@@ -100,24 +100,80 @@ export function mountGriddle(mount, recipeId, onDone) {
     btn.addEventListener('touchend', e => { e.preventDefault(); stop(); });
   }
 
-  // BEAT 2 — FLIP. Bubbles rise; click at the peak. msOffset is the signed
-  // distance from the ideal moment, which engine/cook.js grades.
-  function doFlip() {
-    area.append(el('p', { text: 'Watch for bubbles. Flip when they peak.' }));
-    const bub = el('div', { attrs: { id: 'bubbles' } });
-    const btn = el('button', { text: 'Flip' });
-    area.append(bub, btn);
+  /* BEAT 2 — FLIP, on canvas.
 
+     The DOM version printed a row of "o" characters, which read as debug
+     output. Worse, it had a real gameplay hole: the instruction says "flip
+     when they peak" but the bubbles only ever accumulated, so there was no
+     peak to read. The beat whose entire skill is timing gave no timing cue.
+
+     Now the bubbles rise, PEAK, and start popping at the ideal moment, and
+     the edge sets and darkens as it overcooks. The visual peak is the real
+     peak — the player reads the pancake, not a counter. */
+  function doFlip() {
+    area.append(el('p', { text: 'Watch the bubbles. Flip when they peak — they start popping.' }));
+    const canvas = el('canvas', { attrs: { id: 'flip-canvas', width: '520', height: '200' } });
+    const btn = el('button', { text: 'Flip' });
+    area.append(canvas, btn);
+
+    const ctx = canvas.getContext('2d');
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const R = 76;
     const idealAt = 2000 + Math.random() * 1500;
     const t0 = performance.now();
-    const tick = setInterval(() => {
-      const elapsed = performance.now() - t0;
-      const n = Math.min(14, Math.floor(elapsed / (idealAt / 12)));
-      bub.textContent = 'o'.repeat(n);
-    }, 80);
+
+    // Fixed bubble positions so they do not jitter between frames.
+    const bubbles = Array.from({ length: 18 }, () => {
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.sqrt(Math.random()) * (R - 14);
+      return { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d * 0.6,
+               r: 2 + Math.random() * 3, born: Math.random() };
+    });
+
+    let raf = null;
+    const draw = () => {
+      const t = (performance.now() - t0) / idealAt;      // 1.0 == the ideal moment
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // griddle
+      ctx.fillStyle = '#241d33';
+      ctx.beginPath(); ctx.ellipse(cx, cy, 130, 78, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#3a2f52'; ctx.lineWidth = 2; ctx.stroke();
+
+      // the pancake, darkening as it cooks past the window
+      const over = Math.max(0, t - 1.3);
+      const shade = Math.max(0, 1 - over * 0.6);
+      ctx.fillStyle = `rgb(${Math.round(217 * shade)}, ${Math.round(160 * shade)}, ${Math.round(91 * shade)})`;
+      ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#a8712f'; ctx.lineWidth = 2; ctx.stroke();
+
+      // bubbles: rise, peak at t=1, then pop
+      for (const b of bubbles) {
+        const life = t - b.born * 0.55;
+        if (life <= 0) continue;
+        const popping = t >= 1;
+        // after the peak, bubbles burst into rings and vanish
+        const phase = popping ? Math.min(1, (t - 1) * 1.6 + b.born * 0.4) : 0;
+        if (phase >= 1) continue;
+        const grow = Math.min(1, life * 1.6);
+        const r = b.r * grow * (1 + phase * 2.2);
+        ctx.globalAlpha = popping ? 1 - phase : Math.min(1, life * 2);
+        if (popping) {
+          ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.stroke();
+        } else {
+          ctx.fillStyle = '#b4762f';
+          ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
 
     btn.addEventListener('click', () => {
-      clearInterval(tick);
+      cancelAnimationFrame(raf);
       beats.msOffset = (performance.now() - t0) - idealAt;
       stage = 'stack';
       render();

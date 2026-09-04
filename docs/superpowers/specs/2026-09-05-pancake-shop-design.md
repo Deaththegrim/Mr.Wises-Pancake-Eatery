@@ -204,8 +204,19 @@ the scoring for all four is correct and unit-tested.
 2. **Pour on canvas** — a puddle of batter that visibly spreads on the
    griddle as the button is held, so volume is read from the shape rather
    than from a number.
-3. Flip can stay in DOM; a bubble animation over a canvas griddle would be
-   nicer but the timing readout already communicates clearly.
+3. ~~Flip can stay in DOM~~ — **WRONG, corrected after looking at it.** The
+   DOM flip printed a row of "o" characters, which reads as debug output
+   next to a griddle and a plated stack. It also had a gameplay hole the
+   scoring hid: the instruction says "flip when they peak", but the bubbles
+   only ever *accumulated*, so there was no peak to read. The one beat whose
+   entire skill is timing gave the player no timing cue at all.
+
+   Now on canvas: bubbles rise, peak, and start **popping** at the ideal
+   moment, and the pancake darkens as it overcooks. The visual peak is the
+   real peak, so the player reads the pancake rather than a counter.
+
+   Lesson: "the readout communicates clearly" was an assumption made from
+   the code. It did not survive one look at the rendered screen.
 
 **Nothing in `engine/cook.js` changes.** The scorers consume `volume`,
 `msOffset`, `offsets[]` and `coverage[]`; only the module that *measures*

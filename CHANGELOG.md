@@ -124,7 +124,15 @@ These were found by tooling, not by review, and every one would have shipped:
   to act on it, sending you hunting through the research screen.
 - Checkboxes were rendering as default browser blue against a violet palette.
 
+- **The flip beat moved to canvas too.** It had been left in DOM on the
+  assumption that "the timing readout communicates clearly" — it did not. It
+  rendered as a row of `o` characters, and it had a gameplay hole the scoring
+  hid: the bubbles only accumulated, so there was no peak to flip *on*. They
+  now rise, peak, and pop at the ideal moment, and the pancake darkens as it
+  overcooks. All four beats are now visual and consistent.
+
 ### Known gaps
 
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.
-- Food, griddle and shop furniture are CSS and canvas shapes, not art.
+- Food, griddle and shop furniture are procedural canvas shapes, not art.
+  They are legible and consistent, but they are placeholders.
