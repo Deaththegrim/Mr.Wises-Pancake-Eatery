@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pancake Shop</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+  <header id="hud">
+    <span id="hud-title"></span>
+    <span id="hud-day"></span>
+    <span id="hud-money"></span>
+    <span id="hud-rep"></span>
+    <span id="hud-quota"></span>
+  </header>
+
+  <main>
+    <section id="screen-title" class="screen active">
+      <h1 id="title-text"></h1>
+      <p class="muted">A pancake shop, and the tired god who keeps coming back.</p>
+      <button id="btn-new">New Game</button>
+      <button id="btn-continue">Continue</button>
+    </section>
+
+    <section id="screen-morning" class="screen">
+      <h2>Morning</h2>
+      <p class="muted">Choose what goes on the menu today. A narrow menu of your
+        best work earns more than a wide one — but only if people want it.</p>
+      <div id="menu-picker" class="card"></div>
+      <button id="btn-open">Open the shop</button>
+    </section>
+
+    <section id="screen-service" class="screen">
+      <h2>Service</h2>
+      <div id="customer-card"></div>
+      <div id="griddle-mount"></div>
+      <button id="btn-close">Close for the day</button>
+    </section>
+
+    <section id="screen-evening" class="screen">
+      <h2>Evening</h2>
+      <div id="ledger"></div>
+      <button id="btn-research">Research</button>
+      <button id="btn-next-day">Next day</button>
+    </section>
+
+    <section id="screen-research" class="screen">
+      <h2>Research</h2>
+      <div id="tree-mount"></div>
+      <div id="bench-mount"></div>
+      <button id="btn-back-evening">Back</button>
+    </section>
+
+    <section id="screen-vn" class="screen">
+      <div id="vn-stage"><img id="vn-sprite" alt=""></div>
+      <div id="vn-box">
+        <div id="vn-name"></div>
+        <div id="vn-text"></div>
+        <div id="vn-choices"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="notice" hidden></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

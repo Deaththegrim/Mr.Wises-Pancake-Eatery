@@ -1,0 +1,122 @@
+/* Balance simulator. Run: node tools/simulate.js [quality]
+   Plays a full 8-week game headlessly with a competent player and prints
+   the week-by-week outcome.
+
+   Use this whenever you change the quota curve, payouts, research costs,
+   or affection grants. Unit tests prove the rules are correct; this shows
+   you whether the GAME works — whether quotas are reachable, whether the
+   research tree opens up at a sensible pace, and how far the Synthia arc
+   gets for a normal player.
+
+   Read the "met" column. Early weeks should be YES comfortably, the middle
+   should be tight, and the end should demand a fully unlocked shop. */
+
+import { newGame } from '../js/engine/state.js';
+import { openDay, closeDay, serve, nextCustomer, customersToday } from '../js/engine/day.js';
+import { availableNodes, purchase } from '../js/engine/research.js';
+import { quotaForWeek } from '../js/engine/economy.js';
+import { tierFor } from '../js/engine/affection.js';
+import { RECIPES } from '../js/data/recipes.js';
+import { TUNING } from '../js/data/economy.js';
+
+// Customers per day now comes from reputation (engine/day.js customersToday).
+const WEEKS = 8;
+
+/* Two player profiles, so the curve can be tuned against both ends.
+   `competent` is imperfect: slightly over-poured, a little late on the
+   flip, first pancake marginally off-centre. `skilled` plays cleanly.
+
+   Tune so competent misses the last week or two (a Synthia scene, not a
+   failure) and skilled clears everything. */
+/* Measured scores, so these labels mean something:
+
+     recipe      sloppy  careful
+     plain          80     100
+     souffle        35     100
+     impossible     69      99
+
+   Note that "careful" and "flawless" score the same. That is deliberate,
+   not a bug — the timing windows are generous on purpose ("oil", not
+   "juice"), so modest care reads as mastery. The skill gradient lives in
+   RECIPE DIFFICULTY instead: the souffle's tight band punishes sloppiness
+   four times harder than a plain stack does. If you want a dish to demand
+   precision, tighten its pour.band and flip.windowMs — do not make the
+   scoring curves harsher globally, or the game stops being chill. */
+const PROFILES = {
+  sloppy:  { pourOff: 16, msOffset: 1100, firstOffset: 7,
+             coverage: [0.9, 0.3, 0.8, 0.2, 0.95, 0.4] },
+  careful: { pourOff: 4, msOffset: 250, firstOffset: 1.5,
+             coverage: [0.68, 0.72, 0.65, 0.75, 0.7, 0.66] }
+};
+
+function execution(recipeId, profile) {
+  const r = RECIPES.find(x => x.id === recipeId);
+  const p = PROFILES[profile];
+  return {
+    volume: r.pour.target + p.pourOff,
+    msOffset: p.msOffset,
+    offsets: new Array(r.stackCount).fill(0).map((_, i) => (i === 0 ? p.firstOffset : -0.5)),
+    coverage: p.coverage
+  };
+}
+
+function buyEverythingAffordable(state) {
+  let bought = true;
+  while (bought) {
+    bought = false;
+    for (const n of availableNodes(state).sort((a, b) => a.cost - b.cost)) {
+      if (purchase(state, n.id).ok) { bought = true; break; }
+    }
+  }
+}
+
+export function simulate(seed = 2026, profile = 'careful') {
+  const s = newGame(seed);
+  const rows = [];
+  for (let w = 1; w <= WEEKS; w++) {
+    const quota = quotaForWeek(w);
+    for (let d = 0; d < 7; d++) {
+      openDay(s);
+      s.menu = [...s.unlockedRecipes];
+      const todays = customersToday(s);
+      for (let i = 0; i < todays; i++) {
+        const order = nextCustomer(s);
+        if (!order) break;
+        const first = !s.cooked[order.recipeId];
+        const res = serve(s, order.recipeId, execution(order.recipeId, profile));
+        if (res.quality >= TUNING.highQualityAt) s.points += TUNING.pointsPerHighQuality;
+        if (first) s.points += TUNING.pointsPerNewRecipeServed;
+      }
+      const earned = s.weekEarnings;
+      const r = closeDay(s);
+      if (r.weekRolled) {
+        buyEverythingAffordable(s);
+        rows.push({
+          week: w, quota, earned, met: r.weekResult.met, money: s.money,
+          points: s.points, recipes: s.unlockedRecipes.length,
+          purchased: [...s.purchased], tier: tierFor(s.synthia.points)
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  for (const profile of ['sloppy', 'careful']) {
+    const rows = simulate(2026, profile);
+    console.log(`\n=== ${profile.toUpperCase()} player, serving everyone, buying all affordable research ===\n`);
+    console.log('week |  quota |  earned | met | money | pts | recipes | tier');
+    console.log('-----+--------+---------+-----+-------+-----+---------+----------');
+    for (const r of rows) {
+      console.log(
+        String(r.week).padStart(4) + ' |' + String(r.quota).padStart(7) + ' |' +
+        String(r.earned).padStart(8) + ' |' + (r.met ? ' YES' : '  no').padStart(4) + ' |' +
+        String(r.money).padStart(6) + ' |' + String(r.points).padStart(4) + ' |' +
+        String(r.recipes).padStart(8) + ' | ' + r.tier);
+    }
+    const missed = rows.filter(r => !r.met).map(r => r.week);
+    console.log(`Met ${rows.length - missed.length}/${rows.length} quotas.` +
+      (missed.length ? ` Missed: week ${missed.join(', ')}` : ''));
+  }
+}

@@ -1,0 +1,105 @@
+.card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  padding: var(--sp);
+  margin-bottom: var(--sp);
+}
+
+#menu-picker label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+#menu-picker .price { color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+
+.quota-bar { height: 8px; background: var(--edge); border-radius: 4px; overflow: hidden; margin: 6px 0 10px; }
+.quota-fill { height: 100%; background: var(--accent); transition: width .3s ease; }
+.quota-fill.met { background: var(--good); }
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  font: 13px/1.7 'IBM Plex Mono', ui-monospace, monospace;
+}
+.score-row span:last-child { color: var(--accent); }
+
+/* Griddle */
+#beat-area { margin-top: var(--sp); }
+#plate {
+  position: relative; height: 130px;
+  border: 1px solid var(--edge); border-radius: 8px;
+  cursor: crosshair; background: #191325;
+}
+#plate .centre-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--muted); opacity: .5; }
+#plate .cake {
+  position: absolute; height: 14px; width: 90px; margin-left: -45px;
+  border-radius: 7px; background: #c98a4b; border: 1px solid #8a5a2b;
+}
+#drizzle { display: flex; gap: 2px; height: 80px; cursor: crosshair; }
+#drizzle > div { flex: 1; background: var(--edge); border-radius: 4px; }
+#bubbles { font-family: 'IBM Plex Mono', monospace; letter-spacing: 3px; color: var(--accent); min-height: 1.5em; }
+#pour-read { font-family: 'IBM Plex Mono', monospace; }
+.beat-label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+
+/* Research */
+.node { border-left: 2px solid var(--edge); padding-left: var(--sp); margin-bottom: 8px; }
+.node.affordable { border-left-color: var(--accent); }
+.node .why { color: var(--muted); font-size: 13px; }
+#bench-mount .ing { display: inline-block; margin: 0 6px 6px 0; }
+.hint { color: var(--accent); font-style: italic; }
+
+/* VN
+   Note: the synthia_casual sprites are NOT transparent cutouts — they carry
+   an opaque panel background (inherited from god-synthia, where it was
+   deliberate for two-character overlap). On a bare dark page that reads as
+   a floating rectangle, so the stage gives it a soft glow to sit in and the
+   dialogue box overlaps its lower edge. That overlap is standard VN framing:
+   it makes the crop look intentional instead of broken. */
+#vn-stage {
+  position: relative;
+  text-align: center;
+  min-height: 44vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+#vn-stage::before {
+  content: '';
+  position: absolute;
+  left: 50%; bottom: 0;
+  width: min(560px, 90%); height: 100%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at 50% 70%, rgba(201,168,255,.14), transparent 65%);
+  pointer-events: none;
+}
+#vn-sprite {
+  max-height: 44vh;
+  min-height: 300px;
+  position: relative;
+  /* Soften every edge, not just the bottom. These sprites carry an opaque
+     panel background, so a hard rectangle reads as a cropped card; a
+     vignette makes the same pixels read as atmosphere. Replace this with a
+     plain image if transparent cutouts ever land. */
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 12%, #000 80%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 12%, #000 80%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  mask-composite: intersect;
+}
+#vn-box {
+  position: relative;
+  margin-top: -28px;              /* overlap the sprite, VN-style */
+  background: var(--panel); border: 1px solid #3a2f52;
+  border-radius: var(--radius); padding: var(--sp); min-height: 130px;
+  box-shadow: 0 -14px 30px rgba(20, 16, 28, .85);
+}
+#vn-name { color: var(--accent); font-family: Oswald, sans-serif; margin-bottom: 6px; min-height: 1.2em; }
+#vn-text { white-space: pre-wrap; }
+#vn-choices { margin-top: var(--sp); }
+#vn-choices button { display: block; width: 100%; margin: 6px 0; text-align: left; }

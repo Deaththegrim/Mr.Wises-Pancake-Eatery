@@ -1,0 +1,72 @@
+/* Palette carried over from god-synthia: violet dream / red nightmare. */
+:root {
+  --bg: #14101c;
+  --panel: #1d1729;
+  --edge: #2c2340;
+  --ink: #efeaf6;
+  --muted: #a396bb;
+  --accent: #c9a8ff;
+  --good: #8fe08f;
+  --bad: #ff8b8b;
+  --radius: 10px;
+  --sp: 12px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 Inter, system-ui, -apple-system, sans-serif;
+}
+h1, h2 {
+  font-family: Oswald, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: .02em;
+  margin: 0 0 var(--sp);
+}
+h1 { font-size: 2.2rem; }
+.muted { color: var(--muted); }
+
+#hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp);
+  padding: var(--sp);
+  background: var(--panel);
+  border-bottom: 1px solid var(--edge);
+  font: 13px/1 'IBM Plex Mono', ui-monospace, monospace;
+  color: var(--muted);
+}
+#hud-title { color: var(--accent); }
+
+main { padding: calc(var(--sp) * 2); max-width: 900px; margin: 0 auto; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+button {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid #3a2f52;
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  cursor: pointer;
+  font: inherit;
+  margin: 0 8px 8px 0;
+}
+button:hover:not([disabled]) { border-color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button[disabled] { opacity: .45; cursor: not-allowed; }
+
+#notice {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  max-width: 80vw;
+  z-index: 10;
+}
+[hidden] { display: none !important; }
