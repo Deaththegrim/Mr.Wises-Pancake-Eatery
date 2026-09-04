@@ -18,6 +18,7 @@ export function newGame(seed = Date.now() % 2147483647) {
     upgrades: [],
     menu: [...recipes],
     todayServed: {},
+    pantry: {},
     orderIndex: 0,
     synthia: { points: 0, mentions: [], noticed: [], log: [], lastVisitWeek: 0 },
     flags: {}
@@ -52,6 +53,7 @@ export function deserialize(json) {
   state.cooked = obj.cooked || {};
   state.todayServed = obj.todayServed || {};
   state.flags = obj.flags || {};
+  state.pantry = obj.pantry || {};
 
   // Drop ids that no longer exist in the content, with a warning.
   const validRecipes = new Set(RECIPES.map(r => r.id));

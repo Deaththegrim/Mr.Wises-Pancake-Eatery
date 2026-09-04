@@ -2,6 +2,7 @@ import { RESEARCH } from '../data/research.js';
 import { INGREDIENTS } from '../data/ingredients.js';
 import { SYRUPS } from '../data/syrups.js';
 import { TUNING } from '../data/economy.js';
+import { hasIngredients, missingIngredients, consumeIngredients } from './pantry.js';
 
 const AXES = ['sweet', 'sharp', 'rich', 'strange'];
 const byId = (coll, id) => coll.find(x => x.id === id);
@@ -80,9 +81,30 @@ export function hintFor(blend, target) {
   return worstDelta > 0 ? tooMuch[worstAxis] : tooLittle[worstAxis];
 }
 
-/* A failed experiment ALWAYS returns a hint and non-zero points. The search
-   space must be forgiving enough that failure is informative, not wasted. */
+/* The bench costs INGREDIENTS, which cost MONEY. That is what makes
+   discovery a grind rather than a puzzle you solve for free.
+
+   Three outcomes, and the distinction matters:
+     blocked  — you do not have the ingredients. Nothing happened, nothing
+                was spent, no points. Not a failure, a refusal.
+     miss     — the ingredients are GONE, but you always get a hint and
+                points. Failure must cost something real or there is no
+                grind; it must still teach or nobody experiments twice.
+     found    — the ingredients are gone and you have a new syrup. */
 export function experiment(state, ingredientIds) {
+  if (!hasIngredients(state, ingredientIds)) {
+    const missing = missingIngredients(state, ingredientIds);
+    return {
+      found: false,
+      blocked: true,
+      points: 0,
+      hint: missing.length
+        ? `You do not have: ${missing.join(', ')}. Buy more stock.`
+        : 'Pick something to combine first.'
+    };
+  }
+  consumeIngredients(state, ingredientIds);
+
   const blend = blendAxes(ingredientIds);
   const candidates = SYRUPS.filter(s => s.discover && !state.unlockedSyrups.includes(s.id));
 

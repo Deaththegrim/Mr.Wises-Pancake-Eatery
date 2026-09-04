@@ -5,9 +5,12 @@ import { RESEARCH } from '../js/data/research.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { INGREDIENTS } from '../js/data/ingredients.js';
 
+/* The bench consumes ingredients, so a fixture must be stocked. The
+   unstocked ("blocked") path is covered in tests/pantry.test.js. */
 const baseState = () => ({
   points: 100, purchased: [], cooked: {}, unlockedRecipes: ['plain'],
-  unlockedSyrups: ['maple_syrup'], upgrades: []
+  unlockedSyrups: ['maple_syrup'], upgrades: [], money: 500,
+  pantry: Object.fromEntries(INGREDIENTS.map(i => [i.id, 9]))
 });
 
 test('a node with unmet prereqs is unavailable', () => {

@@ -96,6 +96,23 @@ complain. That's deliberate.
 
 ---
 
+## Ingredients cost money — `js/data/ingredients.js`
+
+    { id: 'cream', name: 'Cream', cost: 22,
+      axes: { sweet: 3, sharp: 1, rich: 9, strange: 0 } }
+
+`cost` is what makes research a grind. You buy stock out of the shop's till,
+and the bench **burns it whether or not the experiment works**. That's the
+whole loop: serve pancakes → earn → buy ingredients → experiment → discover.
+
+Prices are scaled against real income (roughly 1,000/week early, 10,000/week
+late), so the cheap staples keep a broke player tinkering while a
+three-exotic blend is a serious investment. If you change prices, run
+`node tools/simulate.js` — the bench is the game's main money sink, so these
+numbers decide whether the shop's profits have a purpose at all.
+
+The `axes` are the flavour profile the bench averages together.
+
 ## Adding a syrup — `js/data/syrups.js`
 
 Two different things live on a syrup, and it's worth understanding why:
@@ -115,6 +132,12 @@ every combination and will tell you the closest possible blend and how far
 off you are.
 
 `tolerance` is how close counts. Bigger = easier to find.
+
+**Work backwards, don't guess.** Pick the ingredients you want the recipe to
+be — thematically, what *should* make this syrup — then set the target to
+what that blend actually averages to. Every syrup in the file has its
+intended recipe in a comment above it for exactly this reason. Guessing a
+target and hoping is how one of them ended up undiscoverable.
 
 ---
 

@@ -168,12 +168,46 @@ def main():
         check(len(nodes) > 0, f"tree renders {len(nodes)} nodes")
         check(page.inner_text("#bench-mount").strip() != "", "bench renders")
 
-        print("\n-- the bench always answers --")
-        page.query_selector_all("#bench-mount .ing")[0].click()
+        print("\n-- the pantry economy: money -> ingredients -> discovery --")
+        money_before = page.evaluate("window.GAME.state.money")
+        print(f"       till before buying: {money_before}")
+
+        # Trying to blend with nothing must be refused, not silently fail.
         page.click("text=Try it")
-        page.wait_for_timeout(200)
+        page.wait_for_timeout(150)
+        check(page.evaluate("window.GAME.state.money") == money_before,
+              "an empty blend spends nothing")
+
+        # Buy one of the cheapest ingredient, then use it.
+        buy_btns = [b for b in page.query_selector_all("#bench-mount button")
+                    if b.inner_text().startswith("buy")]
+        check(len(buy_btns) > 0, f"market offers {len(buy_btns)} ingredients to buy")
+        enabled = [b for b in buy_btns if b.is_enabled()]
+        check(len(enabled) > 0, f"{len(enabled)} of them are affordable on today's takings")
+        enabled[0].click()
+        page.wait_for_timeout(150)
+        money_after = page.evaluate("window.GAME.state.money")
+        pantry = page.evaluate("JSON.stringify(window.GAME.state.pantry)")
+        print(f"       till after buying: {money_after}  pantry={pantry}")
+        check(money_after < money_before, "buying stock spent money from the till")
+        check(pantry not in ("{}", "null"), "the ingredient landed in the pantry")
+
+        use_btns = [b for b in page.query_selector_all("#bench-mount button")
+                    if b.inner_text().strip() == "use" and b.is_enabled()]
+        check(len(use_btns) > 0, "an in-stock ingredient can be selected")
+        use_btns[0].click()
+        page.wait_for_timeout(120)
+
+        page.click("text=Try it")
+        page.wait_for_timeout(250)
         hint = page.inner_text("#bench-mount .hint").strip()
-        check(hint != "", f"a miss returned a hint: \"{hint}\"")
+        check(hint != "", f'the bench answered: "{hint}"')
+
+        after_pantry = page.evaluate("JSON.stringify(window.GAME.state.pantry)")
+        total_stock = page.evaluate(
+            "Object.values(window.GAME.state.pantry||{}).reduce((a,b)=>a+b,0)")
+        print(f"       pantry after experiment: {after_pantry}")
+        check(total_stock == 0, "the experiment consumed the ingredient (failure costs stock)")
 
         browser.close()
 

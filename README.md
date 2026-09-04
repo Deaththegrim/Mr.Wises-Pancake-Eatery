@@ -26,7 +26,7 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/        # 121 unit tests over the rules
+    node --test tests/        # 137 unit tests over the rules
     node tools/validate.js    # content integrity
     node tools/simulate.js    # is the game actually balanced?
     python3 tools/smoke.py    # plays the game in a headless browser
@@ -65,6 +65,11 @@ whole tower (though a steady hand can nurse it back).
 The weekly quota isn't a survival threshold, it's the **story metronome**.
 Hit it and the next beat opens; miss it and you get a softer Synthia scene
 and nothing is lost.
+
+Research is a **grind on purpose**. Ingredients cost money from the till and
+the experiment bench burns them whether or not the blend works, so the shop's
+profits are what fund discovery. For the first few weeks you are broke because
+everything you earn goes back into the bench.
 
 And the thing the whole design hangs on: **the grind is the courtship.**
 Her voice guide says *"And most don't stay."* A player who keeps opening

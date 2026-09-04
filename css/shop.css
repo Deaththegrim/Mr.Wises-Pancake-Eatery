@@ -106,3 +106,16 @@
 #vn-text { white-space: pre-wrap; }
 #vn-choices { margin-top: var(--sp); }
 #vn-choices button { display: block; width: 100%; margin: 6px 0; text-align: left; }
+
+/* Market rows: one compact line each. There are 14 ingredients, so a
+   three-line row per item turned this screen into a 2000px scroll and
+   buried the bench underneath it. */
+.stock-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0; border-bottom: 1px solid rgba(58,47,82,.4);
+}
+.stock-row:last-child { border-bottom: 0; }
+.stock-name { flex: 1 1 auto; min-width: 110px; }
+.stock-row .why { flex: 0 0 118px; text-align: right; font-size: 12px; }
+.stock-row button { margin: 0; padding: 4px 10px; font-size: 13px; min-width: 74px; }
+#bench-mount .card h3 { margin-top: 0; }

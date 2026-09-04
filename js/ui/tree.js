@@ -3,6 +3,7 @@ import { INGREDIENTS } from '../data/ingredients.js';
 import { SYRUPS } from '../data/syrups.js';
 import { RECIPES } from '../data/recipes.js';
 import { purchase, isAvailable, gateMet, experiment } from '../engine/research.js';
+import { priceOf, stockOf, canAfford, buyIngredient } from '../engine/pantry.js';
 import { el, clear, showNotice } from './screens.js';
 
 /* Why a node is not available yet, in the author's own words. Potion
@@ -73,30 +74,83 @@ export function renderTree(state, onChange) {
   }
 }
 
+/* The market and the bench are one screen on purpose: you can see the
+   money leaving the till and turning into the thing you are about to burn
+   on an experiment. That connection IS the grind. */
 export function renderBench(state, onChange) {
   const mount = clear(document.getElementById('bench-mount'));
-  const chosen = new Set();
+  const chosen = [];                       // an array: a blend may repeat an item
 
+  const money = el('span', { text: String(state.money) });
+  const result = el('div', { className: 'hint' });
+  const rows = new Map();                  // ingredient id -> {stockEl, buyBtn, useBtn}
+
+  const refreshRow = ing => {
+    const row = rows.get(ing.id);
+    if (!row) return;
+    const stock = stockOf(state, ing.id);
+    const used = chosen.filter(x => x === ing.id).length;
+    row.stockEl.textContent = `${stock} in stock` + (used ? ` · using ${used}` : '');
+    row.buyBtn.disabled = !canAfford(state, ing.id, 1);
+    row.buyBtn.textContent = `buy ${priceOf(ing.id)}`;
+    row.useBtn.disabled = stock - used <= 0 || chosen.length >= 3;
+    row.useBtn.style.borderColor = used ? 'var(--accent)' : '';
+    money.textContent = String(state.money);
+  };
+  const refreshAll = () => { for (const ing of INGREDIENTS) refreshRow(ing); };
+
+  // --- market ---
+  const market = el('div', { className: 'card' });
+  market.append(el('h3', { text: 'Stock' }));
+  market.append(el('p', { className: 'muted' },
+    el('span', { text: 'Ingredients cost money from the till. In the till: ' }), money));
+
+  for (const ing of INGREDIENTS) {
+    const stockEl = el('span', { className: 'why' });
+    const buyBtn = el('button', { className: 'ing' });
+    const useBtn = el('button', { className: 'ing', text: 'use' });
+
+    buyBtn.addEventListener('click', () => {
+      const r = buyIngredient(state, ing.id, 1);
+      if (!r.ok) showNotice(r.reason);
+      refreshAll();
+      if (onChange) onChange();
+    });
+
+    useBtn.addEventListener('click', () => {
+      if (chosen.length >= 3) { showNotice('Three at a time is plenty.'); return; }
+      if (stockOf(state, ing.id) - chosen.filter(x => x === ing.id).length <= 0) {
+        showNotice(`No ${ing.name} left. Buy more.`);
+        return;
+      }
+      chosen.push(ing.id);
+      refreshAll();
+    });
+
+    rows.set(ing.id, { stockEl, buyBtn, useBtn });
+    market.append(el('div', { className: 'stock-row' },
+      el('span', { className: 'stock-name', text: ing.name }),
+      stockEl, buyBtn, useBtn));
+  }
+
+  // --- bench ---
   const card = el('div', { className: 'card' });
   card.append(el('h3', { text: 'The bench' }));
-  card.append(el('p', { className: 'muted', text: 'Combine two or three things and see what happens. A miss still tells you something.' }));
+  card.append(el('p', { className: 'muted', text: 'Combine two or three things. Whatever you use is gone, whether or not it works — but a miss always tells you something.' }));
 
-  const picker = el('div');
-  for (const ing of INGREDIENTS) {
-    const btn = el('button', { className: 'ing', text: ing.name });
-    btn.addEventListener('click', () => {
-      if (chosen.has(ing.id)) { chosen.delete(ing.id); btn.style.borderColor = ''; }
-      else if (chosen.size < 3) { chosen.add(ing.id); btn.style.borderColor = 'var(--accent)'; }
-      else showNotice('Three at a time is plenty.');
-    });
-    picker.append(btn);
-  }
-  card.append(picker);
+  const chosenLine = el('div', { className: 'why', text: 'nothing selected' });
+  const updateChosen = () => {
+    chosenLine.textContent = chosen.length
+      ? `Blending: ${chosen.map(id => (INGREDIENTS.find(i => i.id === id) || {}).name).join(' + ')}`
+      : 'nothing selected';
+  };
 
-  const result = el('div', { className: 'hint' });
+  const clearBtn = el('button', { text: 'Clear' });
+  clearBtn.addEventListener('click', () => { chosen.length = 0; updateChosen(); refreshAll(); });
+
   const go = el('button', { text: 'Try it' });
   go.addEventListener('click', () => {
-    if (chosen.size === 0) { showNotice('Pick something first.'); return; }
+    if (chosen.length === 0) { showNotice('Pick something first.'); return; }
     const r = experiment(state, [...chosen]);
     state.points += r.points;
     if (r.found) {
@@ -105,9 +159,20 @@ export function renderBench(state, onChange) {
     } else {
       result.textContent = r.hint;
     }
+    // Blocked experiments consume nothing, so keep the selection to fix it.
+    if (!r.blocked) chosen.length = 0;
+    updateChosen();
+    refreshAll();
     if (onChange) onChange();
   });
 
-  card.append(go, result);
-  mount.append(card);
+  card.append(chosenLine, go, clearBtn, result);
+
+  /* The bench goes ABOVE the market. The bench is the verb; the stock list
+     is just supply. With 14 ingredients the market is long, and putting it
+     first pushed the actual action below the fold. */
+  mount.append(card, market);
+
+  updateChosen();
+  refreshAll();
 }

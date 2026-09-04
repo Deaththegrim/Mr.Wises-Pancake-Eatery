@@ -12,8 +12,11 @@
    should be tight, and the end should demand a fully unlocked shop. */
 
 import { newGame } from '../js/engine/state.js';
+import { makeRng } from '../js/engine/rng.js';
 import { openDay, closeDay, serve, nextCustomer, customersToday } from '../js/engine/day.js';
-import { availableNodes, purchase } from '../js/engine/research.js';
+import { availableNodes, purchase, experiment } from '../js/engine/research.js';
+import { buyIngredient, priceOf } from '../js/engine/pantry.js';
+import { INGREDIENTS } from '../js/data/ingredients.js';
 import { quotaForWeek } from '../js/engine/economy.js';
 import { tierFor } from '../js/engine/affection.js';
 import { RECIPES } from '../js/data/recipes.js';
@@ -60,6 +63,27 @@ function execution(recipeId, profile) {
   };
 }
 
+/* An experimenting player: each evening, buys a few ingredients out of the
+   till and burns them at the bench. This is now the main money sink, so the
+   simulation has to model it or the economy numbers are fiction. */
+function experimentTonight(state, rng) {
+  let spent = 0, tries = 0;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const combo = [];
+    for (let k = 0; k < 2 + (attempt % 2); k++) {
+      const ing = INGREDIENTS[Math.floor(rng() * INGREDIENTS.length)];
+      const r = buyIngredient(state, ing.id, 1);
+      if (!r.ok) return { spent, tries };
+      spent += r.spent;
+      combo.push(ing.id);
+    }
+    const res = experiment(state, combo);
+    state.points += res.points;
+    tries += 1;
+  }
+  return { spent, tries };
+}
+
 function buyEverythingAffordable(state) {
   let bought = true;
   while (bought) {
@@ -75,6 +99,7 @@ export function simulate(seed = 2026, profile = 'careful') {
   const rows = [];
   for (let w = 1; w <= WEEKS; w++) {
     const quota = quotaForWeek(w);
+    let weekBenchSpend = 0;
     for (let d = 0; d < 7; d++) {
       openDay(s);
       s.menu = [...s.unlockedRecipes];
@@ -87,6 +112,9 @@ export function simulate(seed = 2026, profile = 'careful') {
         if (res.quality >= TUNING.highQualityAt) s.points += TUNING.pointsPerHighQuality;
         if (first) s.points += TUNING.pointsPerNewRecipeServed;
       }
+      const benchRng = makeRng(s.seed + s.week * 77 + s.day);
+      const bench = experimentTonight(s, benchRng);
+      weekBenchSpend += bench.spent;
       const earned = s.weekEarnings;
       const r = closeDay(s);
       if (r.weekRolled) {
@@ -94,7 +122,8 @@ export function simulate(seed = 2026, profile = 'careful') {
         rows.push({
           week: w, quota, earned, met: r.weekResult.met, money: s.money,
           points: s.points, recipes: s.unlockedRecipes.length,
-          purchased: [...s.purchased], tier: tierFor(s.synthia.points)
+          purchased: [...s.purchased], tier: tierFor(s.synthia.points),
+          benchSpend: weekBenchSpend, syrups: s.unlockedSyrups.length
         });
       }
     }
@@ -106,14 +135,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const profile of ['sloppy', 'careful']) {
     const rows = simulate(2026, profile);
     console.log(`\n=== ${profile.toUpperCase()} player, serving everyone, buying all affordable research ===\n`);
-    console.log('week |  quota |  earned | met | money | pts | recipes | tier');
-    console.log('-----+--------+---------+-----+-------+-----+---------+----------');
+    console.log('week |  quota |  earned | met | money | bench | pts | recipes | syrups | tier');
+    console.log('-----+--------+---------+-----+-------+-------+-----+---------+--------+----------');
     for (const r of rows) {
       console.log(
         String(r.week).padStart(4) + ' |' + String(r.quota).padStart(7) + ' |' +
         String(r.earned).padStart(8) + ' |' + (r.met ? ' YES' : '  no').padStart(4) + ' |' +
-        String(r.money).padStart(6) + ' |' + String(r.points).padStart(4) + ' |' +
-        String(r.recipes).padStart(8) + ' | ' + r.tier);
+        String(r.money).padStart(6) + ' |' +
+        String(r.benchSpend).padStart(6) + ' |' +
+        String(r.points).padStart(4) + ' |' +
+        String(r.recipes).padStart(8) + ' |' +
+        String(r.syrups).padStart(7) + ' | ' + r.tier);
     }
     const missed = rows.filter(r => !r.met).map(r => r.week);
     console.log(`Met ${rows.length - missed.length}/${rows.length} quotas.` +
