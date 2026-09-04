@@ -171,8 +171,46 @@ when the customer is Synthia — affection.
 - **Order of operations:** responsive control first, predictable simulation second,
   polish third. Never the reverse.
 
-**Open, resolve by prototype not argument:** whether pour and drizzle need a
-`<canvas>` for feel, or layered DOM suffices. Everything else is DOM.
+### Canvas vs DOM — RESOLVED by prototype, 2026-09-05
+
+The Phase 1 build implemented all four beats in DOM and they were played.
+Verdict: **stack works in DOM; pour and drizzle need `<canvas>` in Phase 2.**
+
+The evidence is the comparison between the beats, not a preference:
+
+- **Stack is the best of the four**, and it is the only one with a real
+  visual — pancakes land on a plate and the tower visibly leans away from
+  the centre line. You can *see* the compounding rule that the engine is
+  scoring. It needs nothing further.
+- **Drizzle is the weakest.** In DOM it is six flat rectangles that fill
+  with colour. It reads as an equaliser or a progress bar, not as syrup.
+  Worse, it breaks continuity: the plate you just stacked disappears and is
+  replaced by abstract cells, so the player stops decorating their stack and
+  starts filling in a bar chart. Six buckets is also a coarse instrument for
+  a score built on coverage variance.
+- **Pour is nearly as weak** — a button and a rising millilitre counter,
+  with no batter visibly spreading on a griddle.
+
+The pattern is consistent: **the beats that feel like cooking are the ones
+you can see.** Two of four currently communicate nothing about what the
+player is doing, and that is a presentation failure, not a mechanical one —
+the scoring for all four is correct and unit-tested.
+
+**Phase 2 fix, in priority order:**
+1. **Drizzle on canvas, drawn over the actual stack.** Keep the plate and
+   the pancakes on screen; the player drags syrup across the food they made.
+   Sample coverage from the canvas at a much finer resolution than six
+   cells and feed the same `coverage[]` array to the unchanged scorer.
+2. **Pour on canvas** — a puddle of batter that visibly spreads on the
+   griddle as the button is held, so volume is read from the shape rather
+   than from a number.
+3. Flip can stay in DOM; a bubble animation over a canvas griddle would be
+   nicer but the timing readout already communicates clearly.
+
+**Nothing in `engine/cook.js` changes.** The scorers consume `volume`,
+`msOffset`, `offsets[]` and `coverage[]`; only the module that *measures*
+them (`js/ui/griddle.js`) is rewritten. That separation was the point of
+keeping measurement and scoring apart.
 
 ---
 
@@ -451,7 +489,10 @@ not by looking at it.
 
 ## 12. Build order
 
-**Phase 1 — the bones.** This is the handoff target.
+**Phase 1 — the bones. ✅ COMPLETE 2026-09-05.** This was the handoff target.
+Built, merged to `master`, pushed private. 121 unit tests, a content validator,
+a balance simulator, and a headless smoke test that plays the game. Plan and
+its deviations: `docs/superpowers/plans/2026-09-05-pancake-shop-phase1.md`.
 
 1. Skeleton, ES module wiring, `index.html`, screen manager
 2. `data/` files with a small but real content set
@@ -467,7 +508,18 @@ not by looking at it.
 At the end of Phase 1 the game is playable end-to-end with placeholder art and
 thin content, and the collaborator can start writing.
 
-**Phase 2 — after handoff.** Art, the full content pass, shop decoration, audio,
+**Phase 2 — after handoff. Priority order, informed by playing Phase 1:**
+
+1. **Drizzle and pour onto `<canvas>`, drawn over the real stack** (§5). These
+   are the two beats that currently communicate nothing about what the player
+   is doing. Highest impact on how the game *feels*; no engine change needed.
+2. **The collaborator's writing.** Everything in `data/scenes.js` is
+   placeholder. The systems for the arc exist; the voice does not.
+3. Character art beyond the reused sprites — in particular, food. Layered 2D
+   composited at runtime (see the art-pipeline note below).
+4. Shop decoration, audio, juice.
+
+Original Phase 2 scope: Art, the full content pass, shop decoration, audio,
 juice and polish. Explicitly deferred per the brief: back bone entirely first, art
 eventually.
 
@@ -540,9 +592,14 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
    and their world. Nothing in the code may hardcode a title: it lives in
    `data/economy.js` alongside the other tuning constants (or its own `data/meta.js`),
    so naming it later is a one-line edit rather than a find-and-replace.
-2. **Canvas or DOM** for pour and drizzle. Resolve by prototype in Phase 1 step 4.
+2. ~~**Canvas or DOM**~~ — resolved by prototype, see §5. Stack stays DOM;
+   pour and drizzle move to `<canvas>` in Phase 2, drawn over the real
+   stack. No engine change required.
 3. **Eight weeks** — the right length? Long enough for a slow burn to breathe,
-   short enough to finish. Tune from play.
+   short enough to finish. `tools/simulate.js` says the quota curve works over
+   8 weeks (sloppy 2/8, careful 6/8, careful+curated 8/8), but whether 8 weeks
+   is enough time for the *relationship* to breathe is a question only reading
+   the finished writing can answer. Revisit once the collaborator's scenes exist.
 4. **Demon Synthia's role**, if any. Collaborator's call; system supports it free.
 5. ~~**Decoration layer**~~ — resolved. Phase 2, and it does **not** feed
    reputation. Decoration is a money sink and a self-expression outlet only, per

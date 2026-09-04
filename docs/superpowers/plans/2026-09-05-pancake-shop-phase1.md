@@ -26,6 +26,51 @@
 
 ---
 
+## STATUS: COMPLETE — 2026-09-05
+
+All 12 tasks executed on branch `phase1-bones`, merged to `master`, pushed to
+a private repo. Final state: **121 unit tests green, validator clean, headless
+smoke test plays the game with zero console errors.**
+
+### What deviated from this plan, and why
+
+The plan was followed task-by-task, but execution changed five things. Each is
+recorded because the plan was wrong, not because the implementation drifted.
+
+1. **Task 2 gained `TIER_POSE`.** Verifying the sprite folder turned up 8
+   activity poses and 5 body angles that the spec did not know existed, so the
+   affection tier now drives how she is standing as well as her expression —
+   the "how long she lingers" signal at zero art cost.
+
+2. **Task 5 uncovered a content bug the plan could not have predicted.**
+   `salted_caramel` was undiscoverable: the bench averages ingredients, so
+   every target must lie inside the ingredient set's reachable range. Fixed by
+   adding Cream and retargeting. The check became a validator rule in Task 9.
+
+3. **Task 6 found the affection thresholds unreachable.** DEVOTED was 90; the
+   maximum achievable was 64. Retuned to 70, which made it *deliberately*
+   impossible without the listening mechanic. Two tests now pin that contract.
+
+4. **Task 8 grew two systems the plan omitted.** The 8-week simulation showed
+   income was flat while quotas escalated — only 3/8 reachable. Root cause: the
+   spec's "reputation raises baseline customer traffic" was never implemented.
+   Added `customersToday()` and `demandShift()`, plus two customers so the
+   `divine` tag had takers. Also produced `tools/simulate.js`, which is not in
+   this plan and should have been: unit tests cannot tell you a game is
+   balanced.
+
+5. **Tasks 10-12 gained `tools/smoke.py`.** The plan said the UI was "verified
+   by loading the page and playing it", which is not a verification anyone will
+   actually repeat. A headless Playwright run that plays the game found a UI bug
+   no unit test could reach, and visual review of its screenshots found four
+   more. Any future plan touching UI should specify this from the start.
+
+**Lesson for the next plan:** every task here had a test, and every test passed,
+while the game itself was unplayable from week 4. Rules-correctness and
+game-correctness are different properties and need different tools.
+
+---
+
 ## File Structure
 
 | Path | Responsibility |
@@ -73,7 +118,7 @@
 - Consumes: nothing
 - Produces: `makeRng(seed: number) -> () => number` returning floats in `[0,1)`; `pick(rng, array) -> element`; `randInt(rng, min, max) -> integer` inclusive of both bounds
 
-- [ ] **Step 1: Create `package.json`**
+- [x] **Step 1: Create `package.json`**
 
 ```json
 {
@@ -87,7 +132,7 @@
 }
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Create `tests/rng.test.js`:
 
@@ -134,12 +179,12 @@ test('pick on an empty array returns undefined', () => {
 });
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `node --test tests/rng.test.js`
 Expected: FAIL — `Cannot find module '../js/engine/rng.js'`
 
-- [ ] **Step 4: Write minimal implementation**
+- [x] **Step 4: Write minimal implementation**
 
 Create `js/engine/rng.js`:
 
@@ -167,12 +212,12 @@ export function pick(rng, array) {
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `node --test tests/rng.test.js`
 Expected: PASS, 6 tests
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json js/engine/rng.js tests/rng.test.js
@@ -191,7 +236,7 @@ git commit -m "feat: project skeleton, node:test harness, seeded RNG"
 - Consumes: nothing
 - Produces: `META`, `QUOTA_CURVE`, `TUNING`, `INGREDIENTS`, `RECIPES`, `SYRUPS`, `RESEARCH`, `CUSTOMERS`, `TIER_THRESHOLDS`, `TIER_ORDER`, `GRANTS`, `TIER_EXPRESSION` — all frozen arrays/objects of plain data
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/data.test.js`:
 
@@ -286,12 +331,12 @@ test('no data module declares a function or imports', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/data.test.js`
 Expected: FAIL — cannot find `../js/data/ingredients.js`
 
-- [ ] **Step 3: Create `js/data/meta.js`**
+- [x] **Step 3: Create `js/data/meta.js`**
 
 ```js
 /* META — identity constants.
@@ -305,7 +350,7 @@ export const META = {
 };
 ```
 
-- [ ] **Step 4: Create `js/data/economy.js`**
+- [x] **Step 4: Create `js/data/economy.js`**
 
 ```js
 /* ECONOMY — the quota curve and every tuning constant.
@@ -342,7 +387,7 @@ export const TUNING = {
 };
 ```
 
-- [ ] **Step 5: Create `js/data/ingredients.js`**
+- [x] **Step 5: Create `js/data/ingredients.js`**
 
 ```js
 /* INGREDIENTS — flavour axes drive bench discovery.
@@ -362,7 +407,7 @@ export const INGREDIENTS = [
 ];
 ```
 
-- [ ] **Step 6: Create `js/data/recipes.js`**
+- [x] **Step 6: Create `js/data/recipes.js`**
 
 ```js
 /* RECIPES — one row per dish.
@@ -413,7 +458,7 @@ export const RECIPES = [
 ];
 ```
 
-- [ ] **Step 7: Create `js/data/syrups.js`**
+- [x] **Step 7: Create `js/data/syrups.js`**
 
 ```js
 /* SYRUPS.
@@ -440,7 +485,7 @@ export const SYRUPS = [
 ];
 ```
 
-- [ ] **Step 8: Create `js/data/research.js`**
+- [x] **Step 8: Create `js/data/research.js`**
 
 ```js
 /* RESEARCH — the visible tree.
@@ -481,7 +526,7 @@ export const UPGRADE_EFFECTS = {
 };
 ```
 
-- [ ] **Step 9: Create `js/data/customers.js`**
+- [x] **Step 9: Create `js/data/customers.js`**
 
 ```js
 /* CUSTOMERS — the roster grows as reputation does.
@@ -509,7 +554,7 @@ export const CUSTOMERS = [
 ];
 ```
 
-- [ ] **Step 10: Create `js/data/affection.js`**
+- [x] **Step 10: Create `js/data/affection.js`**
 
 ```js
 /* SYNTHIA'S ARC.
@@ -556,12 +601,12 @@ export const GRANTS = {
 };
 ```
 
-- [ ] **Step 11: Run tests to verify they pass**
+- [x] **Step 11: Run tests to verify they pass**
 
 Run: `node --test tests/data.test.js`
 Expected: PASS, 10 tests. The DOM-purity and data-purity guards pass trivially now (no engine modules yet beyond `rng.js`) and stay green as a regression net for every later task.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add package.json js/data tests/data.test.js
@@ -585,7 +630,7 @@ git commit -m "feat: content data files + DOM-purity and data-purity guards"
   - `effectsFor(upgrades: string[]) -> {pourBandPlus, flipWindowPlus, stackDriftScale}`
   - `scoreDish(recipe, beats: {volume, msOffset, offsets, coverage}, upgrades: string[]) -> {quality: number, breakdown: {pour, flip, stack, drizzle}}`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/cook.test.js`:
 
@@ -684,12 +729,12 @@ test('effectsFor ignores unknown upgrade ids', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/cook.test.js`
 Expected: FAIL — cannot find `../js/engine/cook.js`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `js/engine/cook.js`:
 
@@ -772,17 +817,17 @@ export function scoreDish(recipe, beats, upgrades = []) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/cook.test.js`
 Expected: PASS, 13 tests
 
-- [ ] **Step 5: Run the whole suite to check nothing regressed**
+- [x] **Step 5: Run the whole suite to check nothing regressed**
 
 Run: `node --test tests/`
 Expected: PASS, all files
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add js/engine/cook.js tests/cook.test.js
@@ -807,7 +852,7 @@ git commit -m "feat: four-beat cooking scores with compounding stack error"
   - `repeatMultiplier(repeatCount: number) -> number`
   - `rollWeek(state) -> {met: boolean, quota: number, earned: number, week: number}`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/economy.test.js`:
 
@@ -881,12 +926,12 @@ test('rollWeek reports missing the quota without penalising anything', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/economy.test.js`
 Expected: FAIL — cannot find `../js/engine/economy.js`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `js/engine/economy.js`:
 
@@ -947,12 +992,12 @@ export function rollWeek(state) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/economy.test.js`
 Expected: PASS, 10 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/engine/economy.js tests/economy.test.js
@@ -978,7 +1023,7 @@ git commit -m "feat: economy - payout, tips, reputation, quota rollover with no 
   - `hintFor(blend, target) -> string`
   - `experiment(state, ingredientIds) -> {found: boolean, syrupId?, hint?, points: number}`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/research.test.js`:
 
@@ -1120,12 +1165,12 @@ test('rediscovering an already-known syrup is not reported as new', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/research.test.js`
 Expected: FAIL — cannot find `../js/engine/research.js`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `js/engine/research.js`:
 
@@ -1236,12 +1281,12 @@ export function experiment(state, ingredientIds) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/research.test.js`
 Expected: PASS, 17 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/engine/research.js tests/research.test.js
@@ -1266,7 +1311,7 @@ git commit -m "feat: research tree + experiment bench with always-informative fa
   - `grantWeekly(synthia) -> number`
   - `grantForServing(synthia, quality: number) -> number`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/affection.test.js`:
 
@@ -1362,12 +1407,12 @@ test('the arc is slow - weekly persistence alone cannot reach DEVOTED in 8 weeks
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/affection.test.js`
 Expected: FAIL — cannot find `../js/engine/affection.js`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `js/engine/affection.js`:
 
@@ -1422,12 +1467,12 @@ export function checkListening(synthia, servedRecipeId) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/affection.test.js`
 Expected: PASS, 12 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/engine/affection.js tests/affection.test.js
@@ -1464,7 +1509,7 @@ State shape (relied on by Tasks 8–12):
 }
 ```
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/state.test.js`:
 
@@ -1537,12 +1582,12 @@ test('deserialize repairs a missing synthia block', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/state.test.js`
 Expected: FAIL — cannot find `../js/engine/state.js`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `js/engine/state.js`:
 
@@ -1620,12 +1665,12 @@ export function deserialize(json) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/state.test.js`
 Expected: PASS, 7 tests
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/engine/state.js tests/state.test.js
@@ -1648,7 +1693,7 @@ git commit -m "feat: game state with tolerant deserialize that never strands the
   - `openDay(state) -> void`
   - `closeDay(state) -> {dayEarnings, weekRolled: boolean, weekResult?: object}`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/day.test.js`:
 
@@ -1779,12 +1824,12 @@ test('the quota for week 1 matches the curve', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/day.test.js`
 Expected: FAIL — cannot find `../js/engine/day.js`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `js/engine/day.js`:
 
@@ -1878,21 +1923,21 @@ export function closeDay(state) {
 }
 ```
 
-- [ ] **Step 4: Fix the test's throwaway recipe stubs**
+- [x] **Step 4: Fix the test's throwaway recipe stubs**
 
 The `perfect()` helper in the test passes a stub object, which is fine because it only reads `pour.target` and `stackCount`. Replace the unused line `const recipe = { ...s.menu.map(id => id), };` in the perfect-serve test — it does nothing. Delete that line.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `node --test tests/day.test.js`
 Expected: PASS, 14 tests
 
-- [ ] **Step 6: Run the whole suite**
+- [x] **Step 6: Run the whole suite**
 
 Run: `node --test tests/`
 Expected: PASS across all files
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add js/engine/day.js tests/day.test.js
@@ -1910,7 +1955,7 @@ git commit -m "feat: day loop - deterministic customers, serving, week rollover"
 - Consumes: all `js/data/*` modules
 - Produces: `validateContent() -> {errors: string[], warnings: string[]}`; the module also runs as a CLI (`node tools/validate.js`) exiting 1 on any error
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/validate.test.js`:
 
@@ -1986,12 +2031,12 @@ test('a customer wanting a tag no recipe has is warned about', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/validate.test.js`
 Expected: FAIL — cannot find `../tools/validate.js`
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `tools/validate.js`:
 
@@ -2102,17 +2147,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `node --test tests/validate.test.js`
 Expected: PASS, 8 tests
 
-- [ ] **Step 5: Run the validator against real content**
+- [x] **Step 5: Run the validator against real content**
 
 Run: `node tools/validate.js`
 Expected: `0 error(s)`, exit code 0
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tools/validate.js tests/validate.test.js
@@ -2136,7 +2181,7 @@ git commit -m "feat: content validator with plain-English errors for the content
 
 This task has no unit tests — it is DOM code. It is verified by loading the page and playing it. The engine it drives is already fully tested.
 
-- [ ] **Step 1: Create `index.html`**
+- [x] **Step 1: Create `index.html`**
 
 ```html
 <!doctype html>
@@ -2207,7 +2252,7 @@ This task has no unit tests — it is DOM code. It is verified by loading the pa
 </html>
 ```
 
-- [ ] **Step 2: Create `css/style.css`**
+- [x] **Step 2: Create `css/style.css`**
 
 ```css
 /* Palette lifted from god-synthia: violet dream / red nightmare. */
@@ -2254,7 +2299,7 @@ button[disabled] { opacity: .45; cursor: not-allowed; }
 [hidden] { display: none !important; }
 ```
 
-- [ ] **Step 3: Create `css/shop.css`**
+- [x] **Step 3: Create `css/shop.css`**
 
 ```css
 .card {
@@ -2272,7 +2317,7 @@ button[disabled] { opacity: .45; cursor: not-allowed; }
 #vn-choices button { display: block; width: 100%; margin: 6px 0; text-align: left; }
 ```
 
-- [ ] **Step 4: Create `js/ui/screens.js`**
+- [x] **Step 4: Create `js/ui/screens.js`**
 
 ```js
 export function showScreen(id) {
@@ -2290,7 +2335,7 @@ export function showNotice(msg, ms = 4000) {
 }
 ```
 
-- [ ] **Step 5: Create `js/ui/ledger.js`**
+- [x] **Step 5: Create `js/ui/ledger.js`**
 
 ```js
 import { quotaForWeek } from '../engine/economy.js';
@@ -2318,7 +2363,7 @@ export function renderLedger(state, dayResult) {
 }
 ```
 
-- [ ] **Step 6: Create `js/ui/shopfront.js`**
+- [x] **Step 6: Create `js/ui/shopfront.js`**
 
 ```js
 import { RECIPES } from '../data/recipes.js';
@@ -2358,7 +2403,7 @@ export function renderCustomer(order) {
 }
 ```
 
-- [ ] **Step 7: Create `js/main.js`**
+- [x] **Step 7: Create `js/main.js`**
 
 ```js
 import { newGame, serialize, deserialize } from './engine/state.js';
@@ -2446,12 +2491,12 @@ showScreen('title');
 window.GAME = { get state() { return state; }, save: saveGame, load: loadGame };
 ```
 
-- [ ] **Step 8: Verify in the browser**
+- [x] **Step 8: Verify in the browser**
 
 Run: `cd ~/vault/projects/pancake-shop && python3 -m http.server 8000`
 Open `http://localhost:8000`. Expected: title screen shows "Pancake Shop" (the fallback, since `META.title` is null), New Game reaches the morning screen, the menu picker lists Plain Stack, and Open the shop reaches service. The griddle mount will be empty until Task 11 — that is expected.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add index.html css js/ui/screens.js js/ui/shopfront.js js/ui/ledger.js js/main.js
@@ -2471,7 +2516,7 @@ git commit -m "feat: HTML shell, screen manager, shopfront, ledger, quota board"
 
 DOM code, verified by playing. Start with the DOM implementation; the spec's open question of whether pour and drizzle need `<canvas>` is answered by playing this, not by arguing.
 
-- [ ] **Step 1: Create `js/ui/griddle.js`**
+- [x] **Step 1: Create `js/ui/griddle.js`**
 
 ```js
 import { RECIPES } from '../data/recipes.js';
@@ -2597,16 +2642,16 @@ export function mountGriddle(mount, recipeId, onDone) {
 }
 ```
 
-- [ ] **Step 2: Play it in the browser**
+- [x] **Step 2: Play it in the browser**
 
 Run: `python3 -m http.server 8000`, open `http://localhost:8000`, New Game → Open the shop.
 Expected: pour builds a volume while held; bubbles animate and Flip records an offset; six clicks place a stack; dragging fills the drizzle cells; Done reports a quality percentage and the next customer appears.
 
-- [ ] **Step 3: Answer the spec's open question**
+- [x] **Step 3: Answer the spec's open question**
 
 Play ten dishes. Record in `docs/superpowers/specs/2026-09-05-pancake-shop-design.md` §5 whether pour and drizzle feel adequate in DOM, or need `<canvas>`. Replace the "Open, resolve by prototype not argument" line with the answer and the reason.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add js/ui/griddle.js docs/superpowers/specs/2026-09-05-pancake-shop-design.md
@@ -2627,7 +2672,7 @@ git commit -m "feat: griddle - four interactive beats, DOM prototype"
   - `SCENES` — object keyed by node id, god-synthia node format plus a `mentions` field
   - `playScene(startId: string, state, onEnd: () => void) -> void`
 
-- [ ] **Step 1: Create `js/data/scenes.js`**
+- [x] **Step 1: Create `js/data/scenes.js`**
 
 ```js
 /* SYNTHIA'S SCENES — same node format as god-synthia's js/story.js.
@@ -2702,7 +2747,7 @@ export const SCENES = {
 };
 ```
 
-- [ ] **Step 2: Create `js/ui/vn.js`**
+- [x] **Step 2: Create `js/ui/vn.js`**
 
 ```js
 import { SCENES } from '../data/scenes.js';
@@ -2778,7 +2823,7 @@ export function playScene(startId, state, onEnd) {
 }
 ```
 
-- [ ] **Step 3: Wire the visit into `js/main.js`**
+- [x] **Step 3: Wire the visit into `js/main.js`**
 
 Add the import at the top:
 
@@ -2809,7 +2854,7 @@ function toEvening() {
 }
 ```
 
-- [ ] **Step 4: Copy Synthia's sprites into the project**
+- [x] **Step 4: Copy Synthia's sprites into the project**
 
 ```bash
 mkdir -p ~/vault/projects/pancake-shop/assets/sprites
@@ -2827,12 +2872,12 @@ The activity poses matter to §9. The spec says affection should show in *how lo
 
 Note there is no `c_smug.png` in this set — the VN aliases smug to `c_wink.png`. Do the same if a scene asks for it.
 
-- [ ] **Step 5: Play the full loop in the browser**
+- [x] **Step 5: Play the full loop in the browser**
 
 Run: `python3 -m http.server 8000`
 Play seven days. Expected: on closing day 7, Synthia's first visit plays with her sprite, choices work, Continue returns to the evening screen, and the save survives a reload via Continue.
 
-- [ ] **Step 6: Create `CONTENT.md`**
+- [x] **Step 6: Create `CONTENT.md`**
 
 ```markdown
 # Adding content
@@ -2923,7 +2968,7 @@ Affection can stall. It never falls. Nothing the player does badly takes
 it away.
 ```
 
-- [ ] **Step 7: Create `README.md`**
+- [x] **Step 7: Create `README.md`**
 
 ```markdown
 # Pancake Shop (working title)
@@ -2964,7 +3009,7 @@ See CONTENT.md. Everything editable lives in `js/data/`.
     tests/      one file per engine module
 ```
 
-- [ ] **Step 8: Run everything**
+- [x] **Step 8: Run everything**
 
 ```bash
 node --test tests/
@@ -2973,7 +3018,7 @@ node tools/validate.js
 
 Expected: all tests pass, `0 error(s)`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add js/data/scenes.js js/ui/vn.js js/main.js assets CONTENT.md README.md
