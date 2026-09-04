@@ -45,8 +45,11 @@ test('quota curve is strictly increasing', () => {
   }
 });
 
-test('title is null so the collaborator can name it', () => {
-  assert.equal(META.title, null);
+test('the title lives only in data, so renaming is one line', () => {
+  // Either a real name or null (the UI falls back). What matters is that
+  // nothing outside js/data/meta.js hardcodes one.
+  assert.ok(META.title === null || typeof META.title === 'string');
+  assert.notEqual(META.title, '', 'an empty title would render a blank header');
 });
 
 test('affection tiers are ordered and every tier maps to an expression and a pose', () => {

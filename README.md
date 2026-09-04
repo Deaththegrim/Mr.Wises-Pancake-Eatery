@@ -1,4 +1,4 @@
-# Pancake Shop *(working title)*
+# Mr. Wise's Pancake Eatery
 
 A chill 2D browser shop sim set in the **God Synthia** world. You run a
 pancake shop, chase a weekly sales quota, research new pancakes and syrups,
