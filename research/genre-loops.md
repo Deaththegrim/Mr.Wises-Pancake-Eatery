@@ -275,9 +275,16 @@ reasoning is traceable.
 ## 8. Confirmed reusable assets (verified on disk, 2026-09-05)
 
 From `~/vault/projects/god-synthia/`:
-- **Sprites:** 5 God Synthia expressions (neutral / happy / smug / angry /
-  surprised) and 6 Demon Synthia (+ playful / adoring), each with its `.kra`
-  Krita source — so new expressions are authorable, not locked.
+- **Sprites:** ~156 PNGs across eight live sets and five wardrobes — `synthia_warrior`
+  (30), `synthia_casual` (29, the VN default), `synthia_god` (26),
+  `synthia_priestess` (25), `Demon_queen_pretend` (16), `synthia_holy` (12),
+  `pancake` (12), `demon` (6). `.kra` Krita sources sit beside them, so new
+  expressions are authorable, not locked. A legacy `synthia/` set (5) is superseded
+  — ignore it.
+
+  *Corrected 2026-09-05: an earlier version of this file said "5 + 6", read from the
+  legacy folder and an outdated README. The real vocabulary is large enough that
+  expression-driven affection signalling costs no new art.*
 - **Backgrounds:** `sanctum.jpg`, `arena.jpg`, `void.jpg`. A shop interior is new art.
 - **Fonts, bundled offline:** Oswald, Inter, IBM Plex Mono, Cormorant Italic.
 - **CSS:** 354 lines carrying both the dream (violet) and nightmare (red CRT) themes.

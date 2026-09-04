@@ -502,8 +502,29 @@ camera angle stay locked across the set. Decide at the start of Phase 2, not now
 
 Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
 
-- **Sprites** — 5 God Synthia expressions, 6 Demon Synthia, each with its `.kra`
-  Krita source, so new expressions are authorable rather than locked
+- **Sprites** — far more than first recorded. Eight live sets totalling ~156 PNGs
+  across five wardrobes, with `.kra` Krita sources beside them so new expressions
+  are authorable rather than locked:
+
+  | Set | Count |
+  |---|---|
+  | `synthia_warrior/` | 30 |
+  | `synthia_casual/` | 29 (the VN's default) |
+  | `synthia_god/` | 26 |
+  | `synthia_priestess/` | 25 |
+  | `Demon_queen_pretend/` | 16 |
+  | `synthia_holy/` | 12 |
+  | `pancake/` | 12 |
+  | `demon/` | 6 |
+
+  (`synthia/` also exists with 5 — a superseded legacy set. Ignore it.)
+
+  Expression keys in `synthia_casual/` include neutral, happy, excited, blush,
+  curious, thinking, wink, love, shy, sweatdrop, sigh, sleepy, surprised, panic,
+  pout, angry. **This directly benefits §9:** the affection arc wants her default
+  expression to shift by tier, and the vocabulary for that already exists at zero
+  art cost. Sprites are normalised to one canvas per set, bottom-anchored, so
+  swapping expressions does not jump the frame.
 - **Backgrounds** — `sanctum.jpg`, `arena.jpg`, `void.jpg`. Shop interior is new art.
 - **Fonts, bundled offline** — Oswald, Inter, IBM Plex Mono, Cormorant Italic
 - **CSS** — 354 lines carrying both dream (violet) and nightmare (red CRT) themes
@@ -514,8 +535,11 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
 
 ## 14. Open questions
 
-1. **Working title.** `pancake-shop` is a directory, not a name. The collaborator
-   should have a say, given it is their character.
+1. ~~**Working title**~~ — resolved, deliberately deferred. `pancake-shop` stays a
+   directory name; **the collaborator names the game**, since it is their character
+   and their world. Nothing in the code may hardcode a title: it lives in
+   `data/economy.js` alongside the other tuning constants (or its own `data/meta.js`),
+   so naming it later is a one-line edit rather than a find-and-replace.
 2. **Canvas or DOM** for pour and drizzle. Resolve by prototype in Phase 1 step 4.
 3. **Eight weeks** — the right length? Long enough for a slow burn to breathe,
    short enough to finish. Tune from play.
