@@ -37,7 +37,7 @@ Playable from the title screen through eight weeks.
   if it declares a function.
 - **Tooling** — `tools/validate.js` (content integrity), `tools/simulate.js`
   (8-week balance simulation, two skill profiles), `tools/smoke.py`
-  (Playwright, plays the game headlessly). 137 unit tests.
+  (Playwright, plays the game headlessly). 149 unit tests.
 - `CONTENT.md`, written for someone who does not read JavaScript.
 
 ### Fixed during the build
@@ -74,11 +74,23 @@ These were found by tooling, not by review, and every one would have shipped:
   equaliser and discarded the plate entirely. `engine/cook.js` was untouched;
   only the module that *measures* changed.
 
+### Added later the same day
+
+- **Cost of goods.** Cooking now consumes ingredients. Stock is bought in
+  units and held in servings — one unit is a bulk quantity that makes ten
+  pancakes, while the bench burns a whole unit per experiment. That gap is
+  load-bearing: it keeps discovery expensive while cooking stays profitable.
+  Running out never cancels a sale; you buy emergency stock at double price,
+  so bad restocking costs margin rather than revenue, and a broke player is
+  never locked out of earning.
+- **Content depth** — 9 recipes (was 4), 11 customers (was 4), 13 research
+  nodes (was 6), 9 syrups with 8 discoverable (was 4/3), 14 ingredients
+  (was 9). Two new branches in the tree: a cheap early *bright* line and an
+  expensive *strange* line with high margins.
+- Recalibrated the quota curve for the new income ceiling. Week 7 is now a
+  deliberate knife-edge — the careful player misses it by 395.
+
 ### Known gaps
 
-- **Cooking does not consume ingredients.** `recipes[].ingredients` is still
-  unread. Wiring it up would make this a full shop sim with restock decisions
-  and running out mid-service — real friction against "chill", so it is a
-  design call rather than an oversight.
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.
 - Food, griddle and shop furniture are CSS and canvas shapes, not art.

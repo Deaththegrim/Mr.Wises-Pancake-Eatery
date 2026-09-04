@@ -35,6 +35,54 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
+    id: 'lemon_stack', name: 'Lemon Stack', tags: ['basic', 'bright'], base: 26,
+    ingredients: ['flour', 'buttermilk', 'lemon'],
+    pour: { target: 52, band: 9 },
+    flip: { windowMs: 460 },
+    stackCount: 3,
+    // A drizzle dish: the glaze is the point, so coverage carries it.
+    weights: { pour: 1, flip: 1, stack: 1, drizzle: 2.5 },
+    unlockedAtStart: false
+  },
+  {
+    id: 'blueberry_pile', name: 'Blueberry Pile', tags: ['basic', 'bright'], base: 34,
+    ingredients: ['flour', 'buttermilk', 'blueberry'],
+    pour: { target: 66, band: 11 },
+    flip: { windowMs: 520 },
+    stackCount: 5,
+    // Forgiving everywhere except height - a tall soft stack wants a steady hand.
+    weights: { pour: 1, flip: 0.8, stack: 2, drizzle: 1 },
+    unlockedAtStart: false
+  },
+  {
+    id: 'ash_dark', name: 'Ash-Dark Stack', tags: ['rich', 'strange'], base: 72,
+    ingredients: ['flour', 'cream', 'ashsugar'],
+    pour: { target: 58, band: 7 },
+    flip: { windowMs: 340 },
+    stackCount: 4,
+    weights: { pour: 1.5, flip: 2, stack: 1.5, drizzle: 1.5 },
+    unlockedAtStart: false
+  },
+  {
+    id: 'ember_crisp', name: 'Ember Crisp', tags: ['delicate', 'strange'], base: 95,
+    ingredients: ['flour', 'butter', 'emberpeel'],
+    pour: { target: 36, band: 4 },
+    flip: { windowMs: 200 },
+    stackCount: 2,
+    // The hardest flip in the game. Thin, hot, and it burns while you think.
+    weights: { pour: 2, flip: 3.5, stack: 0.5, drizzle: 1 },
+    unlockedAtStart: false
+  },
+  {
+    id: 'quiet_stack', name: 'Quiet Stack', tags: ['delicate', 'divine'], base: 140,
+    ingredients: ['flour', 'quietmilk', 'cream'],
+    pour: { target: 48, band: 5 },
+    flip: { windowMs: 280 },
+    stackCount: 3,
+    weights: { pour: 2, flip: 2, stack: 1, drizzle: 2 },
+    unlockedAtStart: false
+  },
+  {
     id: 'impossible', name: 'Impossible Stack', tags: ['divine'], base: 120,
     ingredients: ['flour', 'buttermilk', 'butter', 'starlight'],
     pour: { target: 55, band: 6 },

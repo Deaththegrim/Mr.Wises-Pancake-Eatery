@@ -26,7 +26,7 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/        # 137 unit tests over the rules
+    node --test tests/        # 149 unit tests over the rules
     node tools/validate.js    # content integrity
     node tools/simulate.js    # is the game actually balanced?
     python3 tools/smoke.py    # plays the game in a headless browser

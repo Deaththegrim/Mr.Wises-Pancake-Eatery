@@ -101,6 +101,16 @@ complain. That's deliberate.
     { id: 'cream', name: 'Cream', cost: 22,
       axes: { sweet: 3, sharp: 1, rich: 9, strange: 0 } }
 
+Stock is bought in **units** and held in **servings**. One unit is a bulk
+quantity — a sack of flour — that makes ten pancakes. Cooking spends one
+serving; the bench burns a **whole unit**, because experimenting is
+wasteful. That gap is deliberate and load-bearing: it keeps discovery
+expensive while cooking stays profitable. If you shrink it, cooking starts
+losing money on every dish.
+
+Running out mid-service never turns a customer away — you buy emergency
+stock at double price instead, so bad planning costs margin, not the sale.
+
 `cost` is what makes research a grind. You buy stock out of the shop's till,
 and the bench **burns it whether or not the experiment works**. That's the
 whole loop: serve pancakes → earn → buy ingredients → experiment → discover.
@@ -236,7 +246,7 @@ It plays a full 8-week game twice — once as a sloppy player, once as a
 careful one — and prints whether each week's quota was reachable. As tuned
 right now:
 
-    sloppy player, sells everything ....... 2 of 8 quotas
+    sloppy player, sells everything ....... 3 of 8 quotas
     careful player, sells everything ...... 6 of 8
     careful player, narrows the menu ...... 8 of 8
 

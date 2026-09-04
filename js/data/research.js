@@ -24,8 +24,32 @@ export const RESEARCH = [
   { id: 'r_guide', name: 'Stack Guide', cost: 8, prereqs: ['r_ladle'],
     gate: null, unlocks: { upgrade: 'stack_forgiveness' } },
 
+  // --- the bright branch: cheap, early, and it opens up demand ---
+  { id: 'r_lemon', name: 'Citrus Work', cost: 5, prereqs: ['r_buttermilk'],
+    gate: { cooked: { buttermilk_stack: 4 } }, unlocks: { recipe: 'lemon_stack' } },
+
+  { id: 'r_fruit', name: 'Fruit Handling', cost: 9, prereqs: ['r_lemon'],
+    gate: { cooked: { lemon_stack: 6 } }, unlocks: { recipe: 'blueberry_pile' } },
+
+  { id: 'r_pour_read', name: 'Practised Eye', cost: 12, prereqs: ['r_ladle'],
+    gate: null, unlocks: { upgrade: 'pour_band_bonus' } },
+
+  // --- the strange branch: expensive ingredients, high margins ---
+  { id: 'r_ash', name: 'Working With Ash', cost: 16, prereqs: ['r_souffle'],
+    gate: { cooked: { souffle: 3 } }, unlocks: { recipe: 'ash_dark' } },
+
+  { id: 'r_ember', name: 'The Ember Method', cost: 22, prereqs: ['r_ash', 'r_alarm'],
+    gate: { cooked: { ash_dark: 5 } }, unlocks: { recipe: 'ember_crisp' } },
+
+  { id: 'r_steady', name: 'Steady Hands', cost: 18, prereqs: ['r_guide'],
+    gate: null, unlocks: { upgrade: 'stack_forgiveness' } },
+
   { id: 'r_impossible', name: 'The Impossible Stack', cost: 25, prereqs: ['r_souffle', 'r_guide'],
-    gate: { cooked: { souffle: 5 } }, unlocks: { recipe: 'impossible' } }
+    gate: { cooked: { souffle: 5 } }, unlocks: { recipe: 'impossible' } },
+
+  // --- the end of the tree ---
+  { id: 'r_quiet', name: 'The Quiet Stack', cost: 40, prereqs: ['r_impossible', 'r_ember'],
+    gate: { cooked: { impossible: 3 } }, unlocks: { recipe: 'quiet_stack' } }
 ];
 
 /* Upgrade effects, keyed by the id in unlocks.upgrade. Applied in engine/cook.js. */

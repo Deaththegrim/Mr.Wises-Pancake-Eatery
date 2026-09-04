@@ -11,9 +11,16 @@
 
    Calibrated with `node tools/simulate.js` (2026-09-05):
 
-     sloppy player, sells everything ....... 2/8 quotas
+     sloppy player, sells everything ....... 3/8 quotas
      careful player, sells everything ...... 6/8 quotas
      careful player, CURATES THE MENU ...... 8/8 quotas
+
+   Recalibrated 2026-09-05 after the content expansion (9 recipes) pushed
+   late income from ~10,500 to ~17,800/wk. Week 7 is deliberately a
+   knife-edge: the careful player earns 16,105 against a 16,500 quota and
+   misses by 395. Missing by a hair is far more motivating than missing by
+   a mile, and it is exactly the week that should make you reconsider your
+   menu.
 
    That spread is the design working. Missing is never a failure — it fires
    a Synthia scene — so a sloppy player still finishes the story. The last
@@ -22,7 +29,7 @@
    That is what makes the morning menu screen a real decision.
 
    RE-RUN THE SIMULATOR after changing any of this. */
-export const QUOTA_CURVE = [300, 900, 2200, 4500, 7000, 9000, 10500, 12000];
+export const QUOTA_CURVE = [300, 900, 2200, 4800, 8500, 13000, 16500, 19500];
 
 export const TUNING = {
   // Diminishing returns: each repeat of the same recipe in one day earns
