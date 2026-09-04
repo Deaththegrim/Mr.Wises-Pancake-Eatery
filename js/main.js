@@ -7,6 +7,9 @@ import { renderLedger, renderQuotaBoard } from './ui/ledger.js';
 import { renderTree, renderBench } from './ui/tree.js';
 import { mountGriddle } from './ui/griddle.js';
 import { playScene } from './ui/vn.js';
+import { missSceneFor } from './engine/story.js';
+import { tierFor } from './engine/affection.js';
+import { SCENES } from './data/scenes.js';
 
 const TITLE_FALLBACK = 'Pancake Shop';
 const title = META.title || TITLE_FALLBACK;
@@ -35,6 +38,7 @@ function loadGame() {
 }
 
 function toMorning() {
+  if (state.ended) { showEnding(state.endingId); return; }
   state.phase = 'morning';
   renderMorning(state, () => renderQuotaBoard(state));
   showScreen('morning');
@@ -91,12 +95,48 @@ function toEvening() {
     // missing it fires a softer scene and costs nothing at all.
     const first = !state.flags.metHer;
     if (first) state.flags.metHer = true;
-    const sceneId = first ? 'visit_first' : (dayResult.weekResult.met ? 'quota_met' : 'quota_missed');
+
+    // The last authored week ends the story, chosen by how close she got.
+    if (dayResult.ended) {
+      playScene(dayResult.ending, state, () => { saveGame(); showEnding(dayResult.ending); });
+      return;
+    }
+
+    const sceneId = first
+      ? 'visit_first'
+      : (dayResult.weekResult.met ? 'quota_met' : missSceneFor(state.missCount || 1));
     playScene(sceneId, state, () => { saveGame(); showScreen('evening'); });
     return;
   }
 
   showScreen('evening');
+}
+
+/* The card after the last scene. Reports the shape of the run rather than a
+   score — this is a cozy game, and there is nothing to win. */
+function showEnding(endingId) {
+  const node = SCENES[endingId] || {};
+  let title = node.endingTitle;
+  if (!title) {
+    // Walk to the terminal node, which is where the title lives.
+    let id = endingId, hops = 0;
+    while (id && hops < 20) {
+      const n = SCENES[id];
+      if (!n) break;
+      if (n.endingTitle) { title = n.endingTitle; break; }
+      id = n.next || (n.choices && n.choices[0] && n.choices[0].next);
+      hops += 1;
+    }
+  }
+  document.getElementById('ending-title').textContent = title || 'The season turns';
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const cooked = Object.values(state.cooked).reduce((a, b) => a + b, 0);
+  document.getElementById('ending-summary').textContent =
+    `${plural(state.week - 1, 'week', 'weeks')}. ` +
+    `${plural(cooked, 'pancake', 'pancakes')}. ` +
+    `${plural(state.unlockedSyrups.length, 'syrup', 'syrups')}. ` +
+    `She ended up ${tierFor(state.synthia.points).toLowerCase()}.`;
+  showScreen('ending');
 }
 
 function toResearch() {
@@ -124,6 +164,7 @@ document.getElementById('btn-open').addEventListener('click', toService);
 document.getElementById('btn-close').addEventListener('click', toEvening);
 document.getElementById('btn-next-day').addEventListener('click', toMorning);
 document.getElementById('btn-research').addEventListener('click', toResearch);
+document.getElementById('btn-restart').addEventListener('click', () => { state = newGame(); toMorning(); });
 document.getElementById('btn-back-evening').addEventListener('click', () => showScreen('evening'));
 
 showScreen('title');

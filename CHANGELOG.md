@@ -131,6 +131,20 @@ These were found by tooling, not by review, and every one would have shipped:
   now rise, peak, and pop at the ideal moment, and the pancake darkens as it
   overcooks. All four beats are now visual and consistent.
 
+- **The game now ends.** It previously ran forever — after 70 days you were
+  in week 11 against a quota of 27,523 with no conclusion, despite the spec
+  specifying an ending at the end of week 8. The last authored week now
+  closes the story, and **which ending you get is chosen by how close Synthia
+  became**: five endings, one per affection tier. The devoted one is titled
+  "Most Do Not Stay", after the line in her own voice guide. An ending card
+  reports the shape of the run — weeks, pancakes, syrups, and where she
+  ended up — rather than a score, because there is nothing to win.
+- **Missing the quota no longer repeats the same line.** A struggling player
+  can miss six weeks running and was hearing one identical scene every time,
+  which turns a kind mechanic into a broken record. Three scenes now escalate
+  over the first three misses and then hold: she barely reacts, then she
+  notices, then she sits down.
+
 ### Known gaps
 
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.

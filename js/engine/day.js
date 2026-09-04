@@ -6,6 +6,8 @@ import { CUSTOMERS } from '../data/customers.js';
 import { RECIPES } from '../data/recipes.js';
 import { TUNING } from '../data/economy.js';
 import { payForCooking } from './pantry.js';
+import { endingFor } from './story.js';
+import { QUOTA_CURVE } from '../data/economy.js';
 
 const DAYS_PER_WEEK = 7;
 const recipeById = id => RECIPES.find(r => r.id === id);
@@ -106,6 +108,13 @@ export function serve(state, recipeId, beats, opts = {}) {
   return { quality, breakdown, payout, tip, noticed, ingredientCost, emergencyCost };
 }
 
+/* The story runs as long as the quota curve is authored. Past that the
+   game would extrapolate quotas forever with no conclusion, which is what
+   it did before this existed. */
+export function isFinalWeek(state) {
+  return state.week >= QUOTA_CURVE.length;
+}
+
 export function closeDay(state) {
   const dayEarnings = state.dayEarnings || 0;
   state.phase = 'evening';
@@ -118,6 +127,25 @@ export function closeDay(state) {
   // Week rollover. The quota REPORTS; it never punishes.
   const weekResult = rollWeek(state);
   grantWeekly(state.synthia);      // showing up is the courtship
+
+  if (!weekResult.met) state.missCount = (state.missCount || 0) + 1;
+
+  // The last authored week ends the story.
+  const final = isFinalWeek(state) && !state.ended;
+  if (final) {
+    state.ended = true;
+    // Persist which ending was earned, so reloading a finished save shows
+    // the right one rather than defaulting.
+    state.endingId = endingFor(state.synthia.points);
+    state.week += 1;
+    state.day = 1;
+    state.weekEarnings = 0;
+    return {
+      dayEarnings, weekRolled: true, weekResult,
+      ended: true, ending: state.endingId
+    };
+  }
+
   state.week += 1;
   state.day = 1;
   state.weekEarnings = 0;

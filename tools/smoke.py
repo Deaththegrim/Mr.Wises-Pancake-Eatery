@@ -319,6 +319,36 @@ def main():
         check(after_nodes == before_nodes + 1, "clicking Research actually purchased a node")
         check(page.evaluate("window.GAME.state.points") < 500, "and it spent the points")
 
+        print("\n-- the game actually ENDS --")
+        page.evaluate("""
+          (() => {
+            const s = window.GAME.state;
+            s.week = 8; s.day = 7;
+            s.synthia.points = 200;          // a devoted run
+            s.ended = false;
+            window.GAME.save();
+          })()
+        """)
+        page.click("#btn-back-evening") if page.is_visible("#btn-back-evening") else None
+        page.click("#btn-next-day")
+        page.click("#btn-open")
+        page.click("#btn-close")
+        page.wait_for_timeout(400)
+        check(page.is_visible("#screen-vn"), "the final week opens a closing scene")
+        for _ in range(12):
+            btns = page.query_selector_all("#vn-choices button")
+            if not btns or page.is_visible("#screen-ending"):
+                break
+            btns[0].click(); page.wait_for_timeout(180)
+        check(page.is_visible("#screen-ending"), "the scene resolves to an ending card")
+        title = page.inner_text("#ending-title").strip()
+        summary = page.inner_text("#ending-summary").strip()
+        print(f'       "{title}" — {summary}')
+        check(title != "", "the ending has a title")
+        check("devoted" in summary.lower(),
+              "and the summary reflects the affection tier actually reached")
+        check(page.evaluate("window.GAME.state.ended") is True, "the game is marked over")
+
         browser.close()
 
     httpd.shutdown()

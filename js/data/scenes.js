@@ -56,10 +56,27 @@ export const SCENES = {
     end: true
   },
 
-  quota_missed: {
+  /* MISSING THE QUOTA — three scenes, escalating.
+     A struggling player can miss six weeks running, and hearing the exact
+     same line six times turns a kind mechanic into a broken record. These
+     escalate for the first three misses and then hold. See
+     engine/story.js missSceneFor(). */
+  quota_missed_1: {
     speaker: 'God Synthia',
     expr: 'thinking',
     text: '“Short, this week.”\n\nA pause.\n\n“It happens. The world did not end. I checked.”',
+    end: true
+  },
+  quota_missed_2: {
+    speaker: 'God Synthia',
+    expr: 'curious',
+    text: '“Short again.”\n\nShe does not say it unkindly.\n\n“Is it the mornings? It is usually the mornings.”',
+    end: true
+  },
+  quota_missed_3: {
+    speaker: 'God Synthia',
+    expr: 'sigh',
+    text: 'She sits down. She does not usually sit down.\n\n“I am not here about the number.”\n\n“…You are still open. That is the part I would have bet against.”',
     end: true
   },
 
@@ -81,6 +98,82 @@ export const SCENES = {
     text: '“Seven high. It should not stand up.”\n\n“I have only seen it once. I was younger. So was the world.”',
     mentions: 'impossible',
     end: true
+  },
+
+  /* ============================================================
+     ENDINGS — one per affection tier, chosen at the end of the last
+     authored week by engine/story.js endingFor().
+
+     This is the payoff the whole affection system exists for: a player
+     who never noticed her finishes somewhere quite different from one who
+     listened. All placeholder — the last scene of the game is the one
+     that most needs to be in her author's voice.
+     ============================================================ */
+
+  ending_stranger: {
+    speaker: 'God Synthia',
+    expr: 'neutral',
+    text: 'The season turns.\n\nShe comes in, orders, eats, and goes, the way she has all along.',
+    next: 'ending_stranger_b'
+  },
+  ending_stranger_b: {
+    speaker: 'God Synthia',
+    text: '“You kept it open.”\n\n“Most do not.”\n\nAt the door she almost says something else. She does not.',
+    end: true, endingTitle: 'A Regular'
+  },
+
+  ending_regular: {
+    speaker: 'God Synthia',
+    expr: 'curious',
+    text: 'The season turns.\n\nShe knows which stool she likes now. You had not noticed her deciding.',
+    next: 'ending_regular_b'
+  },
+  ending_regular_b: {
+    speaker: 'God Synthia',
+    text: '“Same time next week.”\n\nIt is not a question, and it is not quite an order.',
+    end: true, endingTitle: 'Same Time Next Week'
+  },
+
+  ending_familiar: {
+    speaker: 'God Synthia',
+    expr: 'thinking',
+    text: 'The season turns.\n\nShe has started arriving before the sign goes up.',
+    next: 'ending_familiar_b'
+  },
+  ending_familiar_b: {
+    speaker: 'God Synthia',
+    text: '“I have been coming here a while.”\n\n“I did not plan to.”\n\nShe looks at the griddle rather than at you.',
+    end: true, endingTitle: 'Before the Sign Goes Up'
+  },
+
+  ending_confidant: {
+    speaker: 'God Synthia',
+    expr: 'happy',
+    text: 'The season turns.\n\nShe lets herself in. She has for weeks. Neither of you mentioned it.',
+    next: 'ending_confidant_b'
+  },
+  ending_confidant_b: {
+    speaker: 'God Synthia',
+    text: '“Breakfast holds the world up. I have said that before.”\n\n“I did not think anyone would take it seriously.”\n\n“…Thank you for taking it seriously.”',
+    end: true, endingTitle: 'Load-Bearing'
+  },
+
+  ending_devoted: {
+    speaker: 'God Synthia',
+    expr: 'shy',
+    text: 'The season turns.\n\nShe is behind the counter. You did not invite her; she did not ask.',
+    next: 'ending_devoted_b'
+  },
+  ending_devoted_b: {
+    speaker: 'God Synthia',
+    expr: 'love',
+    text: '“I said once that most do not stay.”\n\nA long pause. She is not good at this part.',
+    next: 'ending_devoted_c'
+  },
+  ending_devoted_c: {
+    speaker: 'God Synthia',
+    text: '“You stayed.”\n\n“…Do not make it strange.”\n\nShe puts the kettle on, in her own shop, which it is now.',
+    end: true, endingTitle: 'Most Do Not Stay'
   },
 
   /* Fires when she notices you made the thing she mentioned. */

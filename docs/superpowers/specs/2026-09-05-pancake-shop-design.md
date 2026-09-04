@@ -465,8 +465,10 @@ target, so her presence drives progression even between story beats.
 
 ### Endings
 
-Relationship tier at the end of week 8, plus accumulated choice flags, selects the
-ending. The `god-synthia` VN already ships three endings and a branching structure;
+**IMPLEMENTED 2026-09-05.** Relationship tier at the end of the last authored
+week selects the ending — five of them, one per tier, in `engine/story.js`
+`endingFor()`. Until this was built the game simply never ended, which no test
+caught because nothing asserted that it should. The `god-synthia` VN already ships three endings and a branching structure;
 same node format, same engine, so this costs writing rather than code.
 
 Demon Synthia exists in the asset set with six expressions. Whether she appears
