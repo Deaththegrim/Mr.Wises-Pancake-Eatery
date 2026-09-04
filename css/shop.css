@@ -38,8 +38,11 @@
   position: absolute; height: 14px; width: 90px; margin-left: -45px;
   border-radius: 7px; background: #c98a4b; border: 1px solid #8a5a2b;
 }
-#drizzle { display: flex; gap: 2px; height: 80px; cursor: crosshair; }
-#drizzle > div { flex: 1; background: var(--edge); border-radius: 4px; }
+#drizzle, #pour-canvas {
+  display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto var(--sp);
+  background: #191325; border: 1px solid var(--edge);
+  border-radius: 8px; cursor: crosshair; touch-action: none;
+}
 #bubbles { font-family: 'IBM Plex Mono', monospace; letter-spacing: 3px; color: var(--accent); min-height: 1.5em; }
 #pour-read { font-family: 'IBM Plex Mono', monospace; }
 .beat-label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
