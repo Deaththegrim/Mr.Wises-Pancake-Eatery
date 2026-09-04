@@ -1,0 +1,56 @@
+/* SYNTHIA'S ARC.
+
+   The player NEVER sees these numbers. No meter, no hearts, no bar — a
+   visible bar turns a slow burn into a grind target and kills it.
+   The arc is expressed through her default expression, how long she
+   lingers, and what she says. The player should feel the change before
+   they can name it.
+
+   Affection can stall. It can never fall. This is a cozy game.
+
+   Expression keys below are real files in
+   ~/vault/projects/god-synthia/assets/sprites/synthia_casual/ (29 sprites).
+   Verified on disk 2026-09-05. Note there is no c_smug.png in this set —
+   the VN aliases smug to c_wink.png. */
+
+export const TIER_ORDER = ['STRANGER', 'REGULAR', 'FAMILIAR', 'CONFIDANT', 'DEVOTED'];
+
+export const TIER_THRESHOLDS = {
+  STRANGER: 0,
+  REGULAR: 12,
+  FAMILIAR: 30,
+  CONFIDANT: 55,
+  DEVOTED: 90
+};
+
+export const TIER_EXPRESSION = {
+  STRANGER: 'neutral',
+  REGULAR: 'curious',
+  FAMILIAR: 'thinking',
+  CONFIDANT: 'happy',
+  DEVOTED: 'love'
+};
+
+/* How long she lingers, as an activity pose. The spec asks for the arc to
+   show in how long she stays; these are the art for it, and it already
+   exists. At STRANGER she stands in the doorway; by DEVOTED she has sat
+   down with a coffee. */
+export const TIER_POSE = {
+  STRANGER: 'cpose_front',
+  REGULAR: 'cpose_q_front',
+  FAMILIAR: 'cact_pockets',
+  CONFIDANT: 'cact_coffee',
+  DEVOTED: 'cact_sitting'
+};
+
+export const GRANTS = {
+  // Showing up is the courtship. Awarded every week the shop opened.
+  weeklyPersistence: 2,
+  // Serving HER something good. Scaled by quality/100.
+  qualityServedMax: 3,
+  // She mentioned something in passing; weeks later you researched it and
+  // served it, unprompted. This is the arc's best beat — keep it large.
+  listening: 8,
+  // Dialogue choices carry their own value in scenes.js.
+  choiceDefault: 1
+};
