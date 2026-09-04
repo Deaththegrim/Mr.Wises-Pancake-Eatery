@@ -304,7 +304,31 @@ shows the centre line. Each one makes a beat easier to score well rather than
 making numbers bigger — so the game gets calmer as you progress, which is exactly
 right for a chill sim.
 
-### The bench
+### The bench — costs money (added 2026-09-05, post-build)
+
+**Ingredients are bought from the till, and the bench consumes them whether
+or not the blend works.** This was not in the original spec and it should
+have been: without it, an 8-week playthrough ended with ~62,000 in the till
+and nothing to spend it on. The escalating quota was pressure with no
+purpose, because profit converted into nothing.
+
+Serve pancakes → earn → buy stock → experiment → discover. Research points
+still come from serving well and still buy tree nodes; the *bench* runs on
+money. That split gives each currency one job.
+
+Three outcomes, and the difference matters:
+- **blocked** — no stock. Nothing spent, nothing happened, no points. A
+  refusal, not a failure.
+- **miss** — the ingredients are gone, but you always get a hint and points.
+  Failure must cost something real or there is no grind; it must still teach
+  or nobody experiments twice.
+- **found** — gone, and you have a new syrup.
+
+Prices are scaled against real income so cheap staples keep a broke player
+tinkering while an exotic blend is a genuine investment. Simulated: the
+careful player's till reads 223 / 33 / 114 / 2,135 / 6,122 / 8,767 / 11,881
+/ 16,211 across the eight weeks — broke for three weeks because discovery is
+eating the profits, then accumulating as income outgrows the bench.
 
 Free experimentation over ingredient combinations. Every ingredient carries four
 hidden axes in `data/ingredients.js`:
