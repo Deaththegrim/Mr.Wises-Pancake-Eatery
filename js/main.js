@@ -83,6 +83,7 @@ function nextOrder() {
 function toEvening() {
   const dayResult = closeDay(state);
   renderLedger(state, dayResult);
+  renderQuotaBoard(state);   // the week may have rolled; the HUD must agree
   saveGame();
 
   if (dayResult.weekRolled) {

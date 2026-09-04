@@ -103,6 +103,16 @@ These were found by tooling, not by review, and every one would have shipped:
   "this resource has no sink" bugs; these make it impossible for a fourth
   to ship silently.
 
+### Fixed on review
+
+- **The HUD and the ledger contradicted each other after a week rollover.**
+  `closeDay()` advances the week and resets earnings, so the ledger reported
+  the new week's empty progress ("0 / 900") while the header still showed the
+  old week's ("20 / 300"). The ledger now reports the week that just *ended*
+  and shows the new target separately, and the HUD refreshes after the roll.
+  Found by looking at a screenshot, not by any test — so the smoke test now
+  asserts the two agree.
+
 ### Known gaps
 
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.

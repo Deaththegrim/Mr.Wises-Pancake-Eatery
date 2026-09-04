@@ -161,6 +161,18 @@ def main():
         week = page.evaluate("window.GAME.state.week")
         check(week == 2, f"the week advanced (week={week})")
 
+        # The HUD and the ledger must not contradict each other. closeDay()
+        # advances the week, so a ledger reading live state would report the
+        # NEW week's empty progress while the header still showed the old.
+        hud = page.inner_text("#hud")
+        ledger = page.inner_text("#ledger")
+        check(f"week {week}" in hud.lower(),
+              f"the HUD shows the current week after a rollover: {hud.strip()}")
+        check("finished" in ledger.lower(),
+              "the ledger reports the week that just ENDED, not the new empty one")
+        check(f"Week {week} target" in ledger,
+              "and shows the new week's target separately")
+
         print("\n-- research screen --")
         page.click("#btn-research")
         check(page.is_visible("#screen-research"), "research screen visible")
@@ -208,6 +220,95 @@ def main():
             "Object.values(window.GAME.state.pantry||{}).reduce((a,b)=>a+b,0)")
         print(f"       pantry after experiment: {after_pantry}")
         check(total_stock == 0, "the experiment consumed the ingredient (failure costs stock)")
+
+        print("\n-- a HARD recipe: 7-pancake stack, tight windows --")
+        # Everything above exercised `plain`. The recipes differ in
+        # stackCount and window width, and the griddle reads those from
+        # data - so a recipe with a different shape is a genuinely
+        # different code path through the beats.
+        page.evaluate("""
+          (() => {
+            const s = window.GAME.state;
+            s.unlockedRecipes = ['plain','impossible'];
+            s.menu = ['impossible'];
+            s.money = 5000;
+            s.pantry = {};                       // force the emergency path
+            window.GAME.save();
+          })()
+        """)
+        page.click("#btn-back-evening")
+        page.click("#btn-next-day")
+        page.click("#btn-open")
+        page.wait_for_selector("#beat-area button")
+
+        money_before = page.evaluate("window.GAME.state.money")
+        box = bbox(page.query_selector("#beat-area button"), "pour button")
+        page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        page.mouse.down(); time.sleep(0.9); page.mouse.up()
+        check("flip" in stage(page), "pour advanced on a different recipe")
+
+        time.sleep(2.2)
+        page.click("#beat-area button")
+        check("stack" in stage(page), "flip advanced")
+
+        pb = bbox(page.wait_for_selector("#plate"), "plate")
+        clicks = 0
+        for _ in range(14):
+            if "stack" not in stage(page):
+                break
+            page.mouse.click(pb["x"] + pb["width"] / 2, pb["y"] + pb["height"] / 2)
+            clicks += 1
+            time.sleep(0.1)
+        time.sleep(0.5)
+        # NOTE: `clicks` overcounts. The loop keeps clicking during the
+        # 350ms transition and doStack correctly ignores those, so this
+        # asserts the requirement, not the raw click count.
+        check(clicks >= 7, f"a 7-high stack required at least 7 placements (loop sent {clicks}, extras ignored)")
+        check("drizzle" in stage(page), "stack advanced only after seven pancakes")
+
+        wb = bbox(page.wait_for_selector("#drizzle"), "drizzle canvas")
+        y = wb["y"] + wb["height"] / 2
+        page.mouse.move(wb["x"] + 4, y)
+        page.mouse.down()
+        for _ in range(3):
+            for i in range(20):
+                page.mouse.move(wb["x"] + 4 + i * (wb["width"] - 8) / 19, y)
+        page.mouse.up()
+        page.click("text=Done")
+        page.wait_for_timeout(300)
+
+        money_after = page.evaluate("window.GAME.state.money")
+        pantry = page.evaluate("JSON.stringify(window.GAME.state.pantry)")
+        print(f"       money {money_before} -> {money_after}   pantry={pantry}")
+        check(page.evaluate("window.GAME.state.cooked.impossible") == 1,
+              "the expensive dish was actually cooked")
+        check("starlight" in pantry,
+              "emergency stock was bought mid-service rather than blocking the sale")
+
+        print("\n-- buying research through the real UI --")
+        page.evaluate("window.GAME.state.points = 500; window.GAME.save();")
+        page.click("#btn-close")
+        page.wait_for_timeout(300)
+        # a scene may fire on a week rollover; walk past it
+        for _ in range(10):
+            btns = page.query_selector_all("#vn-choices button")
+            if not btns or not page.is_visible("#screen-vn"):
+                break
+            btns[0].click(); page.wait_for_timeout(150)
+        if not page.is_visible("#screen-evening"):
+            page.click("#btn-next-day") if page.is_visible("#btn-next-day") else None
+        page.click("#btn-research")
+        page.wait_for_timeout(200)
+
+        research_btns = [b for b in page.query_selector_all("#tree-mount button")
+                         if b.inner_text().strip() == "Research" and b.is_enabled()]
+        check(len(research_btns) > 0, f"{len(research_btns)} research nodes are buyable")
+        before_nodes = page.evaluate("window.GAME.state.purchased.length")
+        research_btns[0].click()
+        page.wait_for_timeout(250)
+        after_nodes = page.evaluate("window.GAME.state.purchased.length")
+        check(after_nodes == before_nodes + 1, "clicking Research actually purchased a node")
+        check(page.evaluate("window.GAME.state.points") < 500, "and it spent the points")
 
         browser.close()
 
