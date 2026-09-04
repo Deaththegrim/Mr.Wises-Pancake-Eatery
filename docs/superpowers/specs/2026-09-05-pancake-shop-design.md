@@ -621,7 +621,8 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
    stack. No engine change required.
 3. **Eight weeks** — the right length? Long enough for a slow burn to breathe,
    short enough to finish. `tools/simulate.js` says the quota curve works over
-   8 weeks (sloppy 2/8, careful 6/8, careful+curated 8/8), but whether 8 weeks
+   8 weeks (sloppy 3/8, careful 6/8, with week 6 cleared by 266 and week 8
+   missed by 239), but whether 8 weeks
    is enough time for the *relationship* to breathe is a question only reading
    the finished writing can answer. Revisit once the collaborator's scenes exist.
 4. **Demon Synthia's role**, if any. Collaborator's call; system supports it free.
