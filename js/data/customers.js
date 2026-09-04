@@ -18,6 +18,15 @@ export const CUSTOMERS = [
   { id: 'night_shift', name: 'Night Shift', unlockAt: { week: 2 }, wants: ['basic', 'rich'],
     lines: { greeting: 'Something heavy. It has been a long one.', happy: 'That will hold.', disappointed: 'Hm.' } },
 
-  { id: 'the_critic', name: 'The Critic', unlockAt: { reputation: 40 }, wants: ['delicate'],
-    lines: { greeting: 'Show me something you are proud of.', happy: 'Well. Yes.', disappointed: 'You rushed it.' } }
+  { id: 'the_critic', name: 'The Critic', unlockAt: { reputation: 40 }, wants: ['delicate', 'rich'],
+    lines: { greeting: 'Show me something you are proud of.', happy: 'Well. Yes.', disappointed: 'You rushed it.' } },
+
+  { id: 'the_pilgrim', name: 'The Pilgrim', unlockAt: { reputation: 120 }, wants: ['delicate', 'divine'],
+    lines: { greeting: 'I heard. From a long way off.', happy: 'It was worth the walk.', disappointed: 'I walked a long way.' } },
+
+  // Somebody must want the `divine` tag or the Impossible Stack is
+  // unreachable revenue no matter how much research goes into it.
+  // tools/validate.js now fails the build if a recipe tag has no taker.
+  { id: 'the_devout', name: 'The Devout', unlockAt: { reputation: 260 }, wants: ['divine'],
+    lines: { greeting: 'The one that should not exist. Please.', happy: 'It should not exist. And yet.', disappointed: 'It existed. Barely.' } }
 ];
