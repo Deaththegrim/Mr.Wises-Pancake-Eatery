@@ -246,13 +246,18 @@ It plays a full 8-week game twice — once as a sloppy player, once as a
 careful one — and prints whether each week's quota was reachable. As tuned
 right now:
 
-    sloppy player, sells everything ....... 3 of 8 quotas
-    careful player, sells everything ...... 6 of 8
-    careful player, narrows the menu ...... 8 of 8
+    sloppy player ..... 3 of 8 quotas,  4 of 13 research nodes
+    careful player .... 6 of 8 quotas, 13 of 13 research nodes
 
 That spread is the design working. Nobody ever fails — a missed quota is a
-Synthia scene, not a game over — but the last weeks need the player to
-think about *what* they sell, not just how well they cook.
+Synthia scene, not a game over — but the late weeks are near-misses that
+make you want one more unlock. Week 6 is cleared by 266; week 8 is missed
+by 239.
+
+The late-game lever is the **research tree**: higher-base recipes are what
+close the gap. (Narrowing the menu helps early, but once you have several
+recipes the game already steers customers toward your expensive dishes on
+its own, so restricting it just turns people away.)
 
 ---
 

@@ -1,4 +1,14 @@
 /* RESEARCH — the visible tree.
+
+   COSTS ARE TUNED TO SPAN THE WHOLE GAME. The tree totals ~1,130 points
+   against roughly 1,100 earned by a careful player over eight weeks, so it
+   is a goal rather than a shopping list. An earlier version totalled 178
+   and was bought out by week 4, after which points piled up with nothing
+   to spend them on — the same "no sink" bug the money economy had.
+
+   Cheap early, steep late: the first node is a quick win, the last is
+   something you are still working toward in week 8. tests/balance.test.js
+   fails if the tree is exhausted too early.
    cost    : research points
    prereqs : other node ids that must be purchased first
    gate    : optional real-world requirement, e.g. cook something N times
@@ -9,46 +19,46 @@
    centre line. The game gets calmer as you progress. */
 
 export const RESEARCH = [
-  { id: 'r_buttermilk', name: 'Buttermilk Technique', cost: 3, prereqs: [],
+  { id: 'r_buttermilk', name: 'Buttermilk Technique', cost: 8, prereqs: [],
     gate: { cooked: { plain: 5 } }, unlocks: { recipe: 'buttermilk_stack' } },
 
-  { id: 'r_ladle', name: 'Measured Ladle', cost: 4, prereqs: [],
+  { id: 'r_ladle', name: 'Measured Ladle', cost: 14, prereqs: [],
     gate: null, unlocks: { upgrade: 'pour_band_bonus' } },
 
-  { id: 'r_alarm', name: 'Griddle Alarm', cost: 6, prereqs: ['r_buttermilk'],
+  { id: 'r_alarm', name: 'Griddle Alarm', cost: 34, prereqs: ['r_buttermilk'],
     gate: null, unlocks: { upgrade: 'flip_window_bonus' } },
 
-  { id: 'r_souffle', name: 'Souffle Method', cost: 10, prereqs: ['r_buttermilk'],
+  { id: 'r_souffle', name: 'Souffle Method', cost: 70, prereqs: ['r_buttermilk'],
     gate: { cooked: { buttermilk_stack: 8 } }, unlocks: { recipe: 'souffle' } },
 
-  { id: 'r_guide', name: 'Stack Guide', cost: 8, prereqs: ['r_ladle'],
+  { id: 'r_guide', name: 'Stack Guide', cost: 42, prereqs: ['r_ladle'],
     gate: null, unlocks: { upgrade: 'stack_forgiveness' } },
 
   // --- the bright branch: cheap, early, and it opens up demand ---
-  { id: 'r_lemon', name: 'Citrus Work', cost: 5, prereqs: ['r_buttermilk'],
+  { id: 'r_lemon', name: 'Citrus Work', cost: 22, prereqs: ['r_buttermilk'],
     gate: { cooked: { buttermilk_stack: 4 } }, unlocks: { recipe: 'lemon_stack' } },
 
-  { id: 'r_fruit', name: 'Fruit Handling', cost: 9, prereqs: ['r_lemon'],
+  { id: 'r_fruit', name: 'Fruit Handling', cost: 85, prereqs: ['r_lemon'],
     gate: { cooked: { lemon_stack: 6 } }, unlocks: { recipe: 'blueberry_pile' } },
 
-  { id: 'r_pour_read', name: 'Practised Eye', cost: 12, prereqs: ['r_ladle'],
+  { id: 'r_pour_read', name: 'Practised Eye', cost: 55, prereqs: ['r_ladle'],
     gate: null, unlocks: { upgrade: 'pour_band_bonus' } },
 
   // --- the strange branch: expensive ingredients, high margins ---
-  { id: 'r_ash', name: 'Working With Ash', cost: 16, prereqs: ['r_souffle'],
+  { id: 'r_ash', name: 'Working With Ash', cost: 105, prereqs: ['r_souffle'],
     gate: { cooked: { souffle: 3 } }, unlocks: { recipe: 'ash_dark' } },
 
-  { id: 'r_ember', name: 'The Ember Method', cost: 22, prereqs: ['r_ash', 'r_alarm'],
+  { id: 'r_ember', name: 'The Ember Method', cost: 150, prereqs: ['r_ash', 'r_alarm'],
     gate: { cooked: { ash_dark: 5 } }, unlocks: { recipe: 'ember_crisp' } },
 
-  { id: 'r_steady', name: 'Steady Hands', cost: 18, prereqs: ['r_guide'],
+  { id: 'r_steady', name: 'Steady Hands', cost: 120, prereqs: ['r_guide'],
     gate: null, unlocks: { upgrade: 'stack_forgiveness' } },
 
-  { id: 'r_impossible', name: 'The Impossible Stack', cost: 25, prereqs: ['r_souffle', 'r_guide'],
+  { id: 'r_impossible', name: 'The Impossible Stack', cost: 185, prereqs: ['r_souffle', 'r_guide'],
     gate: { cooked: { souffle: 5 } }, unlocks: { recipe: 'impossible' } },
 
   // --- the end of the tree ---
-  { id: 'r_quiet', name: 'The Quiet Stack', cost: 40, prereqs: ['r_impossible', 'r_ember'],
+  { id: 'r_quiet', name: 'The Quiet Stack', cost: 240, prereqs: ['r_impossible', 'r_ember'],
     gate: { cooked: { impossible: 3 } }, unlocks: { recipe: 'quiet_stack' } }
 ];
 

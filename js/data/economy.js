@@ -9,27 +9,26 @@
    upmarket. A curve that keeps doubling past that point is unreachable by
    any amount of effort, which is what the first draft got wrong.
 
-   Calibrated with `node tools/simulate.js` (2026-09-05):
+   Calibrated with `node tools/simulate.js` (2026-09-05, after the content
+   expansion and the research-cost rescale):
 
-     sloppy player, sells everything ....... 3/8 quotas
-     careful player, sells everything ...... 6/8 quotas
-     careful player, CURATES THE MENU ...... 8/8 quotas
+     sloppy player ......................... 3/8 quotas, 4 of 13 research
+     careful player ........................ 6/8 quotas, 13 of 13 research
 
-   Recalibrated 2026-09-05 after the content expansion (9 recipes) pushed
-   late income from ~10,500 to ~17,800/wk. Week 7 is deliberately a
-   knife-edge: the careful player earns 16,105 against a 16,500 quota and
-   misses by 395. Missing by a hair is far more motivating than missing by
-   a mile, and it is exactly the week that should make you reconsider your
-   menu.
+   Week 6 is cleared by 266 and week 7 missed by 688 — near-misses on both
+   sides, which is the shape to preserve. Missing by a hair is far more
+   motivating than missing by a mile, and nobody ever fails: a missed quota
+   is a Synthia scene.
 
-   That spread is the design working. Missing is never a failure — it fires
-   a Synthia scene — so a sloppy player still finishes the story. The last
-   two weeks are unreachable by execution alone and require the strategic
-   choice of narrowing the menu to your best dish (worth ~62% more income).
-   That is what makes the morning menu screen a real decision.
+   NOTE, corrected: narrowing the menu is a strong play EARLY but is no
+   longer the late-game lever. Once enough recipes exist, `demandShift()`
+   already steers customers toward your expensive dishes on its own, so
+   restricting the menu just loses customers whose tags do not match. The
+   late-game lever is the research tree — unlocking higher-base recipes.
 
-   RE-RUN THE SIMULATOR after changing any of this. */
-export const QUOTA_CURVE = [300, 900, 2200, 4800, 8500, 13000, 16500, 19500];
+   RE-RUN THE SIMULATOR after changing any of this. tests/balance.test.js
+   will also fail if the shape breaks. */
+export const QUOTA_CURVE = [300, 900, 2200, 4500, 7000, 9500, 12800, 15500];
 
 export const TUNING = {
   // Diminishing returns: each repeat of the same recipe in one day earns

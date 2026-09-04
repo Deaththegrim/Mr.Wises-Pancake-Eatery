@@ -36,11 +36,13 @@ test('a node with a null gate is always gate-met', () => {
 test('purchase deducts points, records the node, and applies the unlock', () => {
   const s = baseState();
   s.cooked.plain = 5;
+  const node = RESEARCH.find(n => n.id === 'r_buttermilk');
   const r = purchase(s, 'r_buttermilk');
   assert.equal(r.ok, true);
   assert.ok(s.purchased.includes('r_buttermilk'));
   assert.ok(s.unlockedRecipes.includes('buttermilk_stack'));
-  assert.equal(s.points, 100 - 3);
+  // Read the cost from the data so retuning the tree does not break the test.
+  assert.equal(s.points, 100 - node.cost);
 });
 
 test('purchasing an upgrade adds it to upgrades, not recipes', () => {

@@ -37,7 +37,8 @@ Playable from the title screen through eight weeks.
   if it declares a function.
 - **Tooling** — `tools/validate.js` (content integrity), `tools/simulate.js`
   (8-week balance simulation, two skill profiles), `tools/smoke.py`
-  (Playwright, plays the game headlessly). 149 unit tests.
+  (Playwright, plays the game headlessly). 161 unit tests, including 12
+  balance regression tests that run the full simulation.
 - `CONTENT.md`, written for someone who does not read JavaScript.
 
 ### Fixed during the build
@@ -87,8 +88,20 @@ These were found by tooling, not by review, and every one would have shipped:
   nodes (was 6), 9 syrups with 8 discoverable (was 4/3), 14 ingredients
   (was 9). Two new branches in the tree: a cheap early *bright* line and an
   expensive *strange* line with high margins.
-- Recalibrated the quota curve for the new income ceiling. Week 7 is now a
-  deliberate knife-edge — the careful player misses it by 395.
+- **Research costs rescaled.** The tree totalled 178 points against ~1,100
+  earned, so six of thirteen nodes were bought in week 1 and it was
+  exhausted by week 4 — points then piled up with nothing to buy, the same
+  "no sink" bug the money economy had. It now totals ~1,130 and completes
+  in week 8 for a careful player; a sloppy one reaches 4 of 13.
+- Recalibrated the quota curve twice for the new content and pacing. The
+  late weeks are near-misses on both sides: week 6 cleared by 266, week 7
+  missed by 688, week 8 by 239.
+- **12 balance regression tests** (`tests/balance.test.js`) that run the
+  8-week simulation and assert the *shape* of the game — income compounds,
+  the tree is not bought out early, discovery continues, money does not
+  hoard, every recipe is profitable. The simulator found three separate
+  "this resource has no sink" bugs; these make it impossible for a fourth
+  to ship silently.
 
 ### Known gaps
 
