@@ -15,12 +15,26 @@
 
 export const TIER_ORDER = ['STRANGER', 'REGULAR', 'FAMILIAR', 'CONFIDANT', 'DEVOTED'];
 
+/* Tuned against the actual grant economy, not guessed. Over 8 weeks:
+     showing up ................ 16   (2/week)
+     serving her well weekly ... 24   (3/week)
+     dialogue choices .......... ~16
+     ------------------------------------------
+     everything except listening 56
+     each listening catch ...... +8
+
+   So DEVOTED at 70 is DELIBERATELY unreachable without the listening
+   mechanic. A player who never notices what she mentions tops out at
+   CONFIDANT no matter how well they cook. That makes paying attention
+   mechanically necessary rather than merely flavourful — which is the
+   whole point of the arc. Do not raise the other grants past this
+   without moving DEVOTED too. */
 export const TIER_THRESHOLDS = {
   STRANGER: 0,
-  REGULAR: 12,
-  FAMILIAR: 30,
-  CONFIDANT: 55,
-  DEVOTED: 90
+  REGULAR: 10,
+  FAMILIAR: 25,
+  CONFIDANT: 45,
+  DEVOTED: 70
 };
 
 export const TIER_EXPRESSION = {
