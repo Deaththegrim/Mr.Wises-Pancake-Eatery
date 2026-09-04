@@ -8,10 +8,13 @@ No timers. No game over. Pressure comes from a number you want to hit,
 never from a clock.
 
 **Synthia is not ours.** She's the collaborator's character, and this is a
-spin-off of [`god-synthia`](../god-synthia). All writing follows the voice
-guide at `../god-synthia/research/voice-style-guide.md`. The sprites come
-from that project. The game still needs a name — that's the collaborator's
-call.
+spin-off of `god-synthia`. All writing follows the voice guide at
+`god-synthia/research/voice-style-guide.md`; the sprites come from that
+project. Everything currently in `js/data/scenes.js` is placeholder written
+to be replaced — the voice belongs to her author, not to us.
+
+The title is set in `js/data/meta.js` and nothing else hardcodes it, so
+renaming the game is one line.
 
 ## Run it
 
