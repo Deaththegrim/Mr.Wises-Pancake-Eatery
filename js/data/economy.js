@@ -61,5 +61,22 @@ export const TUNING = {
   pointsPerNewRecipeServed: 3,
   pointsPerHighQuality: 1,       // awarded when quality >= highQualityAt
   highQualityAt: 85,
-  benchFailPoints: 1             // a failed experiment ALWAYS pays this
+  benchFailPoints: 1,            // a failed experiment ALWAYS pays this
+
+  /* Stock is bought in UNITS and spent in SERVINGS. One unit is a bulk
+     quantity — a sack of flour, a jug of cream — and it makes this many
+     pancakes. The bench, by contrast, burns a WHOLE UNIT per ingredient:
+     experimenting is wasteful, which is what keeps it an expensive habit
+     while cooking stays profitable.
+
+     This is also what makes cost-of-goods real. The Impossible Stack sells
+     for a lot AND costs a lot to make, because Bottled Starlight is 320 a
+     unit. Cheap dishes have thin margins you make up on volume. */
+  servingsPerUnit: 10,
+
+  /* Running out mid-service does NOT turn a customer away — that would be
+     a chill game punishing you for a planning mistake. You buy emergency
+     stock at this multiple of the normal price instead, so bad restocking
+     costs margin rather than the sale. */
+  emergencyMarkup: 2
 };

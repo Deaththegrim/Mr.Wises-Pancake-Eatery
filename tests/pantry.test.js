@@ -1,14 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { priceOf, stockOf, canAfford, buyIngredient, hasIngredients, consumeIngredients, restockCost } from '../js/engine/pantry.js';
+import { priceOf, stockOf, canAfford, buyIngredient, hasIngredients, consumeIngredients, consumeForCooking, restockCost } from '../js/engine/pantry.js';
 import { experiment } from '../js/engine/research.js';
 import { newGame } from '../js/engine/state.js';
 import { INGREDIENTS } from '../js/data/ingredients.js';
+import { TUNING } from '../js/data/economy.js';
+
+const UNIT = TUNING.servingsPerUnit;   // stock is bought in units, held in servings
 
 const stocked = (extra = {}) => {
   const s = newGame(1);
   s.money = 500;
-  s.pantry = { flour: 5, maple: 5, lemon: 5, ...extra };
+  s.pantry = { flour: 5 * UNIT, maple: 5 * UNIT, lemon: 5 * UNIT, ...extra };
   return s;
 };
 
@@ -30,8 +33,8 @@ test('buying spends money and adds stock', () => {
   const before = s.money;
   const r = buyIngredient(s, 'maple', 3);
   assert.equal(r.ok, true);
-  assert.equal(stockOf(s, 'maple'), 8);
-  assert.equal(s.money, before - priceOf('maple') * 3);
+  assert.equal(stockOf(s, 'maple'), (5 + 3) * UNIT, 'each unit adds a bulk number of servings');
+  assert.equal(s.money, before - priceOf('maple') * 3, 'but you pay per unit, not per serving');
 });
 
 test('buying what you cannot afford fails and spends nothing', () => {
@@ -54,7 +57,7 @@ test('buying a non-positive quantity is refused', () => {
   const s = stocked();
   assert.equal(buyIngredient(s, 'maple', 0).ok, false);
   assert.equal(buyIngredient(s, 'maple', -3).ok, false);
-  assert.equal(stockOf(s, 'maple'), 5, 'a negative buy must not remove stock or refund money');
+  assert.equal(stockOf(s, 'maple'), 5 * UNIT, 'a negative buy must not remove stock or refund money');
 });
 
 test('canAfford reflects the real price', () => {
@@ -65,23 +68,36 @@ test('canAfford reflects the real price', () => {
 });
 
 test('hasIngredients checks stock, including duplicates in one blend', () => {
-  const s = stocked({ maple: 1 });
+  const s = stocked({ maple: UNIT });
   assert.equal(hasIngredients(s, ['maple']), true);
-  assert.equal(hasIngredients(s, ['maple', 'maple']), false, 'a blend using two of one thing needs two in stock');
+  assert.equal(hasIngredients(s, ['maple', 'maple']), false, 'a blend using two of one thing needs two units');
   assert.equal(hasIngredients(s, ['starlight']), false);
 });
 
-test('consuming removes exactly what was used', () => {
+test('the bench burns a WHOLE UNIT of each ingredient', () => {
+  // Experimenting is wasteful on purpose: that gap between bench cost and
+  // cooking cost is what keeps discovery an expensive habit.
   const s = stocked();
   consumeIngredients(s, ['maple', 'lemon', 'maple']);
-  assert.equal(stockOf(s, 'maple'), 3);
-  assert.equal(stockOf(s, 'lemon'), 4);
+  assert.equal(stockOf(s, 'maple'), 3 * UNIT);
+  assert.equal(stockOf(s, 'lemon'), 4 * UNIT);
 });
 
 test('stock never goes negative', () => {
   const s = stocked({ maple: 1 });
   consumeIngredients(s, ['maple', 'maple', 'maple']);
   assert.ok(stockOf(s, 'maple') >= 0);
+});
+
+test('cooking costs far less per dish than one bench experiment', () => {
+  // The whole economy rests on this: cooking must be profitable while
+  // experimenting is a real investment.
+  const a = stocked(), b = stocked();
+  consumeForCooking(a, ['maple']);
+  consumeIngredients(b, ['maple']);
+  assert.ok(stockOf(a, 'maple') > stockOf(b, 'maple'),
+    'one experiment must cost more stock than one pancake');
+  assert.equal(stockOf(a, 'maple'), 5 * UNIT - 1);
 });
 
 test('restockCost prices a whole blend', () => {
@@ -93,8 +109,8 @@ test('restockCost prices a whole blend', () => {
 test('an experiment CONSUMES its ingredients', () => {
   const s = stocked();
   experiment(s, ['maple', 'lemon']);
-  assert.equal(stockOf(s, 'maple'), 4);
-  assert.equal(stockOf(s, 'lemon'), 4);
+  assert.equal(stockOf(s, 'maple'), 4 * UNIT);
+  assert.equal(stockOf(s, 'lemon'), 4 * UNIT);
 });
 
 test('an experiment you lack the ingredients for is refused and consumes nothing', () => {
@@ -116,7 +132,7 @@ test('a FAILED experiment still consumes ingredients and still pays a hint', () 
   assert.equal(r.blocked, undefined);
   assert.ok(r.hint.length > 0);
   assert.ok(r.points > 0);
-  assert.equal(stockOf(s, 'flour'), 4, 'the flour was used up');
+  assert.equal(stockOf(s, 'flour'), 4 * UNIT, 'a whole unit of flour was used up');
 });
 
 test('discovery is now gated on money, not just curiosity', () => {

@@ -5,6 +5,7 @@ import { grantWeekly, grantForServing, checkListening } from './affection.js';
 import { CUSTOMERS } from '../data/customers.js';
 import { RECIPES } from '../data/recipes.js';
 import { TUNING } from '../data/economy.js';
+import { payForCooking } from './pantry.js';
 
 const DAYS_PER_WEEK = 7;
 const recipeById = id => RECIPES.find(r => r.id === id);
@@ -81,6 +82,9 @@ export function serve(state, recipeId, beats, opts = {}) {
   const recipe = recipeById(recipeId);
   if (!recipe) throw new Error(`Unknown recipe: ${recipeId}`);
 
+  // Ingredients come off the shelf before the pancake exists.
+  const { ingredientCost, emergencyCost } = payForCooking(state, recipe.ingredients);
+
   const repeatCount = state.todayServed[recipeId] || 0;
   const { quality, breakdown } = scoreDish(recipe, beats, state.upgrades);
   const payout = payoutFor(recipe, quality, repeatCount);
@@ -99,7 +103,7 @@ export function serve(state, recipeId, beats, opts = {}) {
     noticed = checkListening(state.synthia, recipeId).noticed;
   }
 
-  return { quality, breakdown, payout, tip, noticed };
+  return { quality, breakdown, payout, tip, noticed, ingredientCost, emergencyCost };
 }
 
 export function closeDay(state) {

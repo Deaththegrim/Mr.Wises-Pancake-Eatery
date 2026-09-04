@@ -4,6 +4,7 @@ import { SYRUPS } from '../data/syrups.js';
 import { RECIPES } from '../data/recipes.js';
 import { purchase, isAvailable, gateMet, experiment } from '../engine/research.js';
 import { priceOf, stockOf, canAfford, buyIngredient } from '../engine/pantry.js';
+import { TUNING } from '../data/economy.js';
 import { el, clear, showNotice } from './screens.js';
 
 /* Why a node is not available yet, in the author's own words. Potion
@@ -90,10 +91,12 @@ export function renderBench(state, onChange) {
     if (!row) return;
     const stock = stockOf(state, ing.id);
     const used = chosen.filter(x => x === ing.id).length;
-    row.stockEl.textContent = `${stock} in stock` + (used ? ` · using ${used}` : '');
+    row.stockEl.textContent = `${stock} servings` + (used ? ` · using ${used}` : '');
     row.buyBtn.disabled = !canAfford(state, ing.id, 1);
     row.buyBtn.textContent = `buy ${priceOf(ing.id)}`;
-    row.useBtn.disabled = stock - used <= 0 || chosen.length >= 3;
+    // One experiment burns a whole unit, so you need a full unit spare.
+    row.useBtn.disabled = stock - used * TUNING.servingsPerUnit < TUNING.servingsPerUnit
+                          || chosen.length >= 3;
     row.useBtn.style.borderColor = used ? 'var(--accent)' : '';
     money.textContent = String(state.money);
   };
@@ -103,7 +106,8 @@ export function renderBench(state, onChange) {
   const market = el('div', { className: 'card' });
   market.append(el('h3', { text: 'Stock' }));
   market.append(el('p', { className: 'muted' },
-    el('span', { text: 'Ingredients cost money from the till. In the till: ' }), money));
+    el('span', { text: `One unit = ${TUNING.servingsPerUnit} servings. Cooking spends one serving; the bench burns a whole unit. In the till: ` }),
+    money));
 
   for (const ing of INGREDIENTS) {
     const stockEl = el('span', { className: 'why' });
@@ -119,8 +123,10 @@ export function renderBench(state, onChange) {
 
     useBtn.addEventListener('click', () => {
       if (chosen.length >= 3) { showNotice('Three at a time is plenty.'); return; }
-      if (stockOf(state, ing.id) - chosen.filter(x => x === ing.id).length <= 0) {
-        showNotice(`No ${ing.name} left. Buy more.`);
+      const spare = stockOf(state, ing.id) -
+        chosen.filter(x => x === ing.id).length * TUNING.servingsPerUnit;
+      if (spare < TUNING.servingsPerUnit) {
+        showNotice(`Not enough ${ing.name} for an experiment — the bench uses a whole unit.`);
         return;
       }
       chosen.push(ing.id);

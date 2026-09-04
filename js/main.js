@@ -66,9 +66,15 @@ function nextOrder() {
     const result = serve(state, order.recipeId, beats);
     servedToday += 1;
     const b = result.breakdown;
+    // Show the margin, not just the takings — the cost of goods is a real
+    // decision and the player cannot make it if they cannot see it.
+    const cost = result.ingredientCost + result.emergencyCost;
+    const emergency = result.emergencyCost
+      ? ` (${result.emergencyCost} emergency stock!)` : '';
     showNotice(
       `${result.quality}%  ·  pour ${b.pour} flip ${b.flip} stack ${b.stack} drizzle ${b.drizzle}` +
-      `  ·  ${result.payout}${result.tip ? ` +${result.tip} tip` : ''}`, 5000);
+      `  ·  +${result.payout}${result.tip ? ` +${result.tip} tip` : ''}` +
+      `${cost ? ` −${cost} stock${emergency}` : ''}`, 5000);
     saveGame();
     nextOrder();
   });
