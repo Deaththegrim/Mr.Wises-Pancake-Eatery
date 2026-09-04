@@ -113,6 +113,17 @@ These were found by tooling, not by review, and every one would have shipped:
   Found by looking at a screenshot, not by any test — so the smoke test now
   asserts the two agree.
 
+- **The morning screen was giving bad advice.** It read "a narrow menu of
+  your best work earns more than a wide one", which stopped being true once
+  there were nine recipes — the demand system already steers customers
+  upmarket, so restricting the menu just turns people away. Rewritten to say
+  narrow helps early and breadth pays later.
+- **The morning screen now reports stock readiness and offers a restock
+  button.** Cooking consumes ingredients, so "can I get through today?" is a
+  real question; it previously told you the price without giving you any way
+  to act on it, sending you hunting through the research screen.
+- Checkboxes were rendering as default browser blue against a violet palette.
+
 ### Known gaps
 
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.

@@ -75,6 +75,15 @@ def main():
         boxes[0].check()
         check(page.is_enabled("#btn-open"), "re-enabled after re-checking one")
 
+        print("\n-- the morning restock loop --")
+        warn = page.inner_text("#stock-warning")
+        check(warn.strip() != "", "the morning screen reports stock readiness")
+        restock = [b for b in page.query_selector_all("#stock-warning button")]
+        if restock:
+            check(True, f'a restock button is offered: "{restock[0].inner_text()}"')
+            check(not restock[0].is_enabled(),
+                  "and it is correctly disabled with an empty till on day one")
+
         print("\n-- service: cook one dish through all four beats --")
         page.click("#btn-open")
         check(page.is_visible("#screen-service"), "service screen visible")
