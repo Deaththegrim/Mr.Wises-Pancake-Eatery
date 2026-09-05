@@ -48,9 +48,24 @@ def bbox(handle, what):
     return box
 
 
+def dismiss_ask(page):
+    """Answer an impossible order, if she is making one.
+
+    She asks for a dish that is not unlocked before placing her real
+    order, so no griddle exists until "Say so" is clicked. Without this,
+    cook_one() saw no griddle, returned False, and the day loop broke —
+    so the run quietly played a short week and reported the result as if
+    it were a full one."""
+    first = page.query_selector("#griddle-mount button")
+    if first and first.inner_text().strip() == "Say so":
+        first.click()
+        time.sleep(0.3)
+
+
 def cook_one(page):
     """Drive all four beats through the real DOM. Returns False if the
     griddle never appeared (nobody waiting)."""
+    dismiss_ask(page)
     try:
         page.wait_for_selector("#beat-area button", timeout=3000)
     except Exception:
@@ -191,6 +206,13 @@ def main():
     print(f"  grant reasons ........ {reasons}\n")
 
     check(cooked > 0, "the real page actually cooked pancakes")
+    # A run can finish "successfully" having quietly played half a week:
+    # anything that stops the griddle appearing - her asking for a dish you
+    # cannot make was one - breaks the customer loop, and every check below
+    # still passes on the handful of dishes that did get cooked. Traffic
+    # starts at six customers a day, so this is the floor.
+    check(cooked >= days * 6,
+          f"a full run was played, not a short one ({cooked} dishes over {days} days)")
     check(state["money"] > 0, "and took money for them")
     check(state["reputation"] > 0, "and built reputation")
 
