@@ -16,6 +16,25 @@ to be replaced — the voice belongs to her author, not to us.
 The title is set in `js/data/meta.js` and nothing else hardcodes it, so
 renaming the game is one line.
 
+## If you've just been handed this
+
+Four commands, in this order. None of them need anything installed beyond
+Node and Python, and none of them can break the game.
+
+    python3 -m http.server 8000     # then open localhost:8000 and play a week
+    node tools/writing.js           # every line of prose, and when it is seen
+    node tools/art.js               # every picture, where it goes, what it shows
+    node --test tests/              # proves nothing is broken before you start
+
+Then **[CONTENT.md](CONTENT.md)**, which is the whole guide to changing
+things: a pancake, a customer, a syrup, a research node, one of her scenes.
+Everything editable is a plain list in `js/data/` and you never need to open
+the engine.
+
+The two worklists never fail — they are not tests. They print what is left
+to write and to draw, and both are designed so you can do it a line or a
+picture at a time, in any order, and see the result on the next reload.
+
 ## Run it
 
 No build step. No dependencies. No `npm install`.

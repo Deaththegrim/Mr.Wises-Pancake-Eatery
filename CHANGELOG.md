@@ -18,6 +18,13 @@
   and one for each of the seven things you can buy for the room. Synthia's
   29 existing sprites were already in and are untouched.
 
+- **A writing checklist**, `node tools/writing.js` — every line of prose in
+  the game with, for each one, when the player sees it: which week, what
+  they have just done, what her face is doing, what they can say back. All
+  of it can be worked through without opening any code, in any order.
+- **A front door in the README** for whoever picks this up: four commands
+  that orient you, then CONTENT.md for everything else.
+
 - **Decoration** — seven things to buy for the room: window boxes, a second
   table, a repainted sign, a corner lamp, a shelf of jars, the good griddle,
   an awning people wait under when it rains. Bought with money, kept forever,
