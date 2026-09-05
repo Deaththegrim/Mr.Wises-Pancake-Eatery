@@ -119,6 +119,19 @@ A flaky gate is worse than a missing one: it cries wolf and then gets
 ignored, which this project already learned once when an unpinned seed made
 smoke play a different game every run.
 
+**Then the same check across the rest of the suite.** Every place smoke.py
+opens the shop was audited, and two more had no scene handling: the
+decoration section reads `#shopfront-decor` immediately after opening
+(a scene would hide it, and it would have failed as "the room is empty"
+rather than naming the cause), and the first-open, which is genuinely safe
+on the pinned seed — but "safe for this seed" is the sort of property that
+stops being true without anyone noticing. `clear_scenes()` is a no-op when
+nothing is open, so both guards cost nothing.
+
+The unit tests, validator and simulator were re-run repeatedly to confirm
+they are deterministic. They are: 310 every time, 0/0 every time, the same
+6/8 quota table every time. The browser test was the only non-determinism.
+
 ### Fixed — comments that were wrong
 
 This is its own category on purpose. A wrong comment in this codebase is
