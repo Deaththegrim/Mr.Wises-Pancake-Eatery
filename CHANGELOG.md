@@ -48,6 +48,20 @@
   order the player meets them — which is the order the escalation is
   written in, and unreadable in any other.
 
+- **The handoff docs were teaching the mistake.** `CONTENT.md`'s worked
+  example for adding a customer used `happy: 'Hm. Better than mine.'` —
+  handing the collaborator Synthia's own tic as the model line for a
+  market trader. The example now speaks in the roster's register, and the
+  convention is written down beside it, explicitly as something to break
+  on purpose rather than by accident.
+
+  `README.md` and `tools/writing.js` both claimed *everything* was
+  placeholder. That is still exactly true of `scenes.js` and now false of
+  the shop, and the difference is the whole point — the collaborator
+  should be able to tell at a glance which prose is waiting for them and
+  which is only furniture they may rewrite. Both now say which is which.
+  The three `Souffle` spellings in `CONTENT.md` follow the dish.
+
 ## 2026-09-06 — the shop, and somewhere to put the art
 
 ### Added

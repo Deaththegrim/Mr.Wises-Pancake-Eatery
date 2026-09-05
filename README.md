@@ -139,8 +139,13 @@ and the shop you spend the money on once the tree runs out.
 **What's left is writing and art**, and both are set up to be dropped in
 rather than built.
 
-Every line in `js/data/scenes.js` is a placeholder — the systems for the
-arc exist, the voice does not, and that is the collaborator's.
+The shop around her has had a proper pass — the eleven customers, the
+seven things you can buy for the room, the dish and syrup names — so there
+is a furnished place to write her into. Rewrite any of it freely.
+
+Every line in `js/data/scenes.js`, though, is still a placeholder, and
+deliberately so — the systems for the arc exist, the voice does not, and
+that is the collaborator's.
 `node tools/writing.js` prints all ~680 words of it with, for each line,
 when the player sees it: which week, what they have just done, what her
 face is doing. It can be worked through without opening any code.

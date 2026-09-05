@@ -66,7 +66,7 @@ makes the research tree pay. You never type a price; you choose what goes in.
 
 **`craft` is the one number you do pick.** It is the premium for the skill
 the dish takes, on top of its parts, and it exists because a bill of
-materials cannot express difficulty: the Souffle is two pancakes and cheap
+materials cannot express difficulty: the Soufflé is two pancakes and cheap
 ingredients, and it sells for 45 because it is *hard*. Priced purely by
 parts it would be one of the cheapest things in the game. Set `craft` to 0
 for something anyone could make and let the parts speak.
@@ -83,14 +83,14 @@ part of making it counts toward the score.
 - High `stack` → a precision dish. Wobble early and the tower leans.
 - High `drizzle` → a presentation dish.
 
-The Souffle has `flip: 3` and `stack: 0.5`, so it lives and dies on one
+The Soufflé has `flip: 3` and `stack: 0.5`, so it lives and dies on one
 moment. The Impossible Stack has `stack: 3`, so it's about a steady hand.
 Same four actions, completely different feel, for four numbers.
 
 ### `band` and `windowMs` are the difficulty
 
 Smaller = harder. A sloppy player scores **80** on a Plain Stack (band 10)
-but only **35** on a Souffle (band 5). That's where difficulty lives — if
+but only **35** on a Soufflé (band 5). That's where difficulty lives — if
 you want a dish to demand care, tighten these. Don't ask for the scoring to
 be made harsher overall; that would stop the game being chill.
 
@@ -112,9 +112,9 @@ menu, and watch it never sell. This actually happened during development.
       wants: ['rich', 'delicate'],      // recipe tags
       taste: { sweet: 5, sharp: 2, rich: 9, strange: 4 },
       lines: {
-        greeting: 'Professional curiosity.',
-        happy: 'Hm. Better than mine.',
-        disappointed: 'I have had worse.'
+        greeting: "Professional curiosity. Don't let me put you off.",
+        happy: "That's better than mine. Don't tell anyone I said it.",
+        disappointed: "I've had worse. I've made worse."
       }
     }
 
@@ -131,6 +131,19 @@ customer would ever be pleased by.
 **`happy` and `disappointed` are printed at the top of their receipt**,
 under the dish name. They went unrendered for most of the build, so write
 them as things a person actually says, not as labels.
+
+**How they speak — a convention, not a rule.** The roster uses contractions
+and talks loosely; the last three to unlock — the Stranger, the Pilgrim,
+the Devout — don't. That is the only thing marking them out as touched by
+something, and it is what keeps Synthia's clipped, contraction-free voice
+*hers* rather than the way everyone in this world happens to talk. Every
+customer was originally written in her register, and the effect was that
+nobody sounded like anyone, including her.
+
+So: a new face in the ordinary part of the roster should sound ordinary.
+One who has come a long way for a reason should sound formal. Break this
+deliberately if you want it to mean something — just don't hand a market
+trader the word "Hm.", which is hers alone (`visit_first_end`).
 
 **There is no `patience` field.** The game has no clock, so it would be a
 number nothing could ever count down. Customers wait forever and never

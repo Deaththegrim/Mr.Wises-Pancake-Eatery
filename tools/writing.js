@@ -4,9 +4,13 @@
    sees it — so it can be worked through without opening any code, and in
    any order.
 
-   All of it is placeholder. It was written to be replaced, and the
-   sooner it is, the better: the systems are finished and the voice is
-   the only thing left that can make this feel like anything.
+   HER scenes are placeholder, written to be thrown away — the systems
+   are finished and her voice is the only thing left that can make this
+   feel like anything, and it is not ours to write.
+
+   The shop around her has had a pass: the customers, the room, the
+   names. That is furniture, not character, and it is here to be
+   rewritten too — just not left blank while waiting.
 
    Nothing here fails. It is a worklist.
 
@@ -124,7 +128,7 @@ if (wants('customers')) {
   console.log('');
 }
 
-console.log(`\n~${total} words of placeholder prose in total.`);
+console.log(`\n~${total} words of prose in total.`);
 console.log('Everything above is a plain string in js/data/. Rewrite freely — the');
 console.log('game reads whatever is there. `node tools/validate.js` checks the shape');
 console.log('(nothing dangling, nothing unreachable) but never the words.\n');
