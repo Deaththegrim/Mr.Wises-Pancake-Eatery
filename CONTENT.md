@@ -332,6 +332,36 @@ test they had.
 
 ---
 
+## Motion — `css/shop.css`
+
+Short, and only where something was previously instant and therefore
+invisible: a pancake settles onto the stack instead of appearing, the
+receipt's rows arrive in order so you watch the bill total, a customer
+card and a line of her dialogue rise into place, buttons give under the
+press. Nothing shakes, nothing sparkles, nothing repeats.
+
+That restraint is a design decision, not laziness — the research this
+project argues from is that **medium juice beats extreme juice** for a
+cozy game. A shop you visit for eight weeks cannot twitch at you.
+
+**Two rules, and tests enforce both:**
+
+- **Animate only `transform` and `opacity`.** The stack beat scores a
+  leaning tower and the drizzle beat samples syrup coverage across that
+  same tower, so where the pancakes *are* is gameplay. Animate a margin or
+  a height and the tower on screen stops being the tower that was scored.
+- **Nothing runs forever.** Beyond the design reason, an endless animation
+  on anything holding a button makes that button never settle, and a test
+  harness waiting for it to hold still waits for good.
+
+There is a `prefers-reduced-motion` block that blankets the whole
+stylesheet, so anything you add is covered the day you add it rather than
+the day someone remembers. `tests/motion.test.js` fails if it goes missing,
+and `smoke.py` loads the game with the setting on and checks the page is
+still visible and playable.
+
+---
+
 ## Writing Synthia — `js/data/scenes.js`
 
 **Open `preview.html`** (with the server running) to read any scene on its

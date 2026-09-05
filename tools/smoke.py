@@ -768,6 +768,33 @@ def main():
               f"preview loads and plays with no JavaScript faults: {preview_errors[:3]}")
         pv.close()
 
+        # ---- reduced motion ----
+        # tests/motion.test.js asserts the stylesheet SAYS the right thing.
+        # Only a browser can show what it DOES. Every fade-in here starts at
+        # opacity 0 and relies on the animation to finish, so the failure
+        # this guards is a game that renders blank for exactly the people
+        # who asked for less motion — a fill-mode or override mistake away
+        # at all times, and invisible to anyone not running with the setting
+        # on. Cheap to check, effectively impossible to notice otherwise.
+        print("\n-- reduced motion --")
+        rm_errors = []
+        rm = browser.new_page(reduced_motion="reduce")
+        rm.on("pageerror", lambda e: rm_errors.append(f"pageerror: {e}"))
+        rm.goto(f"http://127.0.0.1:{PORT}/", wait_until="networkidle")
+        rm.click("#btn-new")
+        rm.wait_for_selector("#screen-morning", state="visible", timeout=4000)
+        rm.click("#btn-open")
+        rm.wait_for_selector("#customer-card", state="visible", timeout=4000)
+        time.sleep(0.3)
+
+        opacity = rm.evaluate(
+            "getComputedStyle(document.getElementById('customer-card')).opacity")
+        check(abs(float(opacity) - 1.0) < 0.01,
+              f"an animated element ends fully visible, not stranded at its first frame (opacity {opacity})")
+        check(rm.is_visible("#screen-service"), "and the game is playable with motion turned down")
+        check(not rm_errors, f"with no page errors: {rm_errors[:2]}")
+        rm.close()
+
         browser.close()
 
     httpd.shutdown()

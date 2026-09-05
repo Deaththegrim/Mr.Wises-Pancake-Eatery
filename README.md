@@ -52,7 +52,7 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 300 unit tests (incl. balance regressions)
+    node --test tests/         # 305 unit tests (incl. balance + motion regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
     python3 tools/smoke.py     # plays the game in a headless browser
@@ -141,9 +141,11 @@ cannot make yet, five endings chosen by how well you listened, save/load,
 and the shop you spend the money on once the tree runs out.
 
 **What's left is writing and art**, and both are set up to be dropped in
-rather than built. Sound is already there: the game has none of its own
+rather than built. Sound and motion are already there: the game has none of its own
 audio files and is not silent, because every noise it makes is a recipe the
-browser performs. `node tools/audio.js` lists them, and a real recording
+browser performs, and the animation is the restrained kind the design
+research calls for — a pancake settling, a bill adding up, nothing that
+shakes or repeats, and a `prefers-reduced-motion` block over all of it. `node tools/audio.js` lists them, and a real recording
 dropped at a slot's path replaces one the same way a PNG replaces a
 placeholder.
 

@@ -221,3 +221,99 @@
   display: inline-flex; align-items: center;
   height: 64px; max-width: 160px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   MOTION.
+
+   The design research this project argues from is specific: MEDIUM juice
+   beats extreme juice for a cozy game. So everything here is short, and
+   every one of them communicates something that was previously instant
+   and therefore invisible — a pancake settling, a bill adding up, a bar
+   moving. There is no screen-shake, nothing particulate, and nothing
+   that repeats: a shop you visit for eight weeks cannot twitch at you.
+
+   TWO HARD RULES.
+
+   1. NOTHING HERE MAY MOVE ANYTHING THE GAME MEASURES. The stack beat
+      scores a leaning tower and the drizzle beat samples coverage across
+      that same tower, so the pancakes' real positions are gameplay, not
+      decoration. Every animation below is on `transform` and `opacity`
+      and settles at identity, which leaves layout — and therefore every
+      score — exactly where it was.
+
+   2. NOTHING REPEATS FOREVER. Beyond the design reason, an infinite
+      animation on anything containing a button makes that button
+      permanently un-clickable to a test harness waiting for it to hold
+      still, which would turn the smoke test into a hang rather than a
+      failure.
+
+   The reduced-motion block at the bottom is not decoration either — it
+   is the accessibility contract, and a test asserts it stays. */
+
+@keyframes settle {
+  /* A pancake landing. Drops the last few pixels and squashes slightly,
+     which is the whole of the feedback: before this, seven pancakes
+     appeared instantly and the tower had no weight. */
+  from { transform: translateY(-14px) scaleY(.86); opacity: .4; }
+  60%  { transform: translateY(0) scaleY(1.12); opacity: 1; }
+  to   { transform: translateY(0) scaleY(1); opacity: 1; }
+}
+#plate .cake { animation: settle .22s cubic-bezier(.2, .8, .3, 1) both; }
+
+@keyframes rise {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* THE BILL, ADDING UP. The receipt is the payoff of every single order
+   and it used to arrive whole, so the itemisation — the thing the parts-
+   based pricing exists to show — was never actually read. Staggering the
+   rows makes the player watch it total. Six steps only: past that the
+   wait stops reading as a flourish and starts reading as lag. */
+.receipt { animation: rise .18s ease-out both; }
+.receipt-row { animation: rise .22s ease-out both; }
+.receipt-row:nth-child(2) { animation-delay: .04s; }
+.receipt-row:nth-child(3) { animation-delay: .08s; }
+.receipt-row:nth-child(4) { animation-delay: .12s; }
+.receipt-row:nth-child(5) { animation-delay: .16s; }
+.receipt-row:nth-child(n+6) { animation-delay: .2s; }
+.receipt-row.total { animation-delay: .26s; }
+
+/* A customer arriving. Pairs with the bell, and gives the swap between
+   one order and the next a beat of its own. */
+#customer-card { animation: rise .2s ease-out both; }
+
+/* Her scenes. The text is replaced in place as she talks, so without
+   this a new line is indistinguishable from the old one having changed. */
+#vn-text { animation: rise .2s ease-out both; }
+
+/* Controls. No movement in layout — only colour, and a press that gives
+   under the finger. */
+button { transition: color .12s ease, border-color .12s ease, background-color .12s ease; }
+button:active:not([disabled]) { transform: translateY(1px); }
+.syrup-picker .syrup { transition: color .12s ease, border-color .12s ease, box-shadow .12s ease; }
+.node { transition: border-left-color .2s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* THE CONTRACT. Everything above is comfort; for anyone who has asked
+     their system for less motion, none of it is worth a headache. This
+     blankets the whole stylesheet rather than listing the rules one by
+     one, so a new animation added later is covered the day it lands
+     instead of the day somebody remembers. tests/motion.test.js asserts
+     this block still exists and still blankets.
+
+     A near-zero DURATION rather than `animation: none`. Both leave the
+     page looking right today — checked, not assumed: nothing here has a
+     static `opacity: 0` for `none` to strand it at. The difference is
+     what happens next. A zero-length animation still RUNS: it fills, and
+     it fires `animationend`. `none` does neither, so the first animation
+     anyone writes whose completion something waits on would silently
+     never complete, for reduced-motion users only — the hardest possible
+     bug to find. This costs nothing and closes that door. */
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

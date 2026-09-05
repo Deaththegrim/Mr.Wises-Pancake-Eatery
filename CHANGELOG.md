@@ -1,5 +1,61 @@
 # Changelog
 
+## 2026-09-06 — motion, in the restrained kind
+
+### Added
+
+- **Juice, of the sort the design research actually calls for** — medium,
+  not none. I had first written this off as working against the cozy
+  pillar, which was the wrong call: the research says *medium juice beats
+  extreme juice*, and the game had exactly one transition in three hundred
+  and fifty lines of CSS.
+
+  Motion now appears only where something was previously instant and
+  therefore invisible: a pancake **settles** onto the stack instead of
+  appearing, the receipt's rows **arrive in order** so the itemised bill is
+  actually read rather than skipped, a customer card and a line of her
+  dialogue rise into place, and buttons give under the press. No shake, no
+  particles, nothing that repeats — a shop you visit for eight weeks must
+  not twitch at you.
+
+- **`prefers-reduced-motion`, blanketing the whole stylesheet** rather than
+  listing rules one at a time, so an animation added later is covered on
+  the day it lands instead of the day somebody remembers.
+
+### Two rules, enforced by tests rather than by intention
+
+- **Animations touch only `transform` and `opacity`.** The stack beat
+  scores a leaning tower and the drizzle beat samples syrup coverage across
+  that same tower — so where the pancakes *are* is gameplay, not
+  decoration. Animate a margin or a height and the tower on screen stops
+  being the tower that was scored. `tests/motion.test.js` reads every
+  `@keyframes` and fails on any layout property.
+- **Nothing runs forever.** Beyond the design reason: an endless animation
+  on an element holding a button means that button never settles, and a
+  test harness waiting for it to hold still waits for good — a hang rather
+  than a failure, which is much worse to diagnose.
+
+All three guards were mutation-tested (a layout property, an infinite
+animation, a deleted reduced-motion block); all three die.
+
+### Fixed
+
+- **A comment of mine that taught something false.** I had written that
+  `animation: none` in the reduced-motion block "could leave a pancake
+  permanently translucent". Mutating the stylesheet to prove it showed the
+  opposite: nothing here carries a static `opacity: 0`, so `none` is
+  harmless today. The real difference is that a zero-length animation still
+  *runs* — it fills and it fires `animationend` — where `none` does
+  neither, so the first animation whose completion something waits on would
+  silently never complete, for reduced-motion users only. The comment now
+  says that instead. Shipping a plausible-sounding wrong reason is how the
+  next person inherits it as fact.
+
+- The reduced-motion smoke check was written against that same wrong
+  failure mode. Re-aimed at the one that can actually happen — a static
+  hidden start plus a lost fill-mode — and verified by planting exactly
+  that mistake and watching the check fail.
+
 ## 2026-09-06 — sound, with no sound files
 
 ### Added

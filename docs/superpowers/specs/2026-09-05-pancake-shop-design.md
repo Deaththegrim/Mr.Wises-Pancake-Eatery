@@ -703,10 +703,26 @@ thin content, and the collaborator can start writing.
    first run — the customer bell was written as one call with a ternary, so
    neither of its two ids was greppable.
 
-   **Juice beyond sound is deliberately not done.** The design notes are
-   explicit that medium juice beats extreme juice for a cozy game, and the
-   four beats already animate. Adding screen-shake and particles to a shop
-   you visit for eight weeks would work against the pillar.
+6. ~~Juice~~ — **DONE 2026-09-06**, in the restrained form the design notes
+   call for: medium juice, not none. Motion was added only where something
+   was previously instant and therefore invisible — a pancake settling onto
+   the stack, the receipt's rows arriving in order so the itemised bill is
+   actually read, a customer card and a line of dialogue rising into place,
+   a button giving under the press. No shake, no particles, nothing that
+   repeats; a shop visited for eight weeks must not twitch.
+
+   Two constraints are enforced by `tests/motion.test.js` rather than by
+   intention. **Animations touch only `transform` and `opacity`**, because
+   the stack beat scores a leaning tower and the drizzle beat samples
+   coverage across it — animating a layout property would make the tower on
+   screen stop being the tower that was scored. And **nothing runs
+   forever**, which is both the design rule and a practical one: an endless
+   animation on an element holding a button makes it never settle, so a
+   harness waiting for it hangs rather than fails.
+
+   A `prefers-reduced-motion` block blankets the stylesheet, so a future
+   animation is covered on the day it lands. smoke.py loads the game with
+   the setting on and asserts the page is still visible and playable.
 
 **What is left is writing and art.** Every system the spec describes is built
 and tested: the four beats, the economy and its itemised bill, the research tree
