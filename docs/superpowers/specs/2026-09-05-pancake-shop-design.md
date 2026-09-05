@@ -75,6 +75,7 @@ pancake-shop/
 │   │   ├── syrups.js
 │   │   ├── research.js
 │   │   ├── customers.js
+│   │   ├── decor.js       # things to buy for the room. Cosmetic ONLY.
 │   │   ├── scenes.js      # Synthia's VN scenes, god-synthia node format
 │   │   ├── affection.js   # her arc: tiers and their beats
 │   │   └── economy.js     # quota curve, prices, every tuning constant
@@ -86,6 +87,7 @@ pancake-shop/
 │   │   ├── economy.js     # money, quota, tips, reputation
 │   │   ├── affection.js   # Synthia's arc state machine
 │   │   ├── syrup.js       # syrup ↔ customer taste pairing
+│   │   ├── decor.js       # buying for the room. Money in, nothing else out.
 │   │   ├── lookup.js      # the one place anything is found by id
 │   │   ├── story.js       # which scene fires, and the endings
 │   │   ├── rng.js         # seeded, so runs are reproducible
@@ -95,6 +97,7 @@ pancake-shop/
 │   │   ├── screens.js
 │   │   ├── griddle.js
 │   │   ├── shopfront.js
+│   │   ├── decor.js
 │   │   ├── tree.js
 │   │   └── ledger.js
 │   └── main.js
@@ -132,8 +135,9 @@ SERVICE   Customers arrive one at a time, at their own pace. Each places an
           order. You cook it. You hand it over. Repeat as long as you like.
           Closing is a button, always available.
 
-EVENING   Spend: research nodes, ingredient stock, shop decoration.
-          The ledger shows the day's takings and quota progress.
+EVENING   Spend: research nodes, ingredient stock, and the shop itself.
+          The ledger shows the day's takings and quota progress, with the
+          shop directly beneath it — it spends from the till printed above.
 ```
 
 **Prices are not set by the player** (resolved 2026-09-05). This section originally
@@ -755,12 +759,22 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
    weeks is enough for the *relationship* to breathe is a question only reading the
    finished writing can answer. Revisit once the collaborator's scenes exist.
 4. **Demon Synthia's role**, if any. Collaborator's call; system supports it free.
-5. ~~**Decoration layer**~~ — resolved. Phase 2, and it does **not** feed
-   reputation. Decoration is a money sink and a self-expression outlet only, per
-   the cozy research's finding that self-authored goals carry cozy games. Wiring it
-   into reputation would make reputation two systems wearing one name and would put
-   an art-dependent feature on Phase 1's critical path. It stays cosmetic, so it
-   can be added any time after handoff without touching the economy.
+5. ~~**Decoration layer**~~ — **BUILT 2026-09-06**, brought forward from Phase 2
+   because the hole it fills was measured rather than theoretical (below). It does
+   **not** feed reputation: it is a money sink and a self-expression outlet only,
+   per the cozy research's finding that self-authored goals carry cozy games.
+   Wiring it into reputation would make reputation two systems wearing one name.
+
+   `data/decor.js` holds seven things for the room, cheapest first, each with the
+   line of prose that says what it is for and an `art` field naming the sprite that
+   will replace its drawn stand-in. `engine/decor.js` touches money and nothing
+   else — a test buys every item and asserts reputation, research points and
+   affection are all unchanged, and the smoke test asserts the same through the
+   real page. The shop screen sits under the ledger in the evening; the room is
+   drawn above the counter during service.
+
+   Only the ART is deferred now, and swapping placeholders for sprites changes one
+   function (`renderShopfrontDecor`). Nothing about the system moves.
 
    **The measured cost of deferring it** (2026-09-05): a careful player finishes
    the research tree late in the run, and from there the till climbs with nothing

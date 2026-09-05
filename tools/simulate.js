@@ -29,6 +29,7 @@ import { makeRng } from '../js/engine/rng.js';
 import { openDay, closeDay, serve, nextCustomer, customersToday } from '../js/engine/day.js';
 import { mentionSceneFor } from '../js/engine/story.js';
 import { bestSyrupFor } from '../js/engine/syrup.js';
+import { decorFor, buyDecor } from '../js/engine/decor.js';
 import { noteMention } from '../js/engine/affection.js';
 import { SCENES } from '../js/data/scenes.js';
 import { availableNodes, purchase, experiment } from '../js/engine/research.js';
@@ -184,12 +185,24 @@ export function simulate(seed = 2026, profile = 'careful') {
       const r = closeDay(s);
       if (r.weekRolled) {
         buyEverythingAffordable(s);
+
+        /* Spend the surplus on the shop, cheapest first, keeping a float
+           for stock. Without this the simulator banks money it has nothing
+           to do with and the table reports a till climbing to ~21,000 —
+           which is precisely the hole decoration exists to fill, so a run
+           that never buys any does not measure the game as played. */
+        for (const item of decorFor(s)) {
+          if (item.owned) continue;
+          if (s.money - item.cost < 1500) break;   // keep the shelves stocked
+          buyDecor(s, item.id);
+        }
         rows.push({
           week: w, quota, earned, met: r.weekResult.met, money: s.money,
           points: s.points, recipes: s.unlockedRecipes.length,
           purchased: [...s.purchased], tier: tierFor(s.synthia.points),
           affection: s.synthia.points,
-          benchSpend: weekBenchSpend, syrups: s.unlockedSyrups.length
+          benchSpend: weekBenchSpend, syrups: s.unlockedSyrups.length,
+          decor: (s.decor || []).length
         });
       }
     }

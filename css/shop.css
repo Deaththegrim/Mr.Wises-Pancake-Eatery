@@ -179,3 +179,31 @@
 .receipt-row.total .receipt-amount { color: var(--ink); font-weight: 600; }
 .receipt-row.kept .receipt-amount { color: var(--accent); }
 .receipt-said { color: var(--ink); margin-bottom: calc(var(--sp) / 2); }
+
+/* THE SHOP SCREEN. Rows of things to buy for the room, nothing that helps
+   you cook — so nothing here is styled to read as a stat or an upgrade. */
+.decor-row {
+  display: flex; align-items: baseline; gap: var(--sp);
+  padding: calc(var(--sp) / 3) 0;
+  border-bottom: 1px solid rgba(58, 47, 82, .4);
+}
+.decor-row:last-child { border-bottom: 0; }
+.decor-name { flex: 0 0 150px; }
+.decor-row .why { flex: 1 1 auto; }
+.decor-row button { margin: 0; padding: calc(var(--sp) / 3) var(--sp); min-width: 72px; }
+.decor-row.owned .decor-name { color: var(--accent); }
+.decor-have { color: var(--muted); font-size: 13px; }
+
+/* The room above the counter. Placeholder tokens until the sprites named
+   by each item's `art` field exist — outlined, not filled, so a furnished
+   shop does not become a row of slabs over the cooking. */
+.decor-strip {
+  display: flex; flex-wrap: wrap; gap: calc(var(--sp) / 2);
+  margin-bottom: var(--sp);
+}
+.decor-token {
+  padding: calc(var(--sp) / 3) calc(var(--sp) / 2);
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius-sm);
+  color: var(--muted); font-size: 13px;
+}

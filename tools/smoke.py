@@ -301,6 +301,61 @@ def main():
         check(f"Week {week} target" in ledger,
               "and shows the new week's target separately")
 
+        print("\n-- the shop: what the till is for --")
+        # Give the player a till and then reach the evening the way they
+        # do — the shop is drawn when the day closes, so injecting money
+        # onto an already-rendered screen proves nothing.
+        page.evaluate("window.GAME.state.money = 6000; window.GAME.save();")
+        if page.is_visible("#screen-research"):
+            page.click("#btn-back-evening")
+        if page.is_visible("#screen-evening"):
+            page.click("#btn-next-day")
+        page.wait_for_selector("#btn-open", state="visible", timeout=4000)
+        page.click("#btn-open")
+        page.wait_for_timeout(300)
+        for _ in range(12):
+            if not page.is_visible("#screen-vn"):
+                break
+            bs = page.query_selector_all("#vn-choices button")
+            if not bs:
+                break
+            bs[0].click()
+            page.wait_for_timeout(150)
+        page.click("#btn-close")
+        page.wait_for_timeout(400)
+        for _ in range(12):
+            if not page.is_visible("#screen-vn"):
+                break
+            bs = page.query_selector_all("#vn-choices button")
+            if not bs:
+                break
+            bs[0].click()
+            page.wait_for_timeout(150)
+        rows = page.query_selector_all(".decor-row")
+        check(len(rows) >= 5, f"the shop offers {len(rows)} things for the room")
+        buyable = [b for b in page.query_selector_all(".decor-row button") if b.is_enabled()]
+        check(len(buyable) > 0, "and some are affordable on 6000")
+
+        rep_before = page.evaluate("window.GAME.state.reputation")
+        pts_before = page.evaluate("window.GAME.state.points")
+        money_before = page.evaluate("window.GAME.state.money")
+        buyable[0].click()
+        page.wait_for_timeout(350)
+        money_after = page.evaluate("window.GAME.state.money")
+        check(money_after < money_before, f"buying spends the money ({money_before} -> {money_after})")
+        check(len(page.evaluate("window.GAME.state.decor")) == 1, "and the shop keeps what was bought")
+        # THE DESIGN RULE. Decoration is cosmetic: reputation already means
+        # exactly two things, and a third input would make it two systems
+        # wearing one name.
+        check(page.evaluate("window.GAME.state.reputation") == rep_before,
+              "and it does NOT touch reputation")
+        check(page.evaluate("window.GAME.state.points") == pts_before, "nor research points")
+        # The ledger prints "In the till" right above the shop, so it must
+        # not still be showing the old number after spending.
+        ledger = page.inner_text("#ledger")
+        check(str(money_after) in ledger,
+              f"the ledger above it shows the new till, not the old one ({money_after})")
+
         print("\n-- research screen --")
         page.click("#btn-research")
         check(page.is_visible("#screen-research"), "research screen visible")

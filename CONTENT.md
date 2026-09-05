@@ -211,6 +211,44 @@ target and hoping is how one of them ended up undiscoverable.
 
 ---
 
+## Things to buy for the room — `js/data/decor.js`
+
+    { id: 'corner_lamp', name: 'Corner Lamp', cost: 2600,
+      art: 'decor_lamp',
+      note: 'Warm, and low, and on all day.' }
+
+This is the easiest file in the project to add to, and the safest: nothing
+here affects play at all.
+
+**Decoration is cosmetic, and must stay that way.** It never touches
+reputation, research points or affection — there is a test that buys every
+item and asserts all three are unchanged, and the smoke test checks the
+same thing through the real page. Reputation already means exactly two
+things (which customers turn up, and how many); a third input would make it
+two systems wearing one name.
+
+So why does it exist? It is what the money is *for*. The research tree
+finishes before the last weeks, and without a shop to spend on, the till
+just climbs — about 21,000 by the end of a careful run, in a game whose
+whole escalating quota is supposed to mean something. Nobody needs the
+window boxes. That is the point of them.
+
+**Two rules the validator checks:**
+
+- Rows are listed cheapest first, and the shop screen renders in that
+  order, so each one should cost more than the one above it.
+- The whole shop should total more than about 15,000. A careful run banks
+  roughly that much spare, and if everything is affordable in one go the
+  sink empties before the last week and the money starts piling up again.
+
+`note` is the line of prose shown beside it — write it as the reason
+somebody would want the thing, not as a description of the thing. `art`
+names the sprite that will one day replace the drawn placeholder; until
+then the room shows a labelled outline per item and nothing else changes
+when the real art arrives.
+
+---
+
 ## Adding research — `js/data/research.js`
 
     { id: 'r_lemon', name: 'Citrus Work', cost: 5,

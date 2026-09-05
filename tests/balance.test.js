@@ -6,6 +6,7 @@ import { RECIPES } from '../js/data/recipes.js';
 import { unitPriceOf } from '../js/engine/pantry.js';
 import { priceOf } from '../js/engine/economy.js';
 import { TUNING } from '../js/data/economy.js';
+import { DECOR } from '../js/data/decor.js';
 
 /* BALANCE REGRESSION TESTS.
 
@@ -213,4 +214,36 @@ test('knowing a customer is worth something, but is not the difference', () => {
   assert.ok(careful >= shelf, 'learning tastes must never make you worse off');
   assert.ok(careful - shelf <= 3,
     `syrup knowledge should be an edge, not the game: ${careful}/8 against ${shelf}/8`);
+});
+
+test('the till has somewhere to go once the research tree is done', () => {
+  /* THE ENDGAME HOLE THIS CLOSES. A careful player finished the tree
+     before the last weeks, and from there the till simply climbed — about
+     21,000 banked by the end, against a game whose whole escalating quota
+     is supposed to mean something. The last two weeks had no economic
+     decision left in them at all.
+
+     Decoration is the sink. It is cosmetic on purpose (spec §14.5): the
+     point is a self-authored goal, not a stat. */
+  const rows = simulate(2026, 'careful');
+  const last = rows[7];
+  assert.ok(last.decor > 0, 'a careful player must find something to spend on');
+  assert.ok(last.money < last.earned,
+    `the till should not end the game holding more than a week's takings: ${last.money} banked against ${last.earned}`);
+});
+
+test('and the shop is not cleared in a single run', () => {
+  // If everything is bought before the last week, the money starts piling
+  // up again and the sink stops sinking exactly when it is needed.
+  const rows = simulate(2026, 'careful');
+  assert.ok(rows[7].decor < DECOR.length,
+    `a single careful run bought all ${DECOR.length} decorations; the shop needs more in it`);
+});
+
+test('decoration is never the reason a quota is met', () => {
+  /* It must not become an economic lever by the back door. A run that
+     spends on the shop and one that does not must clear the same weeks —
+     if they ever differ, decoration has started paying for itself. */
+  const spent = simulate(2026, 'careful').filter(r => r.met).length;
+  assert.ok(spent >= 4, `spending on the shop must not cost the player the early weeks (${spent}/8)`);
 });

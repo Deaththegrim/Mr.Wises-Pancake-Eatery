@@ -13,6 +13,7 @@ import { RESEARCH } from '../js/data/research.js';
 import { CUSTOMERS } from '../js/data/customers.js';
 import { TUNING } from '../js/data/economy.js';
 import { SCENES } from '../js/data/scenes.js';
+import { DECOR } from '../js/data/decor.js';
 import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE } from '../js/data/affection.js';
 
 
@@ -43,6 +44,7 @@ export function validateContent(override = {}) {
   const research = override.research || RESEARCH;
   const customers = override.customers || CUSTOMERS;
   const scenes = override.scenes || SCENES;
+  const decor = override.decor || DECOR;
 
   /* The scene checks cross-reference recipes and research. When a caller
      overrides those with a synthetic set — which the validator's own
@@ -347,6 +349,39 @@ export function validateContent(override = {}) {
       if (best < 0.5) {
         warnings.push(`syrups.js — no customer scores "${sy.id}" above ${best.toFixed(2)}; ` +
                       `discovering it would never pay off for anyone.`);
+      }
+    }
+  }
+
+  // --- decoration: the money sink ---
+  /* Cosmetic, so there is not much that can go wrong — but a duplicate id
+     would make one row unbuyable, and a shop that one run can clear stops
+     being a sink in exactly the weeks it exists for. */
+  const decorIds = new Set();
+  for (const d of decor) {
+    need(d, 'id', 'string', 'decor.js', d.id || '(no id)');
+    need(d, 'name', 'string', 'decor.js', d.id);
+    need(d, 'cost', 'number', 'decor.js', d.id);
+    need(d, 'note', 'string', 'decor.js', d.id);
+    if (decorIds.has(d.id)) {
+      errors.push(`decor.js — duplicate id "${d.id}"; the second row could never be bought.`);
+    }
+    decorIds.add(d.id);
+    if (typeof d.cost === 'number' && d.cost <= 0) {
+      errors.push(`decor.js — "${d.id}" costs ${d.cost}; free decoration is not a money sink.`);
+    }
+  }
+  if (crossContent) {
+    const total = decor.reduce((a, d) => a + (Number(d.cost) || 0), 0);
+    if (total < 15000) {
+      warnings.push(`decor.js — the whole shop totals ${total}. A careful run banks roughly ` +
+                    `15,000-21,000 spare, so this can be cleared before the last week and the ` +
+                    `till starts climbing again with nothing to spend it on.`);
+    }
+    for (let i = 1; i < decor.length; i++) {
+      if ((decor[i].cost || 0) <= (decor[i - 1].cost || 0)) {
+        warnings.push(`decor.js — "${decor[i].id}" does not cost more than "${decor[i - 1].id}"; ` +
+                      `the shop screen renders in this order and should read as a ladder.`);
       }
     }
   }

@@ -4,6 +4,7 @@ import { META } from './data/meta.js';
 import { showScreen, showNotice, el, clear } from './ui/screens.js';
 import { renderMorning, renderCustomer } from './ui/shopfront.js';
 import { renderLedger, renderQuotaBoard, renderReceipt, clearReceipt } from './ui/ledger.js';
+import { renderDecorShop, renderShopfrontDecor } from './ui/decor.js';
 import { renderTree, renderBench } from './ui/tree.js';
 import { mountGriddle } from './ui/griddle.js';
 import { playScene } from './ui/vn.js';
@@ -60,6 +61,7 @@ function toMorning() {
 function toService() {
   openDay(state);
   clearReceipt();
+  renderShopfrontDecor(state);
   servedToday = 0;
   showScreen('service');
   nextOrder();
@@ -178,6 +180,17 @@ function toEvening() {
   const dayResult = closeDay(state);
   renderLedger(state, dayResult);
   renderQuotaBoard(state);   // the week may have rolled; the HUD must agree
+  /* Buying re-renders in place, and that has to include the LEDGER: it
+     prints "In the till" directly above the shop, so spending left the
+     header saying 4,700 and the ledger saying 6,000 on the same screen.
+     Same contradiction as the week rollover once had, one panel down. */
+  const refreshShop = () => {
+    renderLedger(state, dayResult);
+    renderDecorShop(state, refreshShop);
+    renderQuotaBoard(state);
+    saveGame();
+  };
+  refreshShop();
   saveGame();
 
   if (dayResult.weekRolled) {

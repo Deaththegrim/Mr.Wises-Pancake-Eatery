@@ -1,6 +1,7 @@
 import { META } from '../data/meta.js';
 import { RECIPES } from '../data/recipes.js';
 import { SYRUPS } from '../data/syrups.js';
+import { DECOR } from '../data/decor.js';
 
 const startingRecipes = () => RECIPES.filter(r => r.unlockedAtStart).map(r => r.id);
 const startingSyrups  = () => SYRUPS.filter(s => s.unlockedAtStart).map(s => s.id);
@@ -16,6 +17,7 @@ export function newGame(seed = Date.now() % 2147483647) {
     unlockedRecipes: [...recipes],
     unlockedSyrups: startingSyrups(),
     upgrades: [],
+    decor: [],
     menu: [...recipes],
     todayServed: {},
     pantry: {},
@@ -82,6 +84,7 @@ export function deserialize(json) {
   // Drop ids that no longer exist in the content, with a warning.
   const validRecipes = new Set(RECIPES.map(r => r.id));
   const validSyrups = new Set(SYRUPS.map(s => s.id));
+  const validDecor = new Set(DECOR.map(d => d.id));
   const prune = (arr, valid, label) => (arr || []).filter(id => {
     if (valid.has(id)) return true;
     console.warn(`[save] dropping unknown ${label}: ${id}`);
@@ -98,6 +101,7 @@ export function deserialize(json) {
   state.synthia.noticed = prune(state.synthia.noticed, validRecipes, 'dish she noticed');
   state.unlockedSyrups = prune(state.unlockedSyrups, validSyrups, 'syrup');
   state.menu = prune(state.menu, validRecipes, 'menu recipe');
+  state.decor = prune(state.decor, validDecor, 'decoration');
 
   // Never strand the player with nothing to cook or sell.
   if (state.unlockedRecipes.length === 0) state.unlockedRecipes = startingRecipes();

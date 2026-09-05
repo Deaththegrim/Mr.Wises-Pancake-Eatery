@@ -26,7 +26,7 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 264 unit tests (incl. balance regressions)
+    node --test tests/         # 278 unit tests (incl. balance regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
     python3 tools/smoke.py     # plays the game in a headless browser
@@ -49,7 +49,8 @@ open the engine.
 
 ## How it's put together
 
-    js/data/     content. Recipes, syrups, research, customers, scenes.
+    js/data/     content. Recipes, syrups, research, customers, scenes,
+                 and things to buy for the room.
                  Data only - no functions, no imports.
     js/engine/   the rules. Pure logic, never touches the page,
                  so it unit-tests in Node with no toolchain.
@@ -78,7 +79,12 @@ suits the customer pays more; a mismatch is only ordinary, never a penalty.
 Dishes are priced from their parts and billed like a till receipt — so many
 pancakes at the going rate, a line per ingredient, a line for the skill the
 dish takes, then quality, syrup and tip. You never set a price; you choose
-what goes in, which is what makes an unlocked recipe visibly worth more. Stack error compounds, so an off-centre first pancake leans the
+what goes in, which is what makes an unlocked recipe visibly worth more.
+
+What the money is *for*, once the research tree runs out, is the shop
+itself: window boxes, a second table, an awning people wait under when it
+rains. All of it cosmetic, deliberately — it never touches reputation.
+Nobody needs the window boxes. That is the point of them. Stack error compounds, so an off-centre first pancake leans the
 whole tower (though a steady hand can nurse it back).
 
 The weekly quota isn't a survival threshold, it's the **story metronome**.

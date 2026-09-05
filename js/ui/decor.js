@@ -1,0 +1,64 @@
+import { el, clear, showNotice } from './screens.js';
+import { decorFor, buyDecor, ownedDecor } from '../engine/decor.js';
+
+/* THE SHOP SCREEN, and the room it furnishes.
+
+   Decoration is the only place money goes once the research tree is done,
+   which is most of the last two weeks — before this the till simply
+   climbed with nothing to spend it on.
+
+   It is cosmetic, deliberately. The engine never lets it touch reputation
+   and the UI must not imply otherwise, so nothing here reports a benefit:
+   each row is a name, a price and the line of prose that says what it is
+   for. Nobody needs the window boxes. That is the point of them. */
+
+export function renderDecorShop(state, onChange) {
+  const mount = clear(document.getElementById('decor-shop'));
+  const items = decorFor(state);
+  const card = el('div', { className: 'card' });
+  card.append(el('h3', { text: 'The shop' }));
+
+  const owned = items.filter(i => i.owned).length;
+  card.append(el('p', { className: 'muted',
+    text: owned === items.length
+      ? 'Nothing left to buy for it. It looks like somewhere.'
+      : `${owned} of ${items.length}. Nothing here helps you cook.` }));
+
+  for (const item of items) {
+    const row = el('div', { className: `decor-row${item.owned ? ' owned' : ''}` });
+    row.append(el('span', { className: 'decor-name', text: item.name }));
+    row.append(el('span', { className: 'why', text: item.note }));
+
+    if (item.owned) {
+      row.append(el('span', { className: 'decor-have', text: 'bought' }));
+    } else {
+      const btn = el('button', { text: `${item.cost}` });
+      btn.disabled = !item.affordable;
+      btn.setAttribute('aria-label', `Buy ${item.name} for ${item.cost}`);
+      btn.addEventListener('click', () => {
+        const r = buyDecor(state, item.id);
+        showNotice(r.ok ? `${r.item.name}. ${r.item.note}` : r.reason, 6000);
+        if (onChange) onChange();
+      });
+      row.append(btn);
+    }
+    card.append(row);
+  }
+  mount.append(card);
+}
+
+/* The room itself, above the counter. Each owned thing is drawn as a
+   labelled placeholder until the sprite named by its `art` field exists;
+   swapping in the art changes nothing but this function. */
+export function renderShopfrontDecor(state) {
+  const mount = clear(document.getElementById('shopfront-decor'));
+  const items = ownedDecor(state);
+  if (!items.length) return;                 // an empty room needs no strip
+
+  const strip = el('div', { className: 'decor-strip' });
+  strip.setAttribute('aria-label', 'The shop, as you have furnished it');
+  for (const item of items) {
+    strip.append(el('span', { className: 'decor-token', text: item.name, attrs: { title: item.note } }));
+  }
+  mount.append(strip);
+}
