@@ -1,5 +1,73 @@
 # Changelog
 
+## 2026-09-06 — the reviewer panel, and what it found
+
+Ran the full reviewer panel over the audio and motion work, plus `uid lint`
+over the UI. Three real defects, all now fixed and mutation-tested.
+
+### Fixed
+
+- **`release` did nothing.** Every sound layer declares a `release`,
+  documented as "fade-out, as a fraction of ms", and it only ever delayed
+  when the node stopped — it never touched the gain. The fade was always
+  whatever `ms - attack` happened to be, so a documented, per-layer,
+  tunable knob was **inaudible**. That is this project's signature bug
+  class (a declared value nothing reads), and it hid where the anti-drift
+  rule could not see it: in a browser-only file the suite never imported.
+
+  The envelope is now pure arithmetic behind an exported `envelope(layer)`,
+  so the timing is unit-tested in Node: attack, hold, release, adding up to
+  exactly `ms`, clamped so the parts can never overlap or go negative
+  (which would schedule the ramps out of order and drop the layer to
+  silence). A test asserts a larger `release` produces a longer fade —
+  reverting to the old behaviour fails it.
+
+  *The reviewer that found this misdiagnosed it,* reporting an abrupt
+  cutoff. There was no cutoff: an exponential ramp interpolates from the
+  previous scheduled point, so the sound did fade. It just faded over the
+  wrong span, and by a number the author could not control.
+
+- **The sound guards were blind to double quotes.** The call-scanner
+  matched `'single'` only, so `play("flipp")` — a typo, silent forever,
+  throwing nothing — would have sailed through the one test that exists to
+  catch exactly that. Now matches both quote styles and template literals.
+
+- **A tautology.** "At least one sound is played" passed on the two *held*
+  sounds alone, because `start`/`stop` match the same pattern — so the
+  entire one-shot path could have been unwired with the test still green.
+  Now requires several one-shots specifically.
+
+- **Computed ids are refused outright.** A sound played through a variable
+  or a ternary is invisible to every guard here, which already cost us once
+  this session. A test now finds and names them.
+
+- **The motion test would have failed correct CSS.** Vendor prefixes and
+  the standalone `translate`/`scale`/`rotate` properties were treated as
+  layout-movers. They are compositor properties like `transform` and are
+  now allowed — a gate that cries wolf is a gate that gets switched off.
+  Verified the guard still bites on a real layout property.
+
+- **The reduced-motion check sampled one element.** Now sweeps every
+  animated, on-screen element — and does it again after cooking a full
+  order, where the pancakes and the receipt's rows put **eight** animated
+  elements on screen instead of one. It reuses `playthrough.py`'s
+  `cook_one()` rather than hand-rolling a second beat-driver, because a
+  second copy would drift from the real one — which is precisely how
+  `simulate.js` once reproduced a bug instead of finding it.
+
+- **A WCAG 2.4.7 blocker in the sound toggle** (`uid lint`). The shared
+  `button:focus-visible` outline did apply, so focus was visible — but
+  hover brightened the label and keyboard focus did not, leaving keyboard
+  users with less affordance on the one control that sits outside every
+  screen, and one drawn deliberately quiet.
+
+### Verified
+
+`playthrough.py` re-run because the beat handlers changed, and this
+project's rule is that the real-page/simulator cross-check runs whenever
+how a turn is driven changes: 103 dishes over 7 days, three distinct
+affection sources, simulator agrees.
+
 ## 2026-09-06 — motion, in the restrained kind
 
 ### Added

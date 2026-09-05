@@ -306,7 +306,17 @@ project makes.
 pitch; `from`/`to` slides between two. `ms` is how long, `gain` how loud,
 `delay` staggers a layer so two-part sounds land properly, and `filter`
 (lowpass/highpass/bandpass, with `filterHz`) shapes noise into something
-liquid. Two slots are `sustain: true` — pour and drizzle — because they run
+liquid.
+
+`attack` and `release` are fractions of `ms` and shape the envelope:
+
+    |<-attack->|<----- hold ----->|<--release-->|
+    0                                          ms
+
+A big `attack` swells in; a big `release` trails off. `ms` stays the whole
+length either way, so a sound is exactly as long as its row says. Set both
+high and the hold vanishes — that is allowed, and it is the shape you want
+for something breathy. Two slots are `sustain: true` — pour and drizzle — because they run
 while a button is held rather than for a fixed time.
 
 **To replace one with a real recording:** drop a file at its `path`, run

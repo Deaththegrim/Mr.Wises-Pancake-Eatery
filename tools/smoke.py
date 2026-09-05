@@ -787,10 +787,64 @@ def main():
         rm.wait_for_selector("#customer-card", state="visible", timeout=4000)
         time.sleep(0.3)
 
-        opacity = rm.evaluate(
-            "getComputedStyle(document.getElementById('customer-card')).opacity")
-        check(abs(float(opacity) - 1.0) < 0.01,
-              f"an animated element ends fully visible, not stranded at its first frame (opacity {opacity})")
+        # EVERY animated element on screen, not one spot-check. A single
+        # element proves only that one selector survived; the failure mode
+        # is a change to the reduced-motion override, which hits all of
+        # them at once but could equally hit only the ones that use a
+        # different fill-mode.
+        stranded = rm.evaluate("""(() => {
+            const out = [];
+            for (const el of document.querySelectorAll('*')) {
+                const cs = getComputedStyle(el);
+                if (cs.animationName === 'none') continue;
+                // Only what is actually on screen: a hidden screen's
+                // elements are display:none and prove nothing either way.
+                if (!el.getClientRects().length) continue;
+                if (parseFloat(cs.opacity) < 0.99) {
+                    out.push((el.id || el.className || el.tagName) + ' @ ' + cs.opacity);
+                }
+            }
+            return out;
+        })()""")
+        animated = rm.evaluate("""(() => {
+            let n = 0;
+            for (const el of document.querySelectorAll('*')) {
+                const cs = getComputedStyle(el);
+                if (cs.animationName !== 'none' && el.getClientRects().length) n += 1;
+            }
+            return n;
+        })()""")
+        check(animated > 0, f"there are animated elements on screen to check ({animated})")
+        check(not stranded,
+              f"every animated element ends fully visible, none stranded at its first frame: {stranded[:4]}")
+
+        # One element on a fresh service screen is a thin sample — the
+        # pancakes and the receipt's rows are where most of the motion
+        # lives, and they only exist after an order is cooked. cook_one()
+        # is playthrough.py's, reused rather than copied: a second hand-
+        # rolled beat-driver would drift from the real one, which is the
+        # mistake that let simulate.js reproduce a bug instead of find it.
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        from playthrough import cook_one  # type: ignore[import]  # noqa: E402 (sibling tool)
+        if cook_one(rm):
+            time.sleep(0.4)
+            after = rm.evaluate("""(() => {
+                const out = [], seen = [];
+                for (const el of document.querySelectorAll('*')) {
+                    const cs = getComputedStyle(el);
+                    if (cs.animationName === 'none') continue;
+                    if (!el.getClientRects().length) continue;
+                    seen.push(cs.animationName);
+                    if (parseFloat(cs.opacity) < 0.99) {
+                        out.push((el.id || el.className || el.tagName) + ' @ ' + cs.opacity);
+                    }
+                }
+                return { stranded: out, count: seen.length };
+            })()""")
+            check(after["count"] > animated,
+                  f"a cooked order puts more animated elements on screen ({after['count']})")
+            check(not after["stranded"],
+                  f"and every one of those is visible too: {after['stranded'][:4]}")
         check(rm.is_visible("#screen-service"), "and the game is playable with motion turned down")
         check(not rm_errors, f"with no page errors: {rm_errors[:2]}")
         rm.close()

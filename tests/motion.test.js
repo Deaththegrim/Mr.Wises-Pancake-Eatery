@@ -70,8 +70,15 @@ test('animations move only transform and opacity', () => {
      animated element occupies exactly the box it always did. Animate a
      width, a margin, a top or a height and the thing being scored is no
      longer the thing on screen. */
-  const allowed = new Set(['transform', 'opacity', 'filter', 'box-shadow', 'color',
+  /* `translate`, `scale` and `rotate` are the standalone forms of the same
+     compositor transform and move layout no more than `transform` does, so
+     they belong here — leaving them out would fail a correct stylesheet,
+     and a gate that cries wolf is a gate that gets switched off. Vendor
+     prefixes are stripped rather than enumerated for the same reason. */
+  const allowed = new Set(['transform', 'translate', 'scale', 'rotate',
+                           'opacity', 'filter', 'box-shadow', 'color',
                            'background-color', 'border-color', 'outline-color']);
+  const bare = prop => prop.replace(/^-(?:webkit|moz|ms|o)-/, '');
   const offenders = [];
 
   for (const { name, src } of sheets) {
@@ -84,8 +91,8 @@ test('animations move only transform and opacity', () => {
         i += 1;
       }
       const body = src.slice(m.index + m[0].length, i - 1);
-      for (const decl of body.matchAll(/([a-z-]+)\s*:/g)) {
-        if (!allowed.has(decl[1])) {
+      for (const decl of body.matchAll(/(-?[a-z-]+)\s*:/g)) {
+        if (!allowed.has(bare(decl[1]))) {
           offenders.push(`${name}: @keyframes ${m[1]} animates "${decl[1]}", which moves layout`);
         }
       }

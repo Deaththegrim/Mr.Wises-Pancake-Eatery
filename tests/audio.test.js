@@ -4,6 +4,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SOUNDS } from '../js/data/sounds.js';
+import { envelope } from '../js/ui/audio.js';
 
 /* WHAT THESE ARE FOR.
 
@@ -29,10 +30,26 @@ const walk = dir => readdirSync(dir).flatMap(name => {
 
 /* Every call into the sound layer, wherever it lives. The aliases are real:
    ui/griddle.js imports play/start/stop under sfx* names because the pour
-   and drizzle beats already have local start/stop of their own. */
-const CALL = /\b(?:play|sfx|sfxStart|sfxStop|start|stop)\(\s*'([^']+)'/g;
+   and drizzle beats already have local start/stop of their own.
 
-const sources = walk(join(root, 'js')).filter(f => !f.endsWith('js/data/sounds.js'));
+   BOTH QUOTE STYLES AND TEMPLATE LITERALS. The first cut matched only
+   single quotes, which made the typo guard blind in the one direction that
+   matters: play("flipp") is silent forever, throws nothing, and would have
+   sailed through. The house style is single quotes, but a guard that only
+   works while everyone remembers the house style is not a guard. */
+const CALL = /\b(?:play|sfx|sfxStart|sfxStop|start|stop)\(\s*['"`]([^'"`]+)['"`]/g;
+
+/* A call whose id is NOT a literal — play(someVar), play(`${x}`), or an id
+   read from a data structure. None of the checks below can see through
+   one, so rather than let them quietly under-report, they are found and
+   named: a sound wired this way has to be justified in the code. */
+const COMPUTED = /\b(?:play|sfx|sfxStart|sfxStop)\(\s*(?!['"`)])[^)]/g;
+
+/* Callers only. The data file holds the ids, and ui/audio.js DEFINES
+   play/start/stop — its own signatures look exactly like calls with a
+   computed id, which is what the check below is hunting for. */
+const sources = walk(join(root, 'js'))
+  .filter(f => !f.endsWith('js/data/sounds.js') && !f.endsWith('js/ui/audio.js'));
 const played = new Set();
 for (const file of sources) {
   for (const m of readFileSync(file, 'utf8').matchAll(CALL)) played.add(m[1]);
@@ -100,7 +117,34 @@ test('every sound the code plays is declared', () => {
   const unknown = [...played].filter(id => !declared.has(id));
   assert.deepEqual(unknown, [],
     `played by the code but not declared in data/sounds.js: ${unknown.join(', ')}`);
-  assert.ok(played.size > 0, 'expected to find the play() calls');
+
+  /* Not "we found something" — that passed while only the two held sounds
+     were wired, because start()/stop() match the same pattern. At least
+     one ONE-SHOT must be played through play()/sfx(), or the whole
+     one-shot path is unexercised and this test is checking an empty set. */
+  const oneShots = new Set(SOUNDS.filter(s => !s.sustain).map(s => s.id));
+  const playedOneShots = [...played].filter(id => oneShots.has(id));
+  assert.ok(playedOneShots.length > 3,
+    `only ${playedOneShots.length} one-shot sound(s) are actually played; the one-shot path is barely wired`);
+});
+
+test('no sound is played through an id the guards cannot see', () => {
+  /* A computed id — play(someVar), play(`${x}`) — is invisible to every
+     check in this file, so a typo inside one is silent forever and an
+     orphaned slot goes unreported. This has already happened once, with a
+     ternary: play(x ? 'bell_quiet' : 'bell') hid BOTH ids, and the guard
+     could not vouch for either. Two literal calls cost nothing. */
+  const computed = [];
+  for (const file of sources) {
+    const src = readFileSync(file, 'utf8');
+    for (const m of src.matchAll(COMPUTED)) {
+      const line = src.slice(0, m.index).split('\n').length;
+      computed.push(`${file.replace(root, '')}:${line} — ${src.slice(m.index, m.index + 48).split('\n')[0]}`);
+    }
+  }
+  assert.deepEqual(computed, [],
+    'these play a sound through something other than a plain literal, which ' +
+    'no guard here can follow:\n' + computed.join('\n'));
 });
 
 test('every held sound is both started and stopped', () => {
@@ -163,6 +207,54 @@ test('the mute preference survives a browser that blocks storage', () => {
     assert.ok(at > 0, `expected ${call} in the sound layer`);
     const before = src.slice(Math.max(0, at - 400), at);
     assert.ok(before.includes('try {'), `${call} is not inside a try/catch`);
+  }
+});
+
+test('release actually shapes the sound', () => {
+  /* THE BUG THIS EXISTS FOR. The first implementation used `release` only
+     to delay when the node stopped — the gain ramp ran from the end of the
+     attack to the end of the sound regardless — so a field documented as
+     "fade-out" was inaudible, and every layer faded over whatever
+     `ms - attack` happened to be. A declared value nothing reads is this
+     project's recurring bug class; this one hid in a browser-only file
+     where nothing in the suite could reach it, which is why the envelope
+     is now pure arithmetic sitting behind an export. */
+  const base = { ms: 400, attack: 0.1, release: 0.5 };
+  const a = envelope(base);
+  const b = envelope({ ...base, release: 0.25 });
+
+  assert.ok(a.release > b.release,
+    'a larger release must produce a longer fade, or the field is decorative');
+  assert.ok(b.hold > a.hold, 'and a shorter fade must leave more of the sound at full volume');
+
+  // ms is the whole sound: the three parts add up to it, and never past it.
+  for (const env of [a, b]) {
+    assert.ok(Math.abs((env.attack + env.hold + env.release) - env.total) < 1e-9,
+      `the envelope does not add up to ms: ${JSON.stringify(env)}`);
+  }
+
+  /* The ramps are scheduled in order, so the parts may never be negative —
+     a negative hold would schedule the fade before the attack finished and
+     drop the layer to silence. Extreme values must degrade, not break. */
+  for (const layer of [{ ms: 400, attack: 0.9, release: 0.9 },
+                       { ms: 30, attack: 1, release: 1 },
+                       { ms: 0 }, {}]) {
+    const env = envelope(layer);
+    for (const [part, v] of Object.entries(env)) {
+      assert.ok(v >= 0 && Number.isFinite(v),
+        `${part} is ${v} for ${JSON.stringify(layer)}; the layer would never be heard`);
+    }
+    assert.ok(env.attack + env.release <= env.total + 1e-9,
+      `attack and release overlap for ${JSON.stringify(layer)}`);
+  }
+
+  // And every shipped layer survives it.
+  for (const s of SOUNDS.filter(x => !x.sustain)) {
+    for (const [i, l] of s.layers.entries()) {
+      const env = envelope(l);
+      assert.ok(env.release > 0, `${s.id} layer ${i} has no fade-out at all`);
+      assert.ok(env.total > 0, `${s.id} layer ${i} has no length`);
+    }
   }
 });
 

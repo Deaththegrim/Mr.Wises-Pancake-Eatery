@@ -165,6 +165,39 @@ function release(v, seconds = 0.12) {
   }
 }
 
+/* THE ENVELOPE, as arithmetic rather than as scheduling calls.
+
+   Pure, exported and unit-tested, because the first version of this was
+   wrong in a way no test could see: `release` only delayed when the node
+   stopped and never touched the gain, so the fade-out was always whatever
+   `ms - attack` happened to be and the knob documented as "fade-out" did
+   nothing audible at all. A declared value nothing reads is the exact bug
+   class this project keeps hitting; the difference here is that the value
+   lived in a browser-only file where the suite could not reach it.
+
+   Now it is three numbers a test can check:
+
+     |<-attack->|<----- hold ----->|<--release-->|
+     0                                          ms
+
+   `ms` stays the total length, so a sound is exactly as long as its row
+   says. Both fractions are clamped so they cannot overlap: at their most
+   extreme the sound becomes attack-then-release with no hold, never a
+   negative middle, which would schedule the ramps out of order and drop
+   the layer to silence. */
+export function envelope(layer = {}) {
+  const total = Math.max(0, (layer.ms || 0) / 1000);
+  const attack = Math.min(total, Math.max(0.005, total * (layer.attack != null ? layer.attack : 0.05)));
+  const release = Math.min(total - attack,
+                           Math.max(0.02, total * (layer.release != null ? layer.release : 0.5)));
+  return {
+    attack,
+    release: Math.max(0, release),
+    hold: Math.max(0, total - attack - Math.max(0, release)),
+    total
+  };
+}
+
 /* Play a one-shot. `rate` bends the pitch, which is how the stack beat
    makes each pancake land a little higher than the last without needing
    its own slot per layer. */
@@ -188,10 +221,17 @@ export function play(id, { rate = 1 } = {}) {
     for (const layer of slot.layers || []) {
       const at = now + (layer.delay || 0) / 1000;
       const v = voice(layer, at, rate);
-      const secs = (layer.ms || 0) / 1000;
-      const rel = Math.max(0.02, secs * (layer.release || 0.5));
-      v.gain.gain.exponentialRampToValueAtTime(0.0001, at + secs);
-      v.node.stop(at + secs + rel);
+      const env = envelope(layer);
+
+      /* voice() has already ramped up to peak by `at + attack`. Hold it
+         there, then fade across `release` so the sound ends exactly at
+         `at + total` — its declared ms, no longer and no shorter. The
+         hold is pinned explicitly because without it the ramp below would
+         interpolate from the end of the attack, stretching the fade over
+         the whole sound and making `release` decorative. */
+      if (env.hold > 0) v.gain.gain.setValueAtTime(v.peak, at + env.attack + env.hold);
+      v.gain.gain.exponentialRampToValueAtTime(0.0001, at + env.total);
+      v.node.stop(at + env.total + 0.02);
     }
   } catch (e) {
     /* Rule 1. */
