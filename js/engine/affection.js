@@ -1,4 +1,4 @@
-import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE, GRANTS } from '../data/affection.js';
+import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, GRANTS } from '../data/affection.js';
 
 export function tierFor(points) {
   let current = TIER_ORDER[0];
@@ -10,12 +10,6 @@ export function tierFor(points) {
 
 export function expressionFor(points) {
   return TIER_EXPRESSION[tierFor(points)];
-}
-
-/* How long she lingers, rendered as an activity pose. At STRANGER she
-   stands in the doorway; by DEVOTED she has sat down with a coffee. */
-export function poseFor(points) {
-  return TIER_POSE[tierFor(points)];
 }
 
 /* Affection can stall. It can never fall. A negative grant is a bug at the

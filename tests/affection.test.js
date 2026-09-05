@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tierFor, expressionFor, poseFor, grant, noteMention, checkListening, grantWeekly, grantForServing } from '../js/engine/affection.js';
+import { tierFor, expressionFor, grant, noteMention, checkListening, grantWeekly, grantForServing } from '../js/engine/affection.js';
 import { GRANTS, TIER_THRESHOLDS } from '../js/data/affection.js';
 import { SCENES } from '../js/data/scenes.js';
 
@@ -19,7 +19,6 @@ test('tiers resolve by threshold', () => {
 test('every tier maps to a real expression and pose key', () => {
   for (const p of [0, 12, 30, 55, 90]) {
     assert.equal(typeof expressionFor(p), 'string');
-    assert.equal(typeof poseFor(p), 'string');
   }
 });
 

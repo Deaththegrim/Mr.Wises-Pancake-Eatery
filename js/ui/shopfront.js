@@ -1,11 +1,9 @@
-import { RECIPES } from '../data/recipes.js';
-import { INGREDIENTS } from '../data/ingredients.js';
 import { renderQuotaBoard } from './ledger.js';
 import { stockOf, priceOf, buyIngredient } from '../engine/pantry.js';
 import { customersToday } from '../engine/day.js';
 import { el, clear, showNotice } from './screens.js';
+import { recipeById, ingredientById, nameOf } from '../engine/lookup.js';
 
-const recipeById = id => RECIPES.find(r => r.id === id);
 
 let onChangeRef = null;
 
@@ -56,7 +54,7 @@ function renderStockWarning(state) {
   const expected = customersToday(state);
   const needed = new Set();
   for (const id of state.menu) {
-    const r = RECIPES.find(x => x.id === id);
+    const r = recipeById(id);
     if (r) for (const ing of r.ingredients) needed.add(ing);
   }
 
@@ -67,7 +65,7 @@ function renderStockWarning(state) {
     return;
   }
 
-  const names = short.map(id => (INGREDIENTS.find(i => i.id === id) || { name: id }).name);
+  const names = short.map(id => nameOf(ingredientById, id));
   const restock = short.reduce((a, id) => a + priceOf(id), 0);
 
   mount.append(el('p', { className: 'hint',

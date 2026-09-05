@@ -1,5 +1,5 @@
-import { INGREDIENTS } from '../data/ingredients.js';
 import { TUNING } from '../data/economy.js';
+import { ingredientById } from './lookup.js';
 
 /* THE PANTRY — the money sink, and what makes research a grind.
 
@@ -14,7 +14,7 @@ import { TUNING } from '../data/economy.js';
    purpose. Now profit converts into capability, which is the ratchet the
    quota curve was designed around. */
 
-const byId = id => INGREDIENTS.find(i => i.id === id);
+const byId = ingredientById;
 
 /* Stock is bought in UNITS and held in SERVINGS. One unit is a bulk
    quantity that makes TUNING.servingsPerUnit pancakes. Cooking spends one

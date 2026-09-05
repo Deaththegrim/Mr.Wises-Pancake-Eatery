@@ -10,8 +10,9 @@ import { playScene } from './ui/vn.js';
 import { missSceneFor, mentionSceneFor } from './engine/story.js';
 import { tierFor } from './engine/affection.js';
 import { characterOf, matchLabel } from './engine/syrup.js';
-import { SYRUPS } from './data/syrups.js';
+import { TUNING } from './data/economy.js';
 import { SCENES } from './data/scenes.js';
+import { syrupById } from './engine/lookup.js';
 
 const TITLE_FALLBACK = 'Pancake Shop';
 const title = META.title || TITLE_FALLBACK;
@@ -96,7 +97,7 @@ function nextOrder() {
 function cookFor(order) {
   // What the player can pour today, in the order they unlocked them.
   const syrups = state.unlockedSyrups
-    .map(id => SYRUPS.find(s => s.id === id))
+    .map(syrupById)
     .filter(Boolean)
     .map(s => ({ id: s.id, name: s.name, character: characterOf(s) }));
 
@@ -116,11 +117,26 @@ function cookFor(order) {
     /* The syrup's verdict is reported HERE, after serving — the spec's
        "its full effect is revealed by serving it to a customer". It is how
        the player learns a customer's taste, so it has to be legible. */
-    const syrup = result.syrupId ? SYRUPS.find(s => s.id === result.syrupId) : null;
+    const syrup = syrupById(result.syrupId);
     const syrupNote = syrup ? `  ·  ${syrup.name}: ${matchLabel(result.syrupScore)}` : '';
 
+    /* WHAT THEY SAY ABOUT IT. Every customer has carried `happy` and
+       `disappointed` lines since the roster was written — the validator
+       insists on them — and the game rendered neither, so the shop never
+       reacted to how well the player cooked. The readout said 71% and
+       nobody in the room said anything.
+
+       It goes in the result line rather than the customer card because
+       the card has already moved on to whoever is next, and a reaction
+       worth a whole extra click per dish would not be worth it at
+       eighteen customers a day. */
+    const lines = order.customer && order.customer.lines;
+    const said = lines
+      ? `${order.customer.name}: “${result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed}”  ·  `
+      : '';
+
     showNotice(
-      `${result.quality}%  ·  pour ${b.pour} flip ${b.flip} stack ${b.stack} drizzle ${b.drizzle}` +
+      `${said}${result.quality}%  ·  pour ${b.pour} flip ${b.flip} stack ${b.stack} drizzle ${b.drizzle}` +
       `  ·  +${result.payout}${result.tip ? ` +${result.tip} tip` : ''}` +
       `${cost ? ` −${cost} stock${emergency}` : ''}${syrupNote}`, 5000);
     saveGame();

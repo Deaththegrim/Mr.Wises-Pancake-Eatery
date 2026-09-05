@@ -5,7 +5,7 @@ import { TUNING } from '../data/economy.js';
 import { hasIngredients, missingIngredients, consumeIngredients } from './pantry.js';
 
 const AXES = ['sweet', 'sharp', 'rich', 'strange'];
-const byId = (coll, id) => coll.find(x => x.id === id);
+const byId = (coll, id) => coll.find(x => x.id === id) || null;
 
 export function gateMet(node, state) {
   if (!node.gate) return true;

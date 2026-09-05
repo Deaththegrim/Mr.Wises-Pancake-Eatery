@@ -1,5 +1,5 @@
-import { SYRUPS } from '../data/syrups.js';
 import { TUNING } from '../data/economy.js';
+import { syrupById } from './lookup.js';
 
 /* WHAT A SYRUP IS WORTH.
 
@@ -15,7 +15,7 @@ import { TUNING } from '../data/economy.js';
 
 const AXES = ['sweet', 'sharp', 'rich', 'strange'];
 
-export const syrupById = id => SYRUPS.find(s => s.id === id) || null;
+export { syrupById };
 
 /* 0 when the syrup is nothing like their taste, 1 when it is exactly it.
    Manhattan distance over four 0-10 axes, so the worst case is 40; the

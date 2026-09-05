@@ -1,5 +1,5 @@
-import { RECIPES } from '../data/recipes.js';
 import { el, clear } from './screens.js';
+import { recipeById } from '../engine/lookup.js';
 
 /* Four beats: pour, flip, stack, drizzle.
 
@@ -8,7 +8,7 @@ import { el, clear } from './screens.js';
    a number comparison in here, it belongs in the engine. */
 
 export function mountGriddle(mount, recipeId, onDone, opts = {}) {
-  const recipe = RECIPES.find(r => r.id === recipeId);
+  const recipe = recipeById(recipeId);
 
   /* Tear down anything the PREVIOUS dish left running. "Close for the day"
      is visible for the whole of service, so abandoning mid-flip used to

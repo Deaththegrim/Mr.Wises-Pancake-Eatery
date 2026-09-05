@@ -82,6 +82,12 @@ export const TUNING = {
   pointsPerNewRecipeServed: 3,
   pointsPerHighQuality: 1,       // awarded when quality >= highQualityAt
   highQualityAt: 85,
+
+  /* At or above this, the customer says their `happy` line; below it,
+     their `disappointed` one. Lower than highQualityAt on purpose — a
+     decent pancake should please the person who ordered it even when it
+     is not good enough to teach you anything. */
+  happyAt: 60,
   benchFailPoints: 1,            // a failed experiment ALWAYS pays this
 
   /* Stock is bought in UNITS and spent in SERVINGS. One unit is a bulk

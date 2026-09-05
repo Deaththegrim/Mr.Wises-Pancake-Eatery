@@ -172,6 +172,15 @@ def main():
         rep = page.evaluate("window.GAME.state.reputation")
         print(f"       money={money} cooked={cooked} rep={rep:.2f}")
         check(money > 0, "serving the dish paid out")
+
+        # The customer must actually SAY something. Their happy and
+        # disappointed lines existed in the data from the start and the
+        # game rendered neither, so the shop never reacted to the cooking.
+        notice = page.inner_text("#notice")
+        check("\u201c" in notice and "\u201d" in notice,
+              f"the customer reacts in their own words: {notice[:70]}")
+        check("Maple Syrup" in notice or "Glaze" in notice or "Ash" in notice,
+              "and the result names the syrup that was poured")
         check(rep > 0, "serving the dish raised reputation")
         check(page.inner_text("#customer-card").strip() != "", "the next customer appeared")
 

@@ -1,11 +1,10 @@
 import { RESEARCH } from '../data/research.js';
 import { INGREDIENTS } from '../data/ingredients.js';
-import { SYRUPS } from '../data/syrups.js';
-import { RECIPES } from '../data/recipes.js';
 import { purchase, isAvailable, gateMet, experiment } from '../engine/research.js';
 import { priceOf, stockOf, canAfford, buyIngredient } from '../engine/pantry.js';
 import { TUNING } from '../data/economy.js';
 import { el, clear, showNotice } from './screens.js';
+import { recipeById, syrupById, ingredientById, researchById, nameOf } from '../engine/lookup.js';
 
 /* Why a node is not available yet, in the author's own words. Potion
    Craft's biggest complaint was not knowing where to go next, so a locked
@@ -13,12 +12,12 @@ import { el, clear, showNotice } from './screens.js';
 function blockedReason(node, state) {
   const missing = node.prereqs.filter(p => !state.purchased.includes(p));
   if (missing.length) {
-    const names = missing.map(id => (RESEARCH.find(n => n.id === id) || {}).name || id);
+    const names = missing.map(id => nameOf(researchById, id));
     return `Needs first: ${names.join(', ')}`;
   }
   if (!gateMet(node, state) && node.gate && node.gate.cooked) {
     const parts = Object.entries(node.gate.cooked).map(([rid, need]) => {
-      const r = RECIPES.find(x => x.id === rid);
+      const r = recipeById(rid);
       return `${state.cooked[rid] || 0}/${need} ${r ? r.name : rid}`;
     });
     return `Cook more: ${parts.join(', ')}`;
@@ -29,11 +28,11 @@ function blockedReason(node, state) {
 function unlockLabel(node) {
   const u = node.unlocks || {};
   if (u.recipe) {
-    const r = RECIPES.find(x => x.id === u.recipe);
+    const r = recipeById(u.recipe);
     return `unlocks ${r ? r.name : u.recipe}`;
   }
   if (u.syrup) {
-    const s = SYRUPS.find(x => x.id === u.syrup);
+    const s = syrupById(u.syrup);
     return `unlocks ${s ? s.name : u.syrup}`;
   }
   if (u.upgrade) return 'makes a beat more forgiving';
@@ -147,7 +146,7 @@ export function renderBench(state, onChange) {
   const chosenLine = el('div', { className: 'why', text: 'nothing selected' });
   const updateChosen = () => {
     chosenLine.textContent = chosen.length
-      ? `Blending: ${chosen.map(id => (INGREDIENTS.find(i => i.id === id) || {}).name).join(' + ')}`
+      ? `Blending: ${chosen.map(id => nameOf(ingredientById, id)).join(' + ')}`
       : 'nothing selected';
   };
 
@@ -160,7 +159,7 @@ export function renderBench(state, onChange) {
     // experiment() credits the points itself; the UI must not do economy.
     const r = experiment(state, [...chosen]);
     if (r.found) {
-      const s = SYRUPS.find(x => x.id === r.syrupId);
+      const s = syrupById(r.syrupId);
       result.textContent = `You have made something. ${s ? s.name : r.syrupId}.`;
     } else {
       result.textContent = r.hint;

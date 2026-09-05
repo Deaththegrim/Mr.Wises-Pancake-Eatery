@@ -49,6 +49,17 @@ export const TIER_EXPRESSION = {
    show in how long she stays; these are the art for it, and it already
    exists. At STRANGER she stands in the doorway; by DEVOTED she has sat
    down with a coffee. */
+/* AUTHORED AHEAD OF THE ART PASS — nothing renders these yet.
+
+   How long she lingers, as an activity: at STRANGER she is in the
+   doorway; by DEVOTED she has sat down with a coffee. It is here so the
+   arc's staging is decided with the writing rather than invented later,
+   and it names the sprite variant to draw for each tier.
+
+   The engine helper that read this, and its re-export through ui/vn.js,
+   were called by nothing and have been removed — dead plumbing reads like
+   wiring that works. This is a note for the artist, and it should stay
+   one until something actually draws it. */
 export const TIER_POSE = {
   STRANGER: 'cpose_front',
   REGULAR: 'cpose_q_front',

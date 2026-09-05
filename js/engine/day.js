@@ -3,15 +3,14 @@ import { scoreDish } from './cook.js';
 import { payoutFor, tipFor, reputationGain, rollWeek } from './economy.js';
 import { grantWeekly, grantForServing, checkListening } from './affection.js';
 import { CUSTOMERS } from '../data/customers.js';
-import { RECIPES } from '../data/recipes.js';
 import { TUNING } from '../data/economy.js';
 import { payForCooking } from './pantry.js';
 import { endingFor, synthiaDueToday } from './story.js';
 import { QUOTA_CURVE } from '../data/economy.js';
 import { matchScore, syrupById } from './syrup.js';
+import { recipeById } from './lookup.js';
 
 const DAYS_PER_WEEK = 7;
-const recipeById = id => RECIPES.find(r => r.id === id);
 
 /* Reputation's second job (spec §6): a better-known shop is busier.
    Capped, because a chill game must not become a clicking marathon —

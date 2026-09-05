@@ -1,6 +1,6 @@
 import { SCENES } from '../data/scenes.js';
 import { showScreen, showNotice, hideNotice, el, clear } from './screens.js';
-import { expressionFor, poseFor, noteMention, grant } from '../engine/affection.js';
+import { expressionFor, noteMention, grant } from '../engine/affection.js';
 
 const SPRITE_DIR = 'assets/sprites/synthia_casual/';
 /* Tolerant of a non-string key: a scene written with `expr: 0`, or a tier
@@ -101,5 +101,3 @@ export function playScene(startId, state, onEnd) {
   showScreen('vn');
   safely(render);
 }
-
-export { poseFor };
