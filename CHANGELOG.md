@@ -1,5 +1,135 @@
 # Changelog
 
+## 2026-09-06 — the shop
+
+### Added
+
+- **Decoration** — seven things to buy for the room: window boxes, a second
+  table, a repainted sign, a corner lamp, a shelf of jars, the good griddle,
+  an awning people wait under when it rains. Bought with money, kept forever,
+  and **purely cosmetic** — a test buys every item and asserts reputation,
+  research points and affection are all unchanged, and the smoke test asserts
+  the same through the real page. Reputation already means exactly two things
+  (which customers turn up, and how many); a third input would make it two
+  systems wearing one name.
+
+  Brought forward from Phase 2 because the hole it fills was measured: a
+  careful player finished the research tree before the last weeks, and the
+  till then climbed to about 21,000 with nothing to spend it on. The last two
+  weeks had no economic decision left in them. A careful run now ends holding
+  about 1,900 having bought five or six of the seven, so there is always
+  something left to want and no run clears the shop.
+
+### Fixed
+
+- **The evening screen lied about the till after a trip to Research.** "Back"
+  was nothing but a screen switch, so after spending at the bench the header
+  said 200, the ledger four lines below said 3,000, and the shop offered a
+  lamp at 2,600 with a live button. Buying it was safe — the purchase re-reads
+  the money and refuses — but that refusal was the only sign the panel had
+  been lying.
+- **A save holding a string where a list belongs killed Continue.** It threw
+  out of `deserialize`, which nothing catches, so the player clicked and
+  nothing happened at all: no notice, no screen change. Hand-edited duplicates
+  are now dropped too.
+- **Every purchase dropped keyboard focus to the page body**, so a keyboard
+  player lost their place on each buy and a second Enter went nowhere.
+
+---
+
+## 2026-09-05 (later) — syrups, listening, and the bill
+
+### Added
+
+- **Syrups do something.** They were inert: no runtime code read a syrup's
+  axes and the drizzle beat did not know which one it was pouring, so half of
+  what the research tree awards paid out in nothing. Customers now have a
+  taste on the same four axes; you pick a syrup at the drizzle beat and a good
+  match pays more and builds reputation faster. **A mismatch is never a
+  penalty** — a discovery must only ever be a new option, never a new way to
+  lose money. The customer's taste is never printed: you learn it from the
+  result on the bill and from their greetings.
+- **Dishes are priced from their parts, and billed like a till receipt** — so
+  many pancakes at the going rate, a line per ingredient, a line for the skill
+  the dish takes, then quality, the syrup with its verdict, and the tip. You
+  never set a price; you choose what goes in, which is what finally makes an
+  unlocked recipe visibly worth more. The receipt also shows what the stock
+  cost and what was kept, so a dish cooked on emergency stock reads "total 23
+  / stock −40 / kept −17" instead of quietly losing money.
+- **Impossible orders** — she asks for a dish you have not unlocked, is
+  deadpan about it, and the research board marks that node "She asked for
+  this." The ask rides alongside her real order and never replaces it.
+- **Customers react** — their happy and disappointed lines had been in the
+  data since the roster was written and were rendered nowhere. They now speak
+  at the top of their receipt.
+- **She waits** — an unserved visit rolls to the next day the shop opens
+  rather than evaporating. Closing early used to cost a week of the arc with
+  nothing on screen saying she had been there.
+
+### Fixed
+
+- **The listening loop was gated on luck.** She ordered whatever was priciest,
+  so a player who heard her mention a dish and spent weeks researching it had
+  no way to serve it to her deliberately. She now asks for what she mentioned:
+  the last tier went from 2 of 10 seeds to 10 of 10.
+- **Every ending showed the same fallback title.** The walk that finds an
+  ending's title never ran, so a devoted eight-week run and a stranger's were
+  headed identically — and that title is the one thing on the card that tells
+  them apart.
+- **The receipt did not add up.** The total was rounded separately from its
+  own lines, so one bill in eight printed a column that did not sum to its own
+  total row. The money was always right; the arithmetic a player can do by eye
+  was not.
+- **An empty blend paid research points forever** — combining nothing, at no
+  cost, indefinitely.
+- **A stale base-ingredient setting would silently double-bill every dish** in
+  the game, with a plausible extra line on the receipt. Now a validator error.
+- **A hand-edited or stringified save made Continue a dead button**, the story
+  screen could strand a player with no way out, the bench consumed ingredients
+  before it could fail, and blocked browser storage was reported as "No save
+  found."
+
+### Changed
+
+- The quota curve was retuned twice: up when syrup pairing added a real income
+  lever, then down at the late weeks once the balance simulator stopped paying
+  the research bench twice — every number it had been calibrated against
+  described a game about a third richer than the one that ships.
+- **Every colour, including the ones painted on canvas, is now a token.** The
+  page drew a pancake one brown and the canvas drew the same pancake another.
+
+### Tooling
+
+- The balance simulator gained two profiles that exist to keep the tuning
+  honest rather than to model play: one that cooks as well as a careful player
+  but ignores everything Synthia mentions (proving the listening beat is
+  load-bearing — two tiers of difference), and one that pours whatever the
+  picker preselects, because a customer's taste is never printed and a
+  first-time player does not have it.
+- The smoke test was pinned to a fixed seed. It had been playing a different
+  game every run, which is not a regression gate.
+- Static guards for the class of bug that made 227 passing tests meaningless:
+  every module must parse, no module may import the same name twice, every
+  element id must exist in the page, and the canvas colour fallbacks must
+  match the stylesheet.
+
+### Known gaps
+
+- **All dialogue in `js/data/scenes.js` is placeholder**, written to be
+  replaced. The systems for the arc all exist — what she mentions, the payoff
+  when you serve it back weeks later, the five endings chosen by tier, the
+  dishes she asks for that you cannot make yet. The voice does not, and it is
+  not ours to write: Synthia is the collaborator's character.
+- **Food, the griddle, the room and its seven decorations are procedural
+  shapes and labelled outlines**, not art. Legible and consistent, and
+  placeholders. Each decoration already names the sprite that will replace it,
+  and swapping them in changes one function.
+- Audio and juice are untouched.
+
+Nothing else in the design document is unbuilt.
+
+---
+
 ## Phase 1 — 2026-09-05
 
 The whole game loop, end to end, with placeholder art and thin content.
@@ -166,8 +296,12 @@ These were found by tooling, not by review, and every one would have shipped:
   accrue from more than one source; in the broken build the only grant reason
   was "you kept the shop open".
 
-### Known gaps
+### Known gaps at the end of Phase 1
 
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.
 - Food, griddle and shop furniture are procedural canvas shapes, not art.
   They are legible and consistent, but they are placeholders.
+
+*(Both still true. See the current gaps at the top of this file — several
+other things listed here as built turned out to be built incorrectly, and
+are recorded in the entries above.)*
