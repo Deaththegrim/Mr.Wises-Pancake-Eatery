@@ -114,12 +114,24 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
   if (mountGriddle._teardown) mountGriddle._teardown();
   const teardown = [];
   mountGriddle._teardown = () => {
-    while (teardown.length) teardown.pop()();
+    /* Sound first, and outside the loop. It used to be pushed onto the
+       stack, and the stack drains LIFO, so it ran LAST — after the frame
+       loop and the listener removal, either of which throwing would skip
+       it and take the whole teardown with it, unwinding out of
+       mountGriddle before `clear(mount)` and leaving the player on the
+       service screen with a customer, no cook surface, and a sound still
+       running. Each pop is guarded now for the same reason.
+
+       NOT the guard against abandoning mid-pour, despite once claiming to
+       be: this runs when the NEXT dish mounts, which is a whole evening
+       away. main.js stops held sounds on leaving service, and that is what
+       covers it. This is cleanup for the order that was left behind. */
+    sfxStopAll();
+    while (teardown.length) {
+      const fn = teardown.pop();
+      try { fn(); } catch (e) { /* one bad teardown must not skip the rest */ }
+    }
   };
-  /* Same reasoning as the loops above, for sound: the two held beats run
-     until told to stop, so abandoning mid-pour must not leave the batter
-     hissing behind whatever the player went to do instead. */
-  teardown.push(sfxStopAll);
 
   clear(mount);
   if (!recipe) {
@@ -216,6 +228,14 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     btn.addEventListener('mouseleave', stop);
     btn.addEventListener('touchstart', e => { e.preventDefault(); start(); });
     btn.addEventListener('touchend', e => { e.preventDefault(); stop(); });
+    /* touchcancel is NOT touchend. A system gesture, an incoming call, or
+       the browser deciding the touch was a scroll fires this instead — and
+       stop() does three things here, not one: it silences the pour, clears
+       the 30ms interval, and advances the beat. Without this the batter
+       keeps pouring while nobody is touching the screen, `beats.volume`
+       climbs past any target, and the stage never advances. That is a
+       corrupted measurement and a stuck beat, not a stray noise. */
+    btn.addEventListener('touchcancel', e => { e.preventDefault(); stop(); });
 
     /* KEYBOARD. A <button> fires `click` on Enter/Space — it does NOT fire
        mousedown/mouseup. Without this a keyboard user can focus the button,
@@ -577,9 +597,19 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     canvas.addEventListener('touchstart', () => sfxStart('drizzle'));
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
-      applyAt(e.touches[0].clientX);
+      /* `touches` can be empty on the event that ends a gesture, and
+         `[0].clientX` on an empty list throws — inside a listener, where
+         nothing catches it. changedTouches carries the point that actually
+         moved, and the guard covers the rest. */
+      const t = e.touches[0] || e.changedTouches[0];
+      if (t) applyAt(t.clientX);
     });
     canvas.addEventListener('touchend', () => sfxStop('drizzle'));
+    /* Same as the pour: a gesture the system takes over fires touchcancel,
+       never touchend, and the window-level mouseup below does not fire for
+       touch. Without this the syrup keeps running behind the receipt, the
+       ledger and any scene that follows, until something else stops it. */
+    canvas.addEventListener('touchcancel', () => sfxStop('drizzle'));
     const release = () => { down = false; sfxStop('drizzle'); };
     window.addEventListener('mouseup', release);
     teardown.push(() => window.removeEventListener('mouseup', release));

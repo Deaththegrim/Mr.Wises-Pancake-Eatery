@@ -130,6 +130,13 @@ function askImpossible(current) {
   const line = IMPOSSIBLE_ORDER_LINES[
     Math.floor(Math.random() * IMPOSSIBLE_ORDER_LINES.length)];
 
+  /* The one place the griddle is discarded WITHOUT mounting another, so it
+     is the one place that has to run the teardown by hand. Nothing leaks
+     today — the previous order always finished through the drizzle beat's
+     Done handler, which stops everything — but "safe because of what the
+     last screen happened to do" is not a property worth relying on, and
+     this is the seam where a held sound or a frame loop would survive. */
+  stopAll();
   const mount = clear(document.getElementById('griddle-mount'));
   const card = el('div', { className: 'card' },
     el('p', { text: `“${dish}.”` }),
@@ -213,8 +220,17 @@ function renderEvening() {
 }
 
 function toEvening() {
-  /* Any held beat sound dies with the service screen. Without this a pour
-     whose mouseup landed off the button keeps hissing behind the ledger. */
+  /* THIS LINE IS THE PROTECTION, not the griddle's teardown.
+
+     A held beat sound runs until told to stop, and leaving service is how
+     a player abandons one — mouseup landed off the button, a touch the
+     system took over, "Close for the day" pressed mid-pour. The griddle's
+     own teardown only fires when the NEXT dish mounts, which is after the
+     evening, the next morning and another customer, so it is a cleanup for
+     the previous order rather than a guard for this one.
+
+     Deleting this looks safe and is not: it restores a pour that hisses
+     through the ledger and every scene after it. */
   stopAll();
   play('day_close');
   lastDayResult = closeDay(state);

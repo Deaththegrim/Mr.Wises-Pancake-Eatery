@@ -54,6 +54,42 @@ the first pass, including a bug in code predating this session.
   summary kept reading "nothing selected" with ingredients staged — which
   is precisely the bug the comment above it says was fixed.
 
+### Fixed — touch, and the teardown
+
+Finishing the silent-failure list rather than stopping at the findings that
+were easy to reach.
+
+- **A cancelled touch broke the pour beat.** `touchcancel` is not
+  `touchend` — a system gesture, an incoming call, or the browser deciding
+  a touch was really a scroll fires it instead, and the window-level
+  `mouseup` that rescues the mouse path never fires for touch. The pour's
+  `stop()` does three things: silences the sound, clears the 30ms interval,
+  and advances the beat. Without it the batter kept pouring while nobody
+  was touching the screen, the measured volume climbed past any target, and
+  **the beat never advanced**. That is a corrupted measurement and a stuck
+  order, not a stray noise. Both held beats handle it now, with a test —
+  nothing else can see this, since the unit tests have no DOM and the smoke
+  test drives a mouse.
+- **`touches[0].clientX` was unguarded** in the drizzle's move handler.
+  The list is empty on the event that ends a gesture, and that throws
+  inside a listener, where nothing catches it.
+- **The teardown ran the sound stop last.** It was pushed onto a stack that
+  drains LIFO, so it went after the frame loop and the listener removal —
+  either of which throwing would skip it *and* unwind out of `mountGriddle`
+  before `clear(mount)`, leaving the player on the service screen with a
+  customer, no cook surface, and a sound still running. It runs first now,
+  and each teardown step is guarded separately.
+- **A comment credited the wrong line with a guarantee.** The griddle's
+  teardown claimed to be what stops the batter hissing when a player
+  abandons mid-pour. It is not — it runs when the *next* dish mounts, an
+  evening and a morning later. `main.js` stops held sounds on leaving
+  service, and that is what covers it. Deleting that line would have looked
+  safe and silently restored the bug the griddle comment described.
+- **`askImpossible` discarded the griddle outside the teardown protocol.**
+  Nothing leaks today, because the previous order always finished through
+  the drizzle's Done handler — but "safe because of what the last screen
+  happened to do" is not a property worth resting on.
+
 ### Fixed — comments that were wrong
 
 This is its own category on purpose. A wrong comment in this codebase is

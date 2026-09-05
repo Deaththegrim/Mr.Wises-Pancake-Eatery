@@ -362,6 +362,36 @@ test('the envelope arithmetic has exactly one home', () => {
     'envelope() should be the one place a layer\'s attack is read');
 });
 
+test('every held beat handles a cancelled touch', () => {
+  /* touchcancel is NOT touchend. A system gesture, an incoming call, or the
+     browser deciding a touch was really a scroll fires it instead — and the
+     window-level mouseup that rescues the mouse path never fires for touch.
+
+     On the drizzle beat that leaves syrup running behind the receipt. On
+     the POUR it is worse than a stray noise: its stop() also clears the
+     30ms interval and advances the stage, so without this the batter keeps
+     pouring while nobody is touching the screen, the measured volume
+     climbs past any target, and the beat never advances.
+
+     Nothing else can see this. The unit tests have no DOM, the smoke test
+     drives a mouse, and a real cancelled touch is not something a harness
+     produces by accident. */
+  const src = readFileSync(join(root, 'js/ui/griddle.js'), 'utf8');
+  const starts = [...src.matchAll(/addEventListener\('touchstart'/g)].length;
+  assert.ok(starts >= 2, `expected both held beats to begin on touch, found ${starts}`);
+
+  const cancels = [...src.matchAll(/addEventListener\('touchcancel'/g)].length;
+  assert.equal(cancels, starts,
+    `${starts} beat(s) start on touch but only ${cancels} handle touchcancel — ` +
+    'an interrupted gesture leaves the sound running and, on the pour, the beat stuck');
+
+  /* And the point the move handler reads must be guarded: `touches` is
+     empty on the event that ends a gesture, and [0].clientX on an empty
+     list throws inside a listener where nothing catches it. */
+  assert.match(src, /e\.touches\[0\]\s*\|\|\s*e\.changedTouches\[0\]/,
+    'a touchmove reads touches[0] unguarded; it is empty as a gesture ends');
+});
+
 test('the recordings folder the slots point into exists', () => {
   // A path into a folder nobody made is a file nobody will find.
   const dirs = new Set(SOUNDS.filter(s => s.path).map(s => s.path.split('/').slice(0, -1).join('/')));
