@@ -156,9 +156,11 @@ is a furnished place to write her into. Rewrite any of it freely.
 Every line in `js/data/scenes.js`, though, is still a placeholder, and
 deliberately so — the systems for the arc exist, the voice does not, and
 that is the collaborator's.
-`node tools/writing.js` prints all ~680 words of it with, for each line,
+`node tools/writing.js synthia` prints every line of it with, for each one,
 when the player sees it: which week, what they have just done, what her
-face is doing. It can be worked through without opening any code.
+face is doing. It can be worked through without opening any code. It counts
+the words for you at the end, so this file does not carry a number that
+goes stale the moment anyone writes a sentence.
 
 For art, `node tools/art.js` prints every picture the game can use: where
 the file goes, what size, what it has to show, and which placeholder it

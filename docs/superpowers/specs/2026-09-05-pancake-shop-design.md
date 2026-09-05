@@ -651,10 +651,13 @@ not by looking at it.
 ## 12. Build order
 
 **Phase 1 — the bones. ✅ COMPLETE 2026-09-05.** This was the handoff target.
-Built, merged to `master`, pushed private. **261 unit tests**, a content
-validator, a balance simulator with four player profiles, a headless smoke test
-that plays the real page (77 checks), and a slow playthrough that cross-checks
-the simulator against that page. Plan and its deviations:
+Built, merged to `master`, pushed private. At that milestone: **261 unit
+tests** and a headless smoke test of **77 checks**, alongside a content
+validator, a balance simulator with four player profiles, and a slow
+playthrough that cross-checks the simulator against the real page. (Those two
+figures are the Phase-1 snapshot, deliberately left as a record of where the
+handoff target landed — the current counts are in the README, which is the one
+place that tracks them.) Plan and its deviations:
 `docs/superpowers/plans/2026-09-05-pancake-shop-phase1.md`.
 
 Everything in §4 (pricing), §5 (the syrup a dish is finished with) and §9 (her
