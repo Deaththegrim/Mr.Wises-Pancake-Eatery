@@ -176,6 +176,30 @@ export const SCENES = {
     end: true, endingTitle: 'Most Do Not Stay'
   },
 
+  mention_lemon: {
+    speaker: 'God Synthia',
+    expr: 'curious',
+    text: '“There is a sourness that makes sweet things taste more like themselves.”\n\n“Nobody bothers. It is fiddly.”',
+    mentions: 'lemon_stack',
+    end: true
+  },
+
+  mention_quiet: {
+    speaker: 'God Synthia',
+    expr: 'sleepy',
+    text: '“There was one you were supposed to eat in silence.”\n\nShe stops.\n\n“…That is all. It is not a story.”',
+    mentions: 'quiet_stack',
+    end: true
+  },
+
+  mention_ember: {
+    speaker: 'God Synthia',
+    expr: 'thinking',
+    text: '“Something that burns if you look away.”\n\n“I liked that about it. Most things forgive you.”',
+    mentions: 'ember_crisp',
+    end: true
+  },
+
   /* Fires when she notices you made the thing she mentioned. */
   noticed: {
     speaker: 'God Synthia',

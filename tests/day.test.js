@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { customerPool, nextCustomer, serve, openDay, closeDay, customersToday, demandShift } from '../js/engine/day.js';
+import { synthiaDueToday } from '../js/engine/story.js';
 import { TUNING } from '../js/data/economy.js';
 import { newGame } from '../js/engine/state.js';
 import { quotaForWeek } from '../js/engine/economy.js';
@@ -37,11 +38,37 @@ test('nextCustomer is deterministic for a given seed', () => {
 });
 
 test('consecutive customers in a day are not all identical', () => {
+  // Skip Synthia's day: she is a single customer who waits at the counter
+  // until served, so on her day every call correctly returns her.
   const s = newGame(4);
-  openDay(s);
-  const orders = [];
-  for (let i = 0; i < 12; i++) orders.push(nextCustomer(s).customer.id);
-  assert.ok(new Set(orders).size > 1, 'the order index must advance the rng, not repeat one customer');
+  for (let d = 1; d <= 7; d++) {
+    s.day = d;
+    openDay(s);
+    if (synthiaDueToday(s)) continue;
+    const orders = [];
+    for (let i = 0; i < 12; i++) orders.push(nextCustomer(s).customer.id);
+    assert.ok(new Set(orders).size > 1, 'the order index must advance the rng, not repeat one customer');
+    return;
+  }
+  assert.fail('no ordinary day found in the week');
+});
+
+test('Synthia waits at the counter until she is served', () => {
+  const s = newGame(4);
+  for (let d = 1; d <= 7; d++) {
+    s.day = d;
+    openDay(s);
+    if (!synthiaDueToday(s)) continue;
+    assert.equal(nextCustomer(s).isSynthia, true);
+    assert.equal(nextCustomer(s).isSynthia, true, 'she does not wander off unserved');
+    serve(s, s.menu[0], {
+      volume: 50, msOffset: 0, offsets: [0, 0, 0], coverage: [0.7, 0.7, 0.7]
+    }, { forSynthia: true });
+    const after = nextCustomer(s);
+    assert.ok(!after || !after.isSynthia, 'and the queue moves on once she is served');
+    return;
+  }
+  assert.fail('no Synthia day found in the week');
 });
 
 test('nextCustomer only orders something on the menu', () => {

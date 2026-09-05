@@ -145,6 +145,18 @@ These were found by tooling, not by review, and every one would have shipped:
   over the first three misses and then hold: she barely reacts, then she
   notices, then she sits down.
 
+- **Synthia now actually comes into the shop.** She previously appeared only
+  in scenes at week boundaries and was never a customer you could cook for —
+  which meant `serve(..., {forSynthia:true})` was never called by anything.
+  The whole affection chain was dead in the real game: her mentions were
+  never recorded, serving her never counted, and **the listening beat — the
+  best idea in the design, and the thing reaching DEVOTED depends on — could
+  never fire.** She was permanently stuck at REGULAR. She now visits once a
+  week on a varying day, says something in passing, and waits at the counter
+  until served.
+- Five mention scenes (was two), so the arc has headroom to reach its last
+  tier rather than topping out just short.
+
 ### Known gaps
 
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.

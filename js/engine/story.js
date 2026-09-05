@@ -1,5 +1,7 @@
 import { tierFor } from './affection.js';
 import { TIER_ORDER } from '../data/affection.js';
+import { SCENES } from '../data/scenes.js';
+import { makeRng } from './rng.js';
 
 /* Which scene fires, and when.
 
@@ -37,4 +39,32 @@ const MISS_SCENES = [
 export function missSceneFor(missCount) {
   const i = Math.min(Math.max(1, missCount), MISS_SCENES.length) - 1;
   return MISS_SCENES[i];
+}
+
+/* SHE HAS TO ACTUALLY COME IN.
+
+   The whole affection design — serving her, and the listening beat that
+   reaching DEVOTED depends on — needs her to appear as a CUSTOMER, not
+   only in the scenes at week boundaries. Without this the engine code for
+   it is unit-tested and completely dead in the real game.
+
+   Once a week, on a day that varies, so she stays unpredictable without
+   becoming a fixture. */
+export function synthiaDueToday(state) {
+  const rng = makeRng(state.seed + state.week * 31);
+  const herDay = 1 + Math.floor(rng() * 7);
+  return state.day === herDay;
+}
+
+/* Something she says in passing, drawn from whatever she has not already
+   mentioned. Returns null once she has said them all — the beat should
+   stop rather than loop. */
+export function mentionSceneFor(state) {
+  const said = state.synthia.mentions || [];
+  const available = Object.entries(SCENES)
+    .filter(([, node]) => node.mentions && !said.includes(node.mentions))
+    .map(([id]) => id);
+  if (available.length === 0) return null;
+  const rng = makeRng(state.seed + state.week * 977 + state.day);
+  return available[Math.floor(rng() * available.length)];
 }

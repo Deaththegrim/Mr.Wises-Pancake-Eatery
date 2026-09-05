@@ -456,6 +456,24 @@ what a slow burn is actually made of.
 
 Authoring cost is one optional field on a dialogue node.
 
+### She has to actually come in — IMPLEMENTED 2026-09-05
+
+The spec described her arc in detail and never said how she reaches the
+counter. She was built appearing only in week-boundary scenes, so
+`serve(..., {forSynthia:true})` was never called by anything and the entire
+chain below it was dead: mentions unrecorded, `grantForServing` never fired,
+`checkListening` unreachable. Only weekly persistence ran, so she was stuck
+at REGULAR no matter how well the game was played.
+
+`synthiaDueToday()` now brings her in once a week on a varying day. She says
+something in passing first, then waits at the counter until served. That one
+connection is what makes the rest of §9 real rather than unit-tested and
+unreachable.
+
+**Lesson:** the spec specified the mechanism and not the trigger, so every
+piece was individually correct and collectively inert. Specify how a feature
+is REACHED, not only how it behaves.
+
 ### Impossible orders
 
 She periodically orders something you cannot make yet. It is not a fail — she is

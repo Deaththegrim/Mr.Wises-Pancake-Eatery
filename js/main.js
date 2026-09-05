@@ -7,7 +7,7 @@ import { renderLedger, renderQuotaBoard } from './ui/ledger.js';
 import { renderTree, renderBench } from './ui/tree.js';
 import { mountGriddle } from './ui/griddle.js';
 import { playScene } from './ui/vn.js';
-import { missSceneFor } from './engine/story.js';
+import { missSceneFor, mentionSceneFor } from './engine/story.js';
 import { tierFor } from './engine/affection.js';
 import { SCENES } from './data/scenes.js';
 
@@ -66,8 +66,25 @@ function nextOrder() {
   renderCustomer(order);
   if (!order) return;
 
+  /* When SHE is the customer, she says something first — sometimes
+     something she misses, tagged so that researching and serving it weeks
+     later fires the listening beat. Without this the mentions are never
+     recorded and that beat can never happen. */
+  if (order.isSynthia && !state.flags[`mentioned_w${state.week}`]) {
+    const mention = mentionSceneFor(state);
+    if (mention) {
+      state.flags[`mentioned_w${state.week}`] = true;
+      playScene(mention, state, () => { showScreen('service'); cookFor(order); });
+      return;
+    }
+  }
+
+  cookFor(order);
+}
+
+function cookFor(order) {
   mountGriddle(document.getElementById('griddle-mount'), order.recipeId, beats => {
-    const result = serve(state, order.recipeId, beats);
+    const result = serve(state, order.recipeId, beats, { forSynthia: !!order.isSynthia });
     servedToday += 1;
     const b = result.breakdown;
     // Show the margin, not just the takings — the cost of goods is a real
@@ -80,6 +97,12 @@ function nextOrder() {
       `  ·  +${result.payout}${result.tip ? ` +${result.tip} tip` : ''}` +
       `${cost ? ` −${cost} stock${emergency}` : ''}`, 5000);
     saveGame();
+
+    // She remembered that she mentioned it. This is the payoff.
+    if (result.noticed) {
+      playScene('noticed', state, () => { saveGame(); showScreen('service'); nextOrder(); });
+      return;
+    }
     nextOrder();
   });
 }

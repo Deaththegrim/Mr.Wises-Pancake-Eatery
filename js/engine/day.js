@@ -6,7 +6,7 @@ import { CUSTOMERS } from '../data/customers.js';
 import { RECIPES } from '../data/recipes.js';
 import { TUNING } from '../data/economy.js';
 import { payForCooking } from './pantry.js';
-import { endingFor } from './story.js';
+import { endingFor, synthiaDueToday } from './story.js';
 import { QUOTA_CURVE } from '../data/economy.js';
 
 const DAYS_PER_WEEK = 7;
@@ -50,6 +50,25 @@ function dayRng(state) {
 export function nextCustomer(state) {
   const pool = customerPool(state);
   if (pool.length === 0 || state.menu.length === 0) return null;
+
+  /* She comes in once a week, as an actual customer you cook for. This is
+     what makes serving her — and the listening beat — reachable at all. */
+  if (synthiaDueToday(state) && !state.synthiaServedToday) {
+    const rng = makeRng(state.seed + state.week * 13 + state.day);
+    const menu = state.menu.map(recipeById).filter(Boolean);
+    if (menu.length) {
+      // She asks for the most interesting thing on offer.
+      const best = [...menu].sort((a, b) => b.base - a.base);
+      const pick = best[Math.floor(rng() * Math.min(2, best.length))];
+      state.orderIndex = (state.orderIndex || 0) + 1;
+      return {
+        isSynthia: true,
+        customer: { id: 'synthia', name: 'God Synthia',
+                    lines: { greeting: 'Something worth the walk.', happy: 'Hm.', disappointed: 'Hm.' } },
+        recipeId: pick.id
+      };
+    }
+  }
   const rng = dayRng(state);
   const customer = pick(rng, pool);
   const wanted = state.menu
@@ -75,6 +94,7 @@ export function nextCustomer(state) {
 
 export function openDay(state) {
   state.phase = 'service';
+  state.synthiaServedToday = false;
   state.todayServed = {};
   state.orderIndex = 0;
   state.dayEarnings = 0;
@@ -101,6 +121,7 @@ export function serve(state, recipeId, beats, opts = {}) {
 
   let noticed = false;
   if (opts.forSynthia) {
+    state.synthiaServedToday = true;
     grantForServing(state.synthia, quality);
     noticed = checkListening(state.synthia, recipeId).noticed;
   }
