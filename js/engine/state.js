@@ -88,6 +88,14 @@ export function deserialize(json) {
     return false;
   });
   state.unlockedRecipes = prune(state.unlockedRecipes, validRecipes, 'recipe');
+  /* The dishes she has asked for. Pruned like every other id list: a
+     removed recipe would otherwise sit in here forever, matching no
+     research node and marking nothing on the board. Harmless, but this
+     module's whole contract is that a save never carries ids the content
+     no longer has. */
+  state.synthia.wanted = prune(state.synthia.wanted, validRecipes, 'dish she asked for');
+  state.synthia.mentions = prune(state.synthia.mentions, validRecipes, 'dish she mentioned');
+  state.synthia.noticed = prune(state.synthia.noticed, validRecipes, 'dish she noticed');
   state.unlockedSyrups = prune(state.unlockedSyrups, validSyrups, 'syrup');
   state.menu = prune(state.menu, validRecipes, 'menu recipe');
 

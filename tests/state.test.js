@@ -137,3 +137,29 @@ test('negative money cannot be smuggled in through a save', () => {
   const { state: s } = deserialize(JSON.stringify({ ...newGame(), money: -5000 }));
   assert.ok(s.money >= 0, 'a negative till breaks every affordability check');
 });
+
+test('a dish removed from the content is dropped from her memory too', () => {
+  /* Every other id list in the save is pruned against real content;
+     synthia's three were not. A deleted recipe would sit in `wanted`
+     forever, matching no research node and marking nothing on the board,
+     and in `mentions` where she could never be served it. */
+  const g = newGame(1);
+  g.synthia.wanted = ['souffle', 'deleted_dish'];
+  g.synthia.mentions = ['souffle', 'gone_forever'];
+  g.synthia.noticed = ['souffle', 'also_gone'];
+
+  const { state } = deserialize(JSON.stringify(g));
+  assert.deepEqual(state.synthia.wanted, ['souffle']);
+  assert.deepEqual(state.synthia.mentions, ['souffle']);
+  assert.deepEqual(state.synthia.noticed, ['souffle']);
+});
+
+test('and a save with none of those lists still loads', () => {
+  const g = newGame(1);
+  delete g.synthia.wanted;
+  delete g.synthia.mentions;
+  const { ok, state } = deserialize(JSON.stringify(g));
+  assert.ok(ok);
+  assert.deepEqual(state.synthia.wanted, []);
+  assert.deepEqual(state.synthia.mentions, []);
+});
