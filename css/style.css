@@ -93,7 +93,13 @@ h1 { font-size: 2.2rem; }
   color: var(--muted);
   border-color: var(--edge);
 }
-#btn-sound:hover { color: var(--ink); }
+/* Focus gets the same brightening as hover, not just the shared outline.
+   The outline alone satisfies WCAG, but it left keyboard users with
+   strictly less affordance than mouse users on the one control that lives
+   outside every screen — and this button is drawn deliberately quiet, so
+   it is the one that most needs saying "you are on me". */
+#btn-sound:hover,
+#btn-sound:focus-visible { color: var(--ink); }
 #btn-sound[aria-pressed="true"] { opacity: 0.65; }
 
 main { padding: calc(var(--sp) * 2); max-width: 900px; margin: 0 auto; }
