@@ -114,8 +114,10 @@ what goes in, which is what makes an unlocked recipe visibly worth more.
 What the money is *for*, once the research tree runs out, is the shop
 itself: window boxes, a second table, an awning people wait under when it
 rains. All of it cosmetic, deliberately — it never touches reputation.
-Nobody needs the window boxes. That is the point of them. Stack error compounds, so an off-centre first pancake leans the
-whole tower (though a steady hand can nurse it back).
+Nobody needs the window boxes. That is the point of them.
+
+Stack error compounds, so an off-centre first pancake leans the whole tower
+— though a steady hand can nurse it back.
 
 The weekly quota isn't a survival threshold, it's the **story metronome**.
 Hit it and the next beat opens; miss it and you get a softer Synthia scene
@@ -141,13 +143,15 @@ cannot make yet, five endings chosen by how well you listened, save/load,
 and the shop you spend the money on once the tree runs out.
 
 **What's left is writing and art**, and both are set up to be dropped in
-rather than built. Sound and motion are already there: the game has none of its own
-audio files and is not silent, because every noise it makes is a recipe the
-browser performs, and the animation is the restrained kind the design
-research calls for — a pancake settling, a bill adding up, nothing that
-shakes or repeats, and a `prefers-reduced-motion` block over all of it. `node tools/audio.js` lists them, and a real recording
-dropped at a slot's path replaces one the same way a PNG replaces a
-placeholder.
+rather than built.
+
+Sound and motion are already there. The game ships no audio files and is
+not silent: every noise it makes is a recipe the browser performs, listed
+by `node tools/audio.js`. A real recording can replace any of them — drop
+the file at the path shown, run that tool so it lands in the manifest, then
+reload. The motion is the restrained kind the design research calls for: a
+pancake settling, a bill adding up, nothing that shakes or repeats, and a
+`prefers-reduced-motion` block over all of it.
 
 The shop around her has had a proper pass — the eleven customers, the
 seven things you can buy for the room, the dish and syrup names — so there

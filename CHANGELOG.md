@@ -104,10 +104,14 @@ over the UI. Three real defects, all now fixed and mutation-tested.
 
   The envelope is now pure arithmetic behind an exported `envelope(layer)`,
   so the timing is unit-tested in Node: attack, hold, release, adding up to
-  exactly `ms`, clamped so the parts can never overlap or go negative
-  (which would schedule the ramps out of order and drop the layer to
-  silence). A test asserts a larger `release` produces a longer fade —
-  reverting to the old behaviour fails it.
+  exactly `ms`, clamped so the parts can never overlap or go negative. A
+  test asserts a larger `release` produces a longer fade — reverting to the
+  old behaviour fails it. (An earlier draft of this entry justified the
+  clamp by claiming a negative part would schedule the ramps out of order
+  and mute the layer. It would not: the Web Audio timeline sorts automation
+  events by time however they are scheduled. The clamp is for the
+  arithmetic's sake — a negative part is a lie about the shape, in a number
+  other code reads.)
 
   *The reviewer that found this misdiagnosed it,* reporting an abrupt
   cutoff. There was no cutoff: an exponential ramp interpolates from the
