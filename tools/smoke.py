@@ -25,6 +25,37 @@ def serve():
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     return httpd
 
+def clear_scenes(page, limit=12):
+    """Walk out of any VN scene that is open.
+
+    Her visit rolls to the next day the shop opens if she was not served,
+    so a scene can be waiting after almost any "Open the shop". Four
+    sections of this file had grown their own copy of this loop before it
+    was worth naming, and the fifth that forgot it timed out for 30s.
+    """
+    for _ in range(limit):
+        if not page.is_visible("#screen-vn"):
+            return
+        buttons = page.query_selector_all("#vn-choices button")
+        if not buttons:
+            return
+        buttons[0].click()
+        page.wait_for_timeout(150)
+
+
+def dismiss_ask(page):
+    """Acknowledge an impossible order if she is making one.
+
+    She asks for a dish that is not unlocked before placing her real
+    order, so the griddle does not exist until "Say so" is clicked. Any
+    section that opens the shop can land on this.
+    """
+    first = page.query_selector("#griddle-mount button")
+    if first and first.inner_text().strip() == "Say so":
+        first.click()
+        page.wait_for_timeout(300)
+
+
 def main():
     from playwright.sync_api import sync_playwright
 
@@ -259,14 +290,7 @@ def main():
         # to the next day the shop opens, so her mention scene can be up
         # before the day is closed. Walk out of it first.
         page.wait_for_timeout(300)
-        for _ in range(12):
-            if not page.is_visible("#screen-vn"):
-                break
-            bs = page.query_selector_all("#vn-choices button")
-            if not bs:
-                break
-            bs[0].click()
-            page.wait_for_timeout(150)
+        clear_scenes(page)
         page.click("#btn-close")
         page.wait_for_timeout(400)
         check(page.is_visible("#screen-vn"), "week rollover opened the VN screen")
@@ -313,24 +337,10 @@ def main():
         page.wait_for_selector("#btn-open", state="visible", timeout=4000)
         page.click("#btn-open")
         page.wait_for_timeout(300)
-        for _ in range(12):
-            if not page.is_visible("#screen-vn"):
-                break
-            bs = page.query_selector_all("#vn-choices button")
-            if not bs:
-                break
-            bs[0].click()
-            page.wait_for_timeout(150)
+        clear_scenes(page)
         page.click("#btn-close")
         page.wait_for_timeout(400)
-        for _ in range(12):
-            if not page.is_visible("#screen-vn"):
-                break
-            bs = page.query_selector_all("#vn-choices button")
-            if not bs:
-                break
-            bs[0].click()
-            page.wait_for_timeout(150)
+        clear_scenes(page)
         rows = page.query_selector_all(".decor-row")
         check(len(rows) >= 5, f"the shop offers {len(rows)} things for the room")
         buyable = [b for b in page.query_selector_all(".decor-row button") if b.is_enabled()]
@@ -355,6 +365,28 @@ def main():
         ledger = page.inner_text("#ledger")
         check(str(money_after) in ledger,
               f"the ledger above it shows the new till, not the old one ({money_after})")
+
+        # THE VISIBLE HALF. Buying is pointless if the room never shows it —
+        # the same gap as the research board's "She asked for this.", which
+        # could be deleted with every gate still green.
+        bought_name = page.evaluate("""(() => {
+            const id = window.GAME.state.decor[0];
+            return id;
+        })()""")
+        page.click("#btn-next-day")
+        page.wait_for_selector("#btn-open", state="visible", timeout=4000)
+        page.click("#btn-open")
+        page.wait_for_timeout(300)
+        room = page.inner_text("#shopfront-decor")
+        check(room.strip() != "", f"the room shows what was bought for it: {room.strip()[:40]}")
+        tokens = page.query_selector_all(".decor-token")
+        check(len(tokens) == len(page.evaluate("window.GAME.state.decor")),
+              f"one thing drawn per thing owned ({len(tokens)})")
+
+        # Back to the evening, where the sections below expect to start.
+        page.click("#btn-close")
+        page.wait_for_timeout(400)
+        clear_scenes(page)
 
         print("\n-- research screen --")
         page.click("#btn-research")
@@ -422,6 +454,9 @@ def main():
         page.click("#btn-back-evening")
         page.click("#btn-next-day")
         page.click("#btn-open")
+        page.wait_for_timeout(300)
+        clear_scenes(page)
+        dismiss_ask(page)
         page.wait_for_selector("#beat-area button")
 
         money_before = page.evaluate("window.GAME.state.money")
@@ -509,14 +544,7 @@ def main():
         # As above: she may be waiting on the final day, so her scene can be
         # up before the shop can be closed.
         page.wait_for_timeout(300)
-        for _ in range(12):
-            if not page.is_visible("#screen-vn"):
-                break
-            bs = page.query_selector_all("#vn-choices button")
-            if not bs:
-                break
-            bs[0].click()
-            page.wait_for_timeout(150)
+        clear_scenes(page)
         page.click("#btn-close")
         page.wait_for_timeout(400)
         check(page.is_visible("#screen-vn"), "the final week opens a closing scene")
