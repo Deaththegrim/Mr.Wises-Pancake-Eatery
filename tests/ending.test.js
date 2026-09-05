@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openDay, closeDay, isFinalWeek } from '../js/engine/day.js';
-import { endingFor, missSceneFor } from '../js/engine/story.js';
+import { endingFor, missSceneFor, endingTitleFor } from '../js/engine/story.js';
 import { newGame } from '../js/engine/state.js';
 import { SCENES } from '../js/data/scenes.js';
 import { TIER_ORDER, TIER_THRESHOLDS } from '../js/data/affection.js';
@@ -93,4 +93,31 @@ test('the miss scene stops varying rather than running out and breaking', () => 
 test('the first miss is gentler than a repeated one', () => {
   assert.notEqual(missSceneFor(1), missSceneFor(3),
     'the shop being in trouble should read differently from one bad week');
+});
+
+test('every ending resolves to its own title, not the generic fallback', () => {
+  /* THE REGRESSION GUARD. This walk used to live in main.js, which no test
+     can import because it needs a DOM. A rename there changed its condition
+     to one that is always true, so the walk never ran and all five endings
+     printed "The season turns" — a devoted eight-week run and a stranger's
+     were headed identically, and that title is the one thing on the card
+     that tells them apart.
+
+     ending.test.js already proved every tier reaches a real terminating
+     scene. It never proved the title reached the screen, because the code
+     that fetched it was somewhere nothing could reach. */
+  const seen = new Map();
+  for (const points of [0, 10, 30, 60, 300]) {
+    const id = endingFor(points);
+    const title = endingTitleFor(id);
+    assert.ok(title, `${id} (at ${points} points) has no title, so the card falls back to a generic one`);
+    assert.notEqual(title, 'The season turns', `${id} is showing the fallback`);
+    seen.set(title, id);
+  }
+  assert.equal(seen.size, 5, `all five endings must be titled differently, got: ${[...seen.keys()].join(' / ')}`);
+});
+
+test('an unknown or broken ending id returns null rather than looping', () => {
+  assert.equal(endingTitleFor('no_such_ending'), null);
+  assert.equal(endingTitleFor(undefined), null);
 });

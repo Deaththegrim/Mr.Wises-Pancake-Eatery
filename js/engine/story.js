@@ -68,3 +68,27 @@ export function mentionSceneFor(state) {
   const rng = makeRng(state.seed + state.week * 977 + state.day);
   return available[Math.floor(rng() * available.length)];
 }
+
+/* THE ENDING'S TITLE.
+
+   Every ending scene carries its `endingTitle` one or two hops down the
+   chain, not on the node the ending starts at, so finding it means
+   walking. That walk lived in main.js — which no test can import, because
+   it needs a DOM — and a rename there silently changed its condition to
+   one that is always false. The walk stopped running and all five endings
+   printed the same generic fallback: a devoted eight-week run and a
+   stranger's were headed identically, which is the one line on that card
+   that distinguishes them.
+
+   It is pure logic over content, so it lives here where it can be tested. */
+export function endingTitleFor(endingId) {
+  let id = endingId, hops = 0;
+  while (id && hops < 20) {
+    const node = SCENES[id];
+    if (!node) break;
+    if (node.endingTitle) return node.endingTitle;
+    id = node.next || (node.choices && node.choices[0] && node.choices[0].next);
+    hops += 1;
+  }
+  return null;
+}

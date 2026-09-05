@@ -135,6 +135,7 @@ def main():
         # nothing else; the choice now reaches the payout, so the control
         # that makes it has to actually be there and be operable.
         print("\n-- the syrup picker --")
+        chosen_syrup = None
         picker = page.query_selector(".syrup-picker")
         check(picker is not None,
               "the picker renders when the player owns more than one syrup")
@@ -155,6 +156,26 @@ def main():
             check(now and now[0] != first, "arrow keys move the selection")
             check(page.evaluate("document.activeElement.textContent") == now[0],
                   "and focus follows the selection")
+            # The name of the syrup the player actually chose, e.g.
+            # "Lemon Glaze · sharp" -> "Lemon Glaze". The receipt below must
+            # name THIS one: asserting "any of the three seeded syrups
+            # appears" was satisfied by the default selection no matter what
+            # the player picked, so the picker could be made decorative and
+            # every gate still passed.
+            # Now deliberately pour the one that SUITS this customer. The
+            # run is seeded, so the early customers are basic-tastes and
+            # Maple Syrup is their match. Asserting only that "a verdict
+            # appeared" was not enough: dropping the customer's taste from
+            # serve() makes every syrup score zero and still prints a line,
+            # just always the worst one. A good pairing must pay.
+            for opt in page.query_selector_all(".syrup-picker .syrup"):
+                if opt.inner_text().startswith("Maple Syrup"):
+                    opt.click()
+                    break
+            sel_now = [o.inner_text() for o in page.query_selector_all(".syrup-picker .syrup")
+                       if "selected" in (o.get_attribute("class") or "")]
+            chosen_syrup = sel_now[0].split("\u00b7")[0].strip() if sel_now else None
+            check(chosen_syrup == "Maple Syrup", f"clicking selects that syrup ({chosen_syrup})")
 
         # BEAT 4 drizzle — drag across the cells
         wb = bbox(page.wait_for_selector("#drizzle"), "drizzle strip")
@@ -183,8 +204,24 @@ def main():
         check("pancakes @" in receipt or "pancake @" in receipt,
               "the bill charges for the pancakes themselves")
         check("total" in receipt, "the bill totals up")
-        check("Maple Syrup" in receipt or "Glaze" in receipt or "Ash" in receipt,
-              "and names the syrup that was poured, with its verdict")
+        check(chosen_syrup and chosen_syrup in receipt,
+              f"the bill names the syrup the PLAYER chose ({chosen_syrup}), not whatever was first")
+        # And it must have been scored against this customer, not ignored:
+        # dropping `taste` from the serve() options makes every syrup score
+        # zero forever, which no other check could see.
+        rows_r = [r for r in receipt.splitlines() if r.strip()]
+        syrup_idx = next((i for i, r in enumerate(rows_r)
+                          if chosen_syrup and r.startswith(chosen_syrup)), None)
+        verdict = rows_r[syrup_idx] if syrup_idx is not None else "no line"
+        check(syrup_idx is not None and "\u2014" in verdict,
+              f"and carries a verdict: {verdict}")
+        # THE ONE THAT MATTERS. A syrup that suits this customer must PAY.
+        # If serve() is not handed the customer's taste, every syrup scores
+        # zero: the line still prints, the verdict just silently becomes
+        # "not really theirs" forever and the pairing pays nothing.
+        amount = int(rows_r[syrup_idx + 1].lstrip("+")) if syrup_idx is not None else 0
+        check("not really theirs" not in verdict and amount > 0,
+              f"and a well-matched syrup actually pays: {verdict} = +{amount}")
         # THE CHECK THAT MATTERS: the number on the bill is the number the
         # till took. The receipt and the takings come from one billFor()
         # call precisely so they cannot drift, and this proves it end to
@@ -471,7 +508,28 @@ def main():
             check(page.query_selector("#beat-area button") is not None,
                   "the ask costs her nothing — she still orders something you can cook")
             check("souffle" in page.evaluate("JSON.stringify(window.GAME.state.synthia.wanted)"),
-                  "and the goal is recorded for the research board")
+                  "and the goal is recorded")
+            # The RECORD is not the point — the visible goal is. Deleting
+            # the badge from the board passed every gate, while removing
+            # the only thing the ask exists to produce: "turning a line of
+            # dialogue into a visible research goal".
+            page.click("#btn-close")
+            time.sleep(0.3)
+            while page.is_visible("#screen-vn"):
+                bs = page.query_selector_all("#vn-choices button")
+                if not bs:
+                    break
+                bs[0].click()
+                time.sleep(0.15)
+            if page.is_visible("#screen-evening"):
+                page.click("#btn-research")
+                time.sleep(0.4)
+                asked = page.query_selector_all(".node.asked")
+                check(len(asked) == 1, f"the research board marks exactly the node she asked for ({len(asked)})")
+                if asked:
+                    txt = asked[0].inner_text()
+                    check("She asked for this" in txt, f"and says so in words: {txt.splitlines()[0]}")
+                    check("Souffle" in txt, "on the node that unlocks the dish she named")
 
 
         browser.close()

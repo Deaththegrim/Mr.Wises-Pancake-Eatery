@@ -20,7 +20,7 @@ export function newGame(seed = Date.now() % 2147483647) {
     todayServed: {},
     pantry: {},
     orderIndex: 0,
-    synthia: { points: 0, mentions: [], noticed: [], log: [], lastVisitWeek: 0 },
+    synthia: { points: 0, mentions: [], noticed: [], wanted: [], log: [], lastVisitWeek: 0 },
     flags: {}
   };
 }

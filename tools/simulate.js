@@ -94,8 +94,14 @@ function experimentTonight(state, rng) {
       spent += r.spent;
       combo.push(ing.id);
     }
+    /* experiment() credits the points to the state itself (research.js
+       awards on both a find and a miss) and returns the number only so the
+       UI can report it. Adding it here paid the bench twice and made this
+       simulator model a game roughly a third richer than the one that
+       ships — which is precisely what this file's header warns about, and
+       the QUOTA_CURVE was calibrated from its output. ui/tree.js has the
+       matching comment and gets it right. */
     const res = experiment(state, combo);
-    state.points += res.points;
     tries += 1;
   }
   return { spent, tries };

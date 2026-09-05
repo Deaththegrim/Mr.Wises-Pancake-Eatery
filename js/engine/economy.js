@@ -90,7 +90,12 @@ export function billFor(recipe, opts = {}) {
     total += syrupAmount;
   }
 
-  return { lines, subtotal, total: Math.round(total) };
+  /* The total is the SUM OF THE PRINTED LINES, not a separately rounded
+     product. It used to be computed from unrounded floats while each line
+     was rounded on its own, so the residues did not cancel and one receipt
+     in eight printed a column that did not add up — directly against this
+     module's own promise above. The money is whatever the bill says. */
+  return { lines, subtotal, total: lines.reduce((a, l) => a + l.amount, 0) };
 }
 
 const ORDINALS = ['first', 'second', 'third'];

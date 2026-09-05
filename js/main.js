@@ -7,9 +7,9 @@ import { renderLedger, renderQuotaBoard, renderReceipt, clearReceipt } from './u
 import { renderTree, renderBench } from './ui/tree.js';
 import { mountGriddle } from './ui/griddle.js';
 import { playScene } from './ui/vn.js';
-import { missSceneFor, mentionSceneFor } from './engine/story.js';
+import { missSceneFor, mentionSceneFor, endingTitleFor } from './engine/story.js';
 import { tierFor } from './engine/affection.js';
-import { characterOf, matchLabel } from './engine/syrup.js';
+import { characterOf } from './engine/syrup.js';
 import { TUNING } from './data/economy.js';
 import { SCENES, IMPOSSIBLE_ORDER_LINES } from './data/scenes.js';
 import { syrupById, recipeById, nameOf } from './engine/lookup.js';
@@ -205,21 +205,8 @@ function toEvening() {
 /* The card after the last scene. Reports the shape of the run rather than a
    score — this is a cozy game, and there is nothing to win. */
 function showEnding(endingId) {
-  const node = SCENES[endingId] || {};
-  // Not `title` — that is the shop's name, at module scope.
-  let endingTitle = node.endingTitle;
-  if (!title) {
-    // Walk to the terminal node, which is where the title lives.
-    let id = endingId, hops = 0;
-    while (id && hops < 20) {
-      const n = SCENES[id];
-      if (!n) break;
-      if (n.endingTitle) { endingTitle = n.endingTitle; break; }
-      id = n.next || (n.choices && n.choices[0] && n.choices[0].next);
-      hops += 1;
-    }
-  }
-  document.getElementById('ending-title').textContent = endingTitle || 'The season turns';
+  document.getElementById('ending-title').textContent =
+    endingTitleFor(endingId) || 'The season turns';
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const cooked = Object.values(state.cooked).reduce((a, b) => a + b, 0);
   document.getElementById('ending-summary').textContent =

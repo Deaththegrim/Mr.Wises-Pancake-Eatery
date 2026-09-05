@@ -139,3 +139,33 @@ test('no syrup, on any dish, for any customer, can ever cost the player money', 
   assert.ok(worst >= 0,
     `pouring a syrup must never reduce the bill; worst case was ${worstCase} at ${worst}`);
 });
+
+test('the printed lines add up to the printed total — every bill, always', () => {
+  /* The receipt is itemised, so a player can add it up by eye, and one in
+     eight bills did not add up. `total` was rounded once from unrounded
+     floats while each adjustment line was rounded on its own, and the
+     residues did not cancel. The money was right; the visible arithmetic
+     was wrong, against this module's own promise that the receipt and the
+     till "can never disagree".
+
+     The old tests could not see it: one asserted subtotal against the
+     non-adjustment lines only, and the other compared the total to itself. */
+  let checked = 0;
+  for (const r of RECIPES) {
+    for (let quality = 0; quality <= 100; quality += 10) {
+      for (const repeatCount of [0, 1, 2, 3, 8]) {
+        for (const syrup of [null, SYRUPS[0], SYRUPS[4]]) {
+          for (const score of [0, 0.37, 1]) {
+            const bill = billFor(r, { quality, repeatCount, syrup, syrupScore: score });
+            const sum = bill.lines.reduce((a, l) => a + l.amount, 0);
+            assert.equal(sum, bill.total,
+              `${r.id} at ${quality}% x${repeatCount + 1}${syrup ? ' + ' + syrup.id : ''}: ` +
+              `lines add to ${sum} but the total row says ${bill.total}`);
+            checked += 1;
+          }
+        }
+      }
+    }
+  }
+  assert.ok(checked > 1000, `expected a broad sweep, only checked ${checked}`);
+});

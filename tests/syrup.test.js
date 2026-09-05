@@ -129,3 +129,24 @@ test('serve reports which syrup was poured, so the UI can explain the result', (
   assert.equal(r.syrupId, 'lemon_glaze');
   assert.ok(r.syrupScore > 0.9, 'lemon glaze is exactly what the twins want');
 });
+
+test('matchLabel distinguishes the middle, not just the ends', () => {
+  /* This label is the ONLY channel by which a player ever learns a
+     customer's taste — the taste itself is deliberately never printed. Only
+     1.0 and 0.0 were pinned, so collapsing 'a good fit' and 'passable' into
+     'not really theirs' passed the suite while quietly removing the
+     feedback the whole mechanic teaches through. */
+  const labels = [0, 0.3, 0.6, 0.9].map(matchLabel);
+  assert.equal(new Set(labels).size, 4,
+    `each band must read differently, got: ${labels.join(' / ')}`);
+  assert.equal(matchLabel(0.9), 'exactly right');
+  assert.equal(matchLabel(0.6), 'a good fit');
+  assert.equal(matchLabel(0.3), 'passable');
+  assert.equal(matchLabel(0), 'not really theirs');
+  // Better must never read worse.
+  const order = ['not really theirs', 'passable', 'a good fit', 'exactly right'];
+  for (let s = 0; s <= 1; s += 0.05) {
+    const i = order.indexOf(matchLabel(s));
+    assert.ok(i >= 0, `unknown label at score ${s.toFixed(2)}`);
+  }
+});
