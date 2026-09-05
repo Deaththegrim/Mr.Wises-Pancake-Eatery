@@ -16,12 +16,13 @@
 export const TIER_ORDER = ['STRANGER', 'REGULAR', 'FAMILIAR', 'CONFIDANT', 'DEVOTED'];
 
 /* Tuned against the actual grant economy, not guessed. Over 8 weeks:
-     showing up ................ 16   (2/week)
+     showing up ................ 16   (2/week, and UNAVOIDABLE — see below)
      serving her well weekly ... 24   (3/week)
-     dialogue choices .......... ~16
+     dialogue choices ...........  2   (one node in the whole game offers
+                                       an affection choice, and pays once)
      ------------------------------------------
-     everything except listening 56
-     each listening catch ...... +8
+     everything except listening 42
+     each listening catch ...... +8   (five mentions exist, so up to +40)
 
    So DEVOTED at 70 is DELIBERATELY unreachable without the listening
    mechanic. A player who never notices what she mentions tops out at
@@ -29,11 +30,21 @@ export const TIER_ORDER = ['STRANGER', 'REGULAR', 'FAMILIAR', 'CONFIDANT', 'DEVO
    mechanically necessary rather than merely flavourful — which is the
    whole point of the arc. Do not raise the other grants past this
    without moving DEVOTED too. */
+/* REGULAR sits above 16 on purpose. Showing up is granted every week and
+   cannot be declined, so a finished eight-week game ALWAYS carries at
+   least 16 points — which meant the STRANGER ending, and the whole
+   bottom of this ladder, could never be reached by anyone who played to
+   the end. Five endings were authored and one of them was unreachable.
+
+   The floor a completed game produces must therefore fall inside
+   STRANGER, not above it. tests/ending.test.js asserts every tier is
+   reachable from real play, so moving any grant without moving these
+   will fail rather than quietly orphaning an ending again. */
 export const TIER_THRESHOLDS = {
   STRANGER: 0,
-  REGULAR: 10,
-  FAMILIAR: 25,
-  CONFIDANT: 45,
+  REGULAR: 18,
+  FAMILIAR: 30,
+  CONFIDANT: 50,
   DEVOTED: 70
 };
 

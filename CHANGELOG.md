@@ -22,6 +22,12 @@
 
 ### Fixed
 
+- **One of the five endings could never be reached.** Showing up grants two
+  points a week and cannot be declined, so a finished game always carried at
+  least 16 — putting the floor above the lowest tier entirely. Five endings
+  were authored and the collaborator would have been writing one nobody could
+  see. The tiers were retuned so the floor lands in the bottom band, and a
+  test now walks the real grant economy and asserts every tier is reachable.
 - **The evening screen lied about the till after a trip to Research.** "Back"
   was nothing but a screen switch, so after spending at the bench the header
   said 200, the ledger four lines below said 3,000, and the shop offered a

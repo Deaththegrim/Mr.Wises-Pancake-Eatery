@@ -4,8 +4,10 @@ import { openDay, closeDay, isFinalWeek } from '../js/engine/day.js';
 import { endingFor, missSceneFor, endingTitleFor } from '../js/engine/story.js';
 import { newGame } from '../js/engine/state.js';
 import { SCENES } from '../js/data/scenes.js';
-import { TIER_ORDER, TIER_THRESHOLDS } from '../js/data/affection.js';
+import { TIER_ORDER, TIER_THRESHOLDS, GRANTS } from '../js/data/affection.js';
 import { QUOTA_CURVE } from '../js/data/economy.js';
+import { tierFor } from '../js/engine/affection.js';
+const MENTION_COUNT = Object.values(SCENES).filter(n => n.mentions).length;
 
 const runWeeks = (state, n) => {
   let last = null;
@@ -106,8 +108,12 @@ test('every ending resolves to its own title, not the generic fallback', () => {
      ending.test.js already proved every tier reaches a real terminating
      scene. It never proved the title reached the screen, because the code
      that fetched it was somewhere nothing could reach. */
+  /* Derived from the thresholds, not hardcoded: this test used to pin
+     [0, 10, 30, 60, 300], and when the tiers moved so that every ending
+     stayed reachable, 10 stopped being REGULAR and the test collapsed two
+     tiers into one. It was checking the numbers rather than the tiers. */
   const seen = new Map();
-  for (const points of [0, 10, 30, 60, 300]) {
+  for (const points of TIER_ORDER.map(t => TIER_THRESHOLDS[t])) {
     const id = endingFor(points);
     const title = endingTitleFor(id);
     assert.ok(title, `${id} (at ${points} points) has no title, so the card falls back to a generic one`);
@@ -120,4 +126,46 @@ test('every ending resolves to its own title, not the generic fallback', () => {
 test('an unknown or broken ending id returns null rather than looping', () => {
   assert.equal(endingTitleFor('no_such_ending'), null);
   assert.equal(endingTitleFor(undefined), null);
+});
+
+test('every authored ending is reachable by actually playing', () => {
+  /* Five endings were written and one of them could never be seen. Showing
+     up grants two points a week and cannot be declined, so a finished
+     eight-week game always carries at least 16 — which put the floor
+     ABOVE the STRANGER band entirely. Nothing caught it: endingFor() maps
+     points to endings correctly for any number you hand it, and no test
+     asked which numbers the game can actually produce.
+
+     This asserts the ladder against the real grant economy: the floor a
+     completed game produces must land in the lowest tier, and every tier
+     above it must be reachable by adding grants that exist. */
+  const WEEKS = 8;
+  const floor = GRANTS.weeklyPersistence * WEEKS;      // unavoidable
+  assert.equal(tierFor(floor), TIER_ORDER[0],
+    `a player who only ever opened the shop ends on ${tierFor(floor)}, so ` +
+    `"${TIER_ORDER[0]}" and its ending can never be reached`);
+
+  // Now walk up using only grants the game actually hands out.
+  const reachable = new Set([tierFor(floor)]);
+  let points = floor;
+  for (let i = 0; i < WEEKS; i++) {                     // serving her well
+    points += GRANTS.qualityServedMax;
+    reachable.add(tierFor(points));
+  }
+  points += 2;                                          // the one dialogue choice
+  reachable.add(tierFor(points));
+  for (let i = 0; i < MENTION_COUNT; i++) {              // catching what she says
+    points += GRANTS.listening;
+    reachable.add(tierFor(points));
+  }
+
+  for (const tier of TIER_ORDER) {
+    assert.ok(reachable.has(tier), `${tier} is not reachable by any real play`);
+  }
+});
+
+test('and each of those tiers leads somewhere different', () => {
+  const titles = TIER_ORDER.map(t => endingTitleFor(endingFor(TIER_THRESHOLDS[t])));
+  assert.equal(new Set(titles).size, TIER_ORDER.length,
+    `two tiers share an ending: ${titles.join(' / ')}`);
 });

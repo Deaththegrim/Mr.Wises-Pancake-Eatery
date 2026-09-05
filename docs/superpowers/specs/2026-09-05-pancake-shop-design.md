@@ -495,7 +495,18 @@ STRANGER → REGULAR → FAMILIAR → CONFIDANT → DEVOTED
 ```
 
 Thresholds are deliberately far apart. Reaching the last tier should take most of
-the eight weeks. **Affection never decreases** — it stalls. This is a cozy game;
+the eight weeks.
+
+**The bottom of the ladder has to be reachable too** (corrected 2026-09-06).
+Showing up grants two points a week and cannot be declined, so a finished
+eight-week game always carries at least 16 — which put the floor above the
+STRANGER band entirely and made one of the five authored endings impossible to
+reach by anyone who played to the end. Nothing caught it: `endingFor()` maps any
+number to the right ending, and no test asked which numbers the game can actually
+produce. The thresholds now sit at 0 / 18 / 30 / 50 / 70, and
+`tests/ending.test.js` walks the real grant economy and asserts every tier is
+reachable, so moving a grant without moving these fails rather than quietly
+orphaning an ending again. **Affection never decreases** — it stalls. This is a cozy game;
 losing progress on a relationship because you had a bad week is the exact
 punishment the genre exists to avoid. Rudeness in a dialogue choice can decline to
 *grant* a step; nothing takes one away.
