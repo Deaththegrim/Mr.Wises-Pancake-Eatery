@@ -321,21 +321,35 @@ It plays a full 8-week game twice — once as a sloppy player, once as a
 careful one — and prints whether each week's quota was reachable. As tuned
 right now, on the default seed:
 
-    sloppy player ..... 2 of 8 quotas,  8 of 13 research, tier CONFIDANT
-    careful player .... 6 of 8 quotas, 13 of 13 research, tier DEVOTED
+    sloppy player ..... 2 of 8 quotas, tier FAMILIAR
+    shelf player ...... 5 of 8 quotas, tier DEVOTED
+    careful player .... 6 of 8 quotas, tier DEVOTED
 
 That spread is the design working. Nobody ever fails — a missed quota is a
 Synthia scene, not a game over — but the late weeks are near-misses that
-make you want one more unlock. Across ten seeds a careful player averages
-6.1 of 8, and only ever misses weeks 7 and 8.
+make you want one more unlock. Over 20 seeds a careful player averages
+5.8 of 8 and only ever misses weeks 6, 7 and 8.
 
-There is a third profile the tests use, `deaf`. It cooks exactly as well
-as `careful` but keeps anything Synthia has mentioned off the menu, so it
-measures whether **listening** is worth anything on its own: 76.8 affection
-against 46.4, two whole tiers. If those two ever converge, the arc has
-quietly gone back to being a function of cooking accuracy and the listening
-beat has stopped mattering — which is precisely the bug it was written to
-catch, and `tests/balance.test.js` fails when it happens.
+Two of the four profiles exist to keep the tuning honest:
+
+**`shelf`** cooks exactly as well as `careful` but pours whatever syrup the
+picker preselects. `careful` picks with `bestSyrupFor()`, which is an oracle
+for a taste the game deliberately never prints — tuning against that alone
+would balance the game for information no first-time player has. `shelf`
+still clears 5 of 8 and still reaches DEVOTED, so the curve is honest.
+
+**`deaf`** cooks as well as `careful` but keeps anything Synthia has
+mentioned off the menu, measuring whether **listening** is worth anything on
+its own: 72 affection against 43, two whole tiers. If those two ever
+converge, the arc has quietly gone back to being a function of cooking
+accuracy — which is exactly the bug it was written to catch, and
+`tests/balance.test.js` fails when it happens.
+
+**Watch out for one thing when you change the simulator:** `experiment()`
+credits its research points to the state itself and returns the number only
+so the UI can print it. The simulator once added them again, so every
+number in this table described a game a third richer than the one that
+ships, and the quota curve was calibrated from it.
 
 The late-game lever is the **research tree**: dishes with more and dearer
 parts on their bill are what close the gap. (Narrowing the menu helps early, but once you have several

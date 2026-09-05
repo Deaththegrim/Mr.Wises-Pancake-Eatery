@@ -540,6 +540,17 @@ unreachable.
 piece was individually correct and collectively inert. Specify how a feature
 is REACHED, not only how it behaves.
 
+### She waits
+
+Her visit day is fixed per week. If the shop closes before she is served, that
+visit **rolls to the next day the shop opens** rather than evaporating — closing
+up early used to cost a serving grant and a listening catch with nothing on screen
+saying she had been there, and affection is meant to stall, never to be taken away.
+
+She is offered once per day, not until served. An earlier cut returned her from
+every call until the player cooked for her, which guaranteed the arc but meant a
+player who would not serve her could not serve anybody: a soft lock.
+
 ### Impossible orders
 
 **IMPLEMENTED 2026-09-05.** When she has mentioned a dish the player has not
@@ -746,10 +757,9 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
    can be added any time after handoff without touching the economy.
 
    **The measured cost of deferring it** (2026-09-05): a careful player finishes
-   the research tree in **week 7**, and from there the till climbs — 11,440 at the
-   end of week 7 to 21,480 at the end of week 8 — because the only remaining money
-   sink is the bench, which is still hunting the last two syrups but cannot absorb
-   the income. The last two weeks therefore have no *economic* decision left, only
+   the research tree late in the run, and from there the till climbs with nothing
+   left to buy, because the only remaining money sink is the bench, which is still
+   hunting the last syrups but cannot absorb the income. The last two weeks therefore have no *economic* decision left, only
    execution and the menu. Nothing breaks and nobody fails, but decoration is what
    gives that money somewhere to go, so it is the first thing to build in Phase 2
    rather than a nice-to-have.
