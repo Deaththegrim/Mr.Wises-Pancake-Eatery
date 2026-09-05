@@ -26,10 +26,17 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/        # 161 unit tests (incl. 12 balance regressions)
-    node tools/validate.js    # content integrity
-    node tools/simulate.js    # is the game actually balanced?
-    python3 tools/smoke.py    # plays the game in a headless browser
+    node --test tests/         # 180 unit tests (incl. balance regressions)
+    node tools/validate.js     # content integrity
+    node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
+    python3 tools/smoke.py     # plays the game in a headless browser
+    python3 tools/playthrough.py 1   # plays the REAL page for N weeks (slow)
+
+`simulate.js` drives the engine directly, so it is fast enough to run a full
+eight weeks — but it is only as correct as its imitation of `main.js`, and it
+was once wrong in exactly the same way the UI was, which meant it reproduced a
+bug instead of finding it. `playthrough.py` plays the actual page and
+cross-checks the simulator. Run it after changing how a turn is driven.
 
 The first three need nothing but Node 20. The smoke test needs Playwright,
 which is a dev tool only — the game itself has zero dependencies.

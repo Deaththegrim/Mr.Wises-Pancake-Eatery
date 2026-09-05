@@ -157,6 +157,15 @@ These were found by tooling, not by review, and every one would have shipped:
 - Five mention scenes (was two), so the arc has headroom to reach its last
   tier rather than topping out just short.
 
+- **`tools/playthrough.py`** — plays the real page in a browser for N in-game
+  weeks and cross-checks `simulate.js` against it. The simulator drives the
+  engine directly, which is fast but only as correct as its imitation of
+  `main.js` — and it was once wrong in precisely the way the UI was, so it
+  *reproduced* the Synthia bug rather than exposing it, reporting her stuck at
+  REGULAR for eight weeks. Its load-bearing assertion is that affection must
+  accrue from more than one source; in the broken build the only grant reason
+  was "you kept the shop open".
+
 ### Known gaps
 
 - All dialogue in `js/data/scenes.js` is placeholder written to be replaced.
