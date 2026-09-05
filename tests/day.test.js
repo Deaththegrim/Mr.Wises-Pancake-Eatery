@@ -39,37 +39,74 @@ test('nextCustomer is deterministic for a given seed', () => {
 });
 
 test('consecutive customers in a day are not all identical', () => {
-  // Skip Synthia's day: she is a single customer who waits at the counter
-  // until served, so on her day every call correctly returns her.
   const s = newGame(4);
   for (let d = 1; d <= 7; d++) {
     s.day = d;
     openDay(s);
-    if (synthiaDueToday(s)) continue;
     const orders = [];
-    for (let i = 0; i < 12; i++) orders.push(nextCustomer(s).customer.id);
-    assert.ok(new Set(orders).size > 1, 'the order index must advance the rng, not repeat one customer');
+    // She is offered at most once a day, so anything after the first call
+    // is the ordinary queue.
+    for (let i = 0; i < 13; i++) orders.push(nextCustomer(s).customer.id);
+    const ordinary = orders.filter(id => id !== 'synthia');
+    assert.ok(new Set(ordinary).size > 1,
+      'the order index must advance the rng, not repeat one customer');
     return;
   }
-  assert.fail('no ordinary day found in the week');
 });
 
-test('Synthia waits at the counter until she is served', () => {
+test('she is offered once a day, and does not block the queue', () => {
+  /* She used to be returned by EVERY call until served, which guaranteed
+     the arc but meant a player who would not cook for her could not serve
+     anybody, ever — a soft lock. She is offered first, then the day goes
+     on. Missing her costs nothing; see the next test. */
   const s = newGame(4);
   for (let d = 1; d <= 7; d++) {
     s.day = d;
     openDay(s);
     if (!synthiaDueToday(s)) continue;
-    assert.equal(nextCustomer(s).isSynthia, true);
-    assert.equal(nextCustomer(s).isSynthia, true, 'she does not wander off unserved');
-    serve(s, s.menu[0], {
-      volume: 50, msOffset: 0, offsets: [0, 0, 0], coverage: [0.7, 0.7, 0.7]
-    }, { forSynthia: true });
-    const after = nextCustomer(s);
-    assert.ok(!after || !after.isSynthia, 'and the queue moves on once she is served');
+    assert.equal(nextCustomer(s).isSynthia, true, 'she comes first on her day');
+    const after = [];
+    for (let i = 0; i < 6; i++) after.push(nextCustomer(s));
+    assert.ok(after.every(o => o && !o.isSynthia), 'and the queue moves on behind her');
     return;
   }
   assert.fail('no Synthia day found in the week');
+});
+
+test('a visit missed by closing early is not lost — she comes back tomorrow', () => {
+  /* Her day is fixed per week, so closing up before serving her used to
+     cost that week's serving grant AND a listening catch, with nothing on
+     screen saying she had been there. Affection is meant to stall, never
+     to be taken away. */
+  const s = newGame(4);
+  let herDay = null;
+  for (let d = 1; d <= 7; d++) { s.day = d; if (synthiaDueToday(s)) { herDay = d; break; } }
+  assert.ok(herDay, 'she must be due some day this week');
+  if (herDay === 7) return;              // no tomorrow to test against
+
+  s.day = herDay; openDay(s);
+  assert.equal(nextCustomer(s).isSynthia, true);
+  // The player closes up without cooking for her.
+  s.day = herDay + 1; openDay(s);
+  assert.equal(nextCustomer(s).isSynthia, true, 'she waits for the shop to open again');
+});
+
+test('once served, she does not return again that week', () => {
+  const s = newGame(4);
+  let herDay = null;
+  for (let d = 1; d <= 7; d++) { s.day = d; if (synthiaDueToday(s)) { herDay = d; break; } }
+  s.day = herDay; openDay(s);
+  const hers = nextCustomer(s);
+  assert.equal(hers.isSynthia, true);
+  serve(s, hers.recipeId, {
+    volume: 50, msOffset: 0, offsets: [0, 0, 0], coverage: [0.7, 0.7, 0.7]
+  }, { forSynthia: true });
+
+  for (let d = herDay + 1; d <= 7; d++) {
+    s.day = d; openDay(s);
+    const o = nextCustomer(s);
+    assert.ok(!o || !o.isSynthia, `she came back on day ${d} after already being served`);
+  }
 });
 
 test('nextCustomer only orders something on the menu', () => {

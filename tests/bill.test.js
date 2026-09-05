@@ -71,12 +71,26 @@ test('quality and repetition show as adjustments, not as items sold', () => {
   assert.equal(bill.subtotal, items.reduce((a, l) => a + l.amount, 0),
     'the subtotal is the things sold, before anything is adjusted');
   assert.ok(adjustments.some(l => /today/.test(l.label)), 'the repeat must be visible, not silent');
+  /* Name the actual position. The old assertion matched only /today/, so
+     an ordinal that always said "first today" passed while telling the
+     player nothing about why the dish paid less. */
+  assert.ok(adjustments.some(l => l.label === 'third today'),
+    `the third of a dish must say so: ${adjustments.map(l => l.label).join(', ')}`);
   assert.ok(adjustments.some(l => l.amount < 0), 'and it must cost something');
 });
 
 test('the third of a dish today bills less than the first', () => {
   const r = recipe('plain');
   assert.ok(billFor(r, { repeatCount: 2 }).total < billFor(r, { repeatCount: 0 }).total);
+});
+
+test('each repeat is named by its position, all the way up', () => {
+  const r = recipe('plain');
+  const labelAt = n => (billFor(r, { repeatCount: n }).lines.find(l => /today/.test(l.label)) || {}).label;
+  assert.equal(labelAt(1), 'second today');
+  assert.equal(labelAt(2), 'third today');
+  assert.equal(labelAt(3), '4th today');
+  assert.equal(labelAt(9), '10th today');
 });
 
 test('a matched syrup adds a line naming its verdict', () => {

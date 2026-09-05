@@ -92,7 +92,16 @@ export function hintFor(blend, target) {
                 grind; it must still teach or nobody experiments twice.
      found    — the ingredients are gone and you have a new syrup. */
 export function experiment(state, ingredientIds) {
-  if (!hasIngredients(state, ingredientIds)) {
+  /* An empty blend is not a failed experiment, it is not an experiment.
+     hasIngredients(state, []) is vacuously true — every one of no
+     ingredients is in stock — so this fell straight past the blocked
+     branch into the miss branch and paid benchFailPoints for combining
+     nothing at all, indefinitely, at no cost. The bench is the money sink
+     the whole quota curve is balanced against, and it had no floor.
+
+     The hint below was written for exactly this case and was unreachable
+     for the same reason. */
+  if (!ingredientIds || ingredientIds.length === 0 || !hasIngredients(state, ingredientIds)) {
     const missing = missingIngredients(state, ingredientIds);
     return {
       found: false,

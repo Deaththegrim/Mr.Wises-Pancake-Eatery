@@ -52,7 +52,12 @@ function dayRng(state) {
    the ordinary path below shares none of it. Returns her order, or null
    when it is not her turn. */
 function synthiaOrder(state) {
-  if (!synthiaDueToday(state) || state.synthiaServedToday) return null;
+  /* `synthiaOfferedToday` — not "served". She is offered once per day; if
+     the player never cooks it, she must not become every customer for the
+     rest of the day. Whether the WEEK's visit is spent is tracked
+     separately by synthia.seenInWeek, so an unserved visit rolls to
+     tomorrow instead of vanishing. */
+  if (!synthiaDueToday(state) || state.synthiaOfferedToday) return null;
 
   const menu = state.menu.map(recipeById).filter(Boolean);
   if (!menu.length) return null;
@@ -94,6 +99,7 @@ function synthiaOrder(state) {
   const pick = remembered || best[Math.floor(rng() * Math.min(2, best.length))];
 
   state.orderIndex = (state.orderIndex || 0) + 1;
+  state.synthiaOfferedToday = true;
   return {
     isSynthia: true,
     impossibleAsk: impossibleAsk || null,
@@ -140,6 +146,7 @@ export function nextCustomer(state) {
 export function openDay(state) {
   state.phase = 'service';
   state.synthiaServedToday = false;
+  state.synthiaOfferedToday = false;
   state.todayServed = {};
   state.orderIndex = 0;
   state.dayEarnings = 0;
@@ -193,6 +200,7 @@ export function serve(state, recipeId, beats, opts = {}) {
   let noticed = false;
   if (opts.forSynthia) {
     state.synthiaServedToday = true;
+    state.synthia.seenInWeek = state.week;   // her visit for this week is spent
     grantForServing(state.synthia, quality);
     noticed = checkListening(state.synthia, recipeId).noticed;
   }

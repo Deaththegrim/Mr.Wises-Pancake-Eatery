@@ -187,3 +187,30 @@ test('and listening is what gets them there — not just cooking well', () => {
   assert.ok(!deafTiers.includes('DEVOTED'),
     `a player who ignores what she says must NOT reach her closest tier (${deafTiers.join(', ')})`);
 });
+
+test('the quota curve is tuned for a player who is NOT told what customers like', () => {
+  /* `careful` picks its syrup with bestSyrupFor() — an oracle for a taste
+     the UI deliberately never prints, since the whole point is that you
+     learn it by serving people. Calibrating the curve against that alone
+     tunes the game for information no first-time player has.
+
+     `shelf` cooks exactly as well but pours whatever the picker preselects,
+     which is what actually happens until the player has learned a
+     customer. The early weeks must still be comfortable for them. */
+  const rows = simulate(2026, 'shelf');
+  for (const r of rows.slice(0, 4)) {
+    assert.ok(r.met, `week ${r.week} must be clearable without knowing anyone's taste (${r.earned}/${r.quota})`);
+  }
+  assert.ok(rows.filter(r => r.met).length >= 4,
+    'a player who never guesses a syrup right should still clear half the game');
+  assert.equal(rows[7].tier, 'DEVOTED',
+    'and the relationship must not depend on syrup knowledge — that is what listening is for');
+});
+
+test('knowing a customer is worth something, but is not the difference', () => {
+  const shelf = simulate(2026, 'shelf').filter(r => r.met).length;
+  const careful = simulate(2026, 'careful').filter(r => r.met).length;
+  assert.ok(careful >= shelf, 'learning tastes must never make you worse off');
+  assert.ok(careful - shelf <= 3,
+    `syrup knowledge should be an edge, not the game: ${careful}/8 against ${shelf}/8`);
+});

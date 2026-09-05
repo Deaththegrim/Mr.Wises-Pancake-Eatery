@@ -125,6 +125,16 @@ function buyEverythingAffordable(state) {
 export function simulate(seed = 2026, profile = 'careful') {
   const deaf = profile === 'deaf';
   if (deaf) profile = 'careful';
+
+  /* `shelf` cooks as well as `careful` but pours whatever is first on the
+     shelf, because that is what the picker preselects and a customer's
+     taste is deliberately never printed — a real player learns it by
+     serving, over weeks. `careful` uses bestSyrupFor(), which is an oracle
+     for information the UI does not give out, so on its own it calibrates
+     the quota curve against income nobody can reliably earn on a first
+     playthrough. This is the honest middle. */
+  const shelf = profile === 'shelf';
+  if (shelf) profile = 'careful';
   const s = newGame(seed);
   const rows = [];
   for (let w = 1; w <= WEEKS; w++) {
@@ -160,7 +170,7 @@ export function simulate(seed = 2026, profile = 'careful') {
            matching what main.js does, the balance numbers describe a game
            nobody is playing — which has happened here twice already. */
         const taste = order.customer && order.customer.taste;
-        const syrupId = profile === 'careful'
+        const syrupId = (profile === 'careful' && !shelf)
           ? bestSyrupFor(s.unlockedSyrups, taste)
           : (s.unlockedSyrups[0] || null);
 

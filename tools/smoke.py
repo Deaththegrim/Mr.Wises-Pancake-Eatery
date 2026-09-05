@@ -255,6 +255,18 @@ def main():
           })()
         """)
         page.click("#btn-open")
+        # She may be waiting on this day — an unserved visit rolls forward
+        # to the next day the shop opens, so her mention scene can be up
+        # before the day is closed. Walk out of it first.
+        page.wait_for_timeout(300)
+        for _ in range(12):
+            if not page.is_visible("#screen-vn"):
+                break
+            bs = page.query_selector_all("#vn-choices button")
+            if not bs:
+                break
+            bs[0].click()
+            page.wait_for_timeout(150)
         page.click("#btn-close")
         page.wait_for_timeout(400)
         check(page.is_visible("#screen-vn"), "week rollover opened the VN screen")
@@ -439,6 +451,17 @@ def main():
         page.click("#btn-back-evening") if page.is_visible("#btn-back-evening") else None
         page.click("#btn-next-day")
         page.click("#btn-open")
+        # As above: she may be waiting on the final day, so her scene can be
+        # up before the shop can be closed.
+        page.wait_for_timeout(300)
+        for _ in range(12):
+            if not page.is_visible("#screen-vn"):
+                break
+            bs = page.query_selector_all("#vn-choices button")
+            if not bs:
+                break
+            bs[0].click()
+            page.wait_for_timeout(150)
         page.click("#btn-close")
         page.wait_for_timeout(400)
         check(page.is_visible("#screen-vn"), "the final week opens a closing scene")
@@ -451,7 +474,11 @@ def main():
         title = page.inner_text("#ending-title").strip()
         summary = page.inner_text("#ending-summary").strip()
         print(f'       "{title}" — {summary}')
-        check(title != "", "the ending has a title")
+        # Not merely non-empty: "The season turns" is the fallback the card
+        # shows when the title walk fails, and it did fail silently for a
+        # while — every ending, devoted and stranger alike, headed the same.
+        check(title != "" and title != "The season turns",
+              f'the ending card shows its own authored title ("{title}")')
         check("devoted" in summary.lower(),
               "and the summary reflects the affection tier actually reached")
         check(page.evaluate("window.GAME.state.ended") is True, "the game is marked over")

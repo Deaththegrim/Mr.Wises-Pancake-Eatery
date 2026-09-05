@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateContent } from '../tools/validate.js';
 import { SCENES } from '../js/data/scenes.js';
+import { TUNING } from '../js/data/economy.js';
 import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION } from '../js/data/affection.js';
 
 test('the shipped content validates clean', () => {
@@ -231,4 +232,17 @@ test('a tier with no sprite expression is caught', () => {
 test('the real content still passes after every fault is restored', () => {
   const { errors } = validateContent();
   assert.deepEqual(errors, [], 'the shipped content must be clean');
+});
+
+test('a baseIngredient that names nothing is caught', () => {
+  /* billFor() skips this ingredient because the pancakes are already
+     billed by the stack. If it stops naming a real one, nothing is
+     skipped and EVERY dish silently bills its base twice, with a
+     plausible-looking extra line on the receipt. */
+  const saved = TUNING.baseIngredient;
+  TUNING.baseIngredient = 'renamed_flour';
+  try {
+    const { errors } = validateContent();
+    assert.ok(errors.some(e => /baseIngredient/.test(e)), errors.join('\n'));
+  } finally { TUNING.baseIngredient = saved; }
 });

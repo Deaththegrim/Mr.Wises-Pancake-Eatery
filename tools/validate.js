@@ -11,6 +11,7 @@ import { RECIPES } from '../js/data/recipes.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { RESEARCH } from '../js/data/research.js';
 import { CUSTOMERS } from '../js/data/customers.js';
+import { TUNING } from '../js/data/economy.js';
 import { SCENES } from '../js/data/scenes.js';
 import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE } from '../js/data/affection.js';
 
@@ -163,6 +164,23 @@ export function validateContent(override = {}) {
                 'so the shop opens to nobody and the game cannot start.');
   }
 
+  /* A repeated ingredient bills asymmetrically: a second flour is skipped
+     (it is the pancake, billed by the stack) while a second butter adds
+     another line and another charge. Whichever the author meant, one of
+     the two is wrong, and nothing else would ever say so. */
+  for (const r of recipes) {
+    const seen = new Set(), dupes = new Set();
+    for (const id of r.ingredients || []) {
+      if (seen.has(id)) dupes.add(id);
+      seen.add(id);
+    }
+    if (dupes.size) {
+      warnings.push(`recipes.js — "${r.id}" lists ${[...dupes].map(d => `"${d}"`).join(', ')} more ` +
+                    `than once. The bill charges a repeated ingredient twice but ignores a ` +
+                    `repeated base, so the two cases disagree. List it once.`);
+    }
+  }
+
   // --- recipes ---
   for (const r of recipes) {
     for (const ing of r.ingredients || []) {
@@ -269,6 +287,26 @@ export function validateContent(override = {}) {
     for (const key of ['greeting', 'happy', 'disappointed']) {
       if (!c.lines || !c.lines[key]) {
         warnings.push(`customers.js — customer "${c.id}" is missing the "${key}" line`);
+      }
+    }
+  }
+
+  /* THE BASE INGREDIENT. billFor() skips it because the pancakes are
+     already billed by the stack, so if this stops naming a real ingredient
+     nothing is skipped and EVERY dish in the game quietly bills its base
+     twice, with a plausible extra line on the receipt. Renaming an
+     ingredient means editing ingredients.js and recipes.js — both of which
+     are checked — and this third place, which was not. */
+  if (crossContent) {
+    const base = TUNING.baseIngredient;
+    if (!ingIds.has(base)) {
+      errors.push(`economy.js — TUNING.baseIngredient is "${base}", which is not an ingredient. ` +
+                  `Every recipe would bill its base twice.`);
+    } else {
+      const without = recipes.filter(r => !(r.ingredients || []).includes(base));
+      if (without.length) {
+        warnings.push(`recipes.js — ${without.map(r => `"${r.id}"`).join(', ')} do not contain ` +
+                      `"${base}", the ingredient billed as the pancakes themselves.`);
       }
     }
   }

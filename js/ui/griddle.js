@@ -17,7 +17,22 @@ let PALETTE = null;
 function palette() {
   if (PALETTE) return PALETTE;
   const css = getComputedStyle(document.documentElement);
-  const read = (name, fallback) => (css.getPropertyValue(name) || '').trim() || fallback;
+  /* Only 3- or 6-digit hex, because rgb() below parses nothing else: a
+     token authored as `rgb(...)`, `hsl(...)`, a colour name or 8-digit
+     #rrggbbaa parses to NaN or to the wrong channels, and canvas silently
+     ignores an invalid fillStyle and keeps the previous colour — so the
+     food would quietly render the colour of the pan. The guard added when
+     this last bit covered the OUTPUT format; this covers the input. */
+  const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  const read = (name, fallback) => {
+    const raw = (css.getPropertyValue(name) || '').trim();
+    if (!raw) return fallback;
+    if (!HEX.test(raw)) {
+      console.warn(`[palette] ${name} is "${raw}"; the canvas needs 3- or 6-digit hex. Using ${fallback}.`);
+      return fallback;
+    }
+    return raw;
+  };
   PALETTE = {
     pan: read('--pan', '#241d33'),
     rim: read('--pan-rim', '#3a2f52'),

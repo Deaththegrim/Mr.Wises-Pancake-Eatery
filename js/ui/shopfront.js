@@ -82,9 +82,18 @@ function renderStockWarning(state, onChange) {
   });
   btn.disabled = state.money < restock;
   btn.addEventListener('click', () => {
-    for (const id of short) buyIngredient(state, id, 1);
+    /* buyIngredient returns {ok, reason}. This loop used to throw every
+       result away and report success unconditionally, so a partial failure
+       was invisible and the player was told it worked. */
+    const failed = [];
+    for (const id of short) {
+      const r = buyIngredient(state, id, 1);
+      if (!r.ok) failed.push(`${nameOf(ingredientById, id)}: ${r.reason}`);
+    }
     renderMorning(state, onChange);
-    showNotice(`Restocked. ${state.money} left in the till.`);
+    showNotice(failed.length
+      ? `Restocked what it could. ${failed.join('; ')}`
+      : `Restocked. ${state.money} left in the till.`);
   });
   mount.append(btn);
 }

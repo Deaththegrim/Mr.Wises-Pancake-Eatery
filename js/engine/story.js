@@ -51,9 +51,25 @@ export function missSceneFor(missCount) {
    Once a week, on a day that varies, so she stays unpredictable without
    becoming a fixture. */
 export function synthiaDueToday(state) {
+  const herDay = synthiaDay(state);
+  if (state.day === herDay) return true;
+
+  /* She waits. If her day came and went without her being served — the
+     player closed up early, or abandoned the dish half-cooked — she comes
+     back the next day instead of that week's visit silently evaporating.
+
+     Without this, closing the shop early on one particular day cost the
+     player a serving grant AND a listening catch, with nothing on screen
+     saying she had been there at all. Affection is meant to stall, never
+     to be quietly taken away, and "showing up is the courtship" cuts both
+     ways: the shop being open is what she is turning up for. */
+  return state.day > herDay && !(state.synthia.seenInWeek === state.week);
+}
+
+/* The day of the week she means to come. Deterministic per (seed, week). */
+export function synthiaDay(state) {
   const rng = makeRng(state.seed + state.week * 31);
-  const herDay = 1 + Math.floor(rng() * 7);
-  return state.day === herDay;
+  return 1 + Math.floor(rng() * 7);
 }
 
 /* Something she says in passing, drawn from whatever she has not already

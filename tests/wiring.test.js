@@ -124,6 +124,14 @@ test('the canvas fallback colours still match the stylesheet', () => {
 
   const drifted = [];
   for (const [, name, fallback] of fallbacks) {
+    // The canvas parses only 3- or 6-digit hex; anything else silently
+    // falls back, so the stylesheet must not author these any other way.
+    assert.match(fallback, /^#([0-9a-f]{3}|[0-9a-f]{6})$/i,
+      `${name}'s fallback ${fallback} is not plain hex, which the canvas cannot parse`);
+    if (tokens.has(name)) {
+      assert.match(tokens.get(name), /^#([0-9a-f]{3}|[0-9a-f]{6})$/i,
+        `style.css authors ${name} as ${tokens.get(name)}; the canvas reads it and needs plain hex`);
+    }
     if (!tokens.has(name)) {
       drifted.push(`${name}: griddle.js falls back to ${fallback}, but style.css no longer defines it`);
     } else if (tokens.get(name) !== fallback.toLowerCase()) {

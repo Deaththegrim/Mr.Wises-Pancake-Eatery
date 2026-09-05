@@ -208,3 +208,27 @@ test('a blocked experiment consumes nothing at all', () => {
   assert.ok(r.blocked, 'must report the block');
   assert.deepEqual(state.pantry, before, 'a blocked attempt must not spend stock');
 });
+
+test('an empty blend is blocked, not a free research point', () => {
+  /* hasIngredients(state, []) is vacuously true — every one of no
+     ingredients is in stock — so an empty blend fell straight past the
+     blocked branch into the MISS branch and paid benchFailPoints for
+     combining nothing, indefinitely, at no cost. The bench is the money
+     sink the whole quota curve is balanced against, and it had no floor.
+     Only a check in the UI stood between this and the player, and the
+     balance simulator calls the engine directly. */
+  const state = newGame(3);
+  state.points = 0;
+  for (const empty of [[], null, undefined]) {
+    const r = experiment(state, empty);
+    assert.ok(r.blocked, `${JSON.stringify(empty)} must be blocked`);
+    assert.equal(r.points, 0);
+  }
+  for (let i = 0; i < 20; i++) experiment(state, []);
+  assert.equal(state.points, 0, 'combining nothing must never earn anything');
+});
+
+test('and it says what to do — the hint written for this was unreachable', () => {
+  const r = experiment(newGame(3), []);
+  assert.match(r.hint, /pick something/i);
+});

@@ -32,8 +32,15 @@
    RAISED when syrup pairing landed: pouring a syrup that suits the
    customer is worth up to +25% on the payout, which is a real income
    lever the old curve knew nothing about. Left alone, a careful player
-   cleared all eight weeks and the quota stopped being a decision. */
-export const QUOTA_CURVE = [300, 1000, 2600, 5200, 9000, 13500, 18500, 24000];
+   cleared all eight weeks and the quota stopped being a decision.
+
+   LOWERED at weeks 7-8 once tools/simulate.js stopped paying the bench
+   twice. It had been crediting research points that experiment() already
+   credits, so every number this curve was calibrated against described a
+   game about a third richer than the one that ships — week 3 earnings of
+   6,526 against a real 4,522. The late weeks are meant to be near-misses
+   that make you want one more unlock, not unreachable. */
+export const QUOTA_CURVE = [300, 1000, 2600, 5200, 9000, 13500, 16800, 20500];
 
 export const TUNING = {
   // Diminishing returns: each repeat of the same recipe in one day earns
