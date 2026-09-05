@@ -266,6 +266,13 @@ That's on purpose — the game should get calmer as it goes, not louder.
 
 ## Writing Synthia — `js/data/scenes.js`
 
+**Start with `node tools/writing.js synthia`.** It prints every scene with
+when the player sees it — which week, what they have just done, what her
+face is doing, and what the player can say back — so the lines can be
+written in any order without reading any code. `node tools/writing.js` on
+its own adds the shop: the customers, the room, and the names.
+
+
 Same node format as god-synthia's `js/story.js`, so it should feel familiar.
 
     quiet_morning: {
@@ -465,6 +472,11 @@ its own, so restricting it just turns people away.)
     node tools/validate.js     # content — instant
     node --test tests/         # rules — a couple of seconds
     python3 tools/smoke.py     # the real page in a real browser — a minute
+
+And the two worklists, which never fail — they just tell you what is left:
+
+    node tools/writing.js      # every line of prose, and when it is seen
+    node tools/art.js          # every picture, where it goes, what it shows
 
 `tools/playthrough.py` is the slow one. It plays actual in-game weeks
 through the page and then checks that `tools/simulate.js` agrees with what

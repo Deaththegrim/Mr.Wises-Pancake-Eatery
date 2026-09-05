@@ -32,6 +32,7 @@ Then open http://localhost:8000
     python3 tools/smoke.py     # plays the game in a headless browser
     python3 tools/playthrough.py 1   # plays the REAL page for N weeks (slow)
     node tools/art.js          # what art is needed, and what is already in
+    node tools/writing.js      # every line of prose, and when it is seen
 
 `simulate.js` drives the engine directly, so it is fast enough to run a full
 eight weeks — but it is only as correct as its imitation of `main.js`, and it
@@ -116,6 +117,9 @@ rather than built.
 
 Every line in `js/data/scenes.js` is a placeholder — the systems for the
 arc exist, the voice does not, and that is the collaborator's.
+`node tools/writing.js` prints all ~680 words of it with, for each line,
+when the player sees it: which week, what they have just done, what her
+face is doing. It can be worked through without opening any code.
 
 For art, `node tools/art.js` prints every picture the game can use: where
 the file goes, what size, what it has to show, and which placeholder it

@@ -30,7 +30,7 @@ export function endingFor(affectionPoints) {
    turns a kind mechanic into a broken record. The scenes escalate for the
    first few misses and then hold, so a bad run still feels acknowledged
    without needing infinite writing. */
-const MISS_SCENES = [
+export const MISS_SCENES = [
   'quota_missed_1',   // first time: she barely reacts
   'quota_missed_2',   // twice: she notices
   'quota_missed_3'    // three or more: she sits down

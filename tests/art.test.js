@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ART } from '../js/data/art.js';
 import { DECOR } from '../js/data/decor.js';
+import { SCENES } from '../js/data/scenes.js';
+import { TIER_ORDER } from '../js/data/affection.js';
+import { MISS_SCENES } from '../js/engine/story.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -81,4 +84,27 @@ test('the game runs with no art at all', () => {
   const present = ART.filter(s => existsSync(join(root, s.path)));
   assert.ok(present.length >= 0);   // trivially true: this test documents intent
   assert.equal(typeof ART.length, 'number');
+});
+
+test('the writing checklist accounts for every scene', () => {
+  /* tools/writing.js tells the collaborator WHEN each line is seen. A
+     scene it cannot place gets reported as orphaned — which is true and
+     useful when a scene really is unreachable, and a false alarm that
+     sends someone hunting a bug when it is not. It derives the entry
+     points from the engine (miss scenes, endings, mentions) rather than
+     listing them, so this asserts the derivation still covers everything. */
+  const entry = new Set([
+    'visit_first', 'quota_met', 'noticed',
+    ...MISS_SCENES,
+    ...TIER_ORDER.map(t => `ending_${t.toLowerCase()}`),
+    ...Object.entries(SCENES).filter(([, n]) => n.mentions).map(([id]) => id)
+  ]);
+  const reachable = new Set(entry);
+  for (const [, node] of Object.entries(SCENES)) {
+    if (node.next) reachable.add(node.next);
+    for (const c of node.choices || []) if (c.next) reachable.add(c.next);
+  }
+  const orphaned = Object.keys(SCENES).filter(id => !reachable.has(id));
+  assert.deepEqual(orphaned, [],
+    'scenes nothing can reach — either wire them up or delete them:\n' + orphaned.join('\n'));
 });
