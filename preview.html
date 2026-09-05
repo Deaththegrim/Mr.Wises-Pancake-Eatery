@@ -158,11 +158,30 @@ for (const slot of SOUNDS) {
   const btn = document.createElement('button');
   if (slot.sustain) {
     /* A held sound has no length of its own, so it is played the way the
-       game plays it: down to start, up to stop. */
+       game plays it: down to start, up to stop.
+
+       KEYBOARD AND TOUCH, for the same reason the pour beat has them: a
+       <button> fires `click` on Enter/Space and does NOT fire mousedown or
+       mouseup, so a mouse-only version is silent for anyone using the
+       keyboard — they tab to it, see the focus ring, press Enter, and
+       nothing happens. The game already learned this once; the workbench
+       had not. `e.repeat` matters because holding a key autorepeats, and
+       every repeat would start the sound again. */
     btn.textContent = 'Hold to play';
-    btn.addEventListener('mousedown', () => sfxStart(slot.id));
-    btn.addEventListener('mouseup', () => sfxStop(slot.id));
-    btn.addEventListener('mouseleave', () => sfxStop(slot.id));
+    const down = () => sfxStart(slot.id);
+    const up = () => sfxStop(slot.id);
+    btn.addEventListener('mousedown', down);
+    btn.addEventListener('mouseup', up);
+    btn.addEventListener('mouseleave', up);
+    btn.addEventListener('keydown', e => {
+      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); down(); }
+    });
+    btn.addEventListener('keyup', e => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); up(); }
+    });
+    btn.addEventListener('blur', up);
+    btn.addEventListener('touchstart', e => { e.preventDefault(); down(); });
+    btn.addEventListener('touchend', e => { e.preventDefault(); up(); });
   } else {
     btn.textContent = 'Play';
     btn.addEventListener('click', () => sfxPlay(slot.id));

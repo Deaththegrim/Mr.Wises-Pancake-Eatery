@@ -292,17 +292,35 @@ document.getElementById('btn-back-evening').addEventListener('click', () => { re
    sound on" next to a silent game reads as a label for the silence. */
 const soundBtn = document.getElementById('btn-sound');
 function renderSound() {
-  soundBtn.textContent = isMuted() ? 'Sound: off' : 'Sound: on';
-  soundBtn.setAttribute('aria-pressed', String(isMuted()));
+  const on = !isMuted();
+  soundBtn.textContent = on ? 'Sound: on' : 'Sound: off';
+
+  /* aria-pressed has to AGREE with the label. It was set to isMuted(), so
+     a button reading "Sound: off" announced as pressed — and pressed
+     conventionally means engaged, which is the opposite. A screen-reader
+     user got "Sound: off, pressed", which reads as a broken control. */
+  soundBtn.setAttribute('aria-pressed', String(on));
+
+  /* The dimming is a separate class rather than a [aria-pressed] selector.
+     Styling off the ARIA state is what made the bug above possible: the
+     visual said "muted" and the semantics said "on", and fixing either one
+     alone silently broke the other. */
+  soundBtn.classList.toggle('is-muted', !on);
 }
 soundBtn.addEventListener('click', () => { toggleMuted(); renderSound(); });
 renderSound();
 
 /* Browsers will not start an audio context before the player has
-   interacted with the page, so the first click anywhere wakes it — once,
+   interacted with the page, so the first gesture anywhere wakes it — once,
    and before any beat needs it, so the first sound is not the one lost
-   while the hardware comes up. */
+   while the hardware comes up.
+
+   KEYDOWN AS WELL AS CLICK. The pour beat is deliberately operable from
+   the keyboard, so a click-only unlock left keyboard-only players building
+   the context inside the first beat instead of ahead of it — the exact
+   case this exists to prevent. */
 document.addEventListener('click', unlock, { once: true });
+document.addEventListener('keydown', unlock, { once: true });
 
 showScreen('title');
 

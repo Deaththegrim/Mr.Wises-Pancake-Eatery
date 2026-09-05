@@ -19,10 +19,16 @@ import { SOUNDS } from '../js/data/sounds.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/* Formats every current browser decodes. Checked by header rather than by
-   extension, because a .mp3 that is really a .wav decodes fine and a .mp3
-   that is really an HTML error page does not — and the second is what you
-   get from a failed download, which is the realistic way this goes wrong. */
+/* Container sniffing, by HEADER rather than by extension: a .mp3 that is
+   really a .wav decodes fine, and a .mp3 that is really an HTML error page
+   does not — the second being what a failed download leaves behind, which
+   is the realistic way this goes wrong.
+
+   Recognising a container is not a promise that every browser decodes it.
+   MP3 and WAV are safe everywhere; Ogg and FLAC are not universal (Safari
+   is the usual gap). The game reports a file it cannot decode at run time,
+   so a wrong choice here is visible rather than silent — but prefer MP3 or
+   WAV if the recording is meant to work for everyone. */
 function format(file) {
   const buf = readFileSync(file);
   if (buf.length < 12) return null;
@@ -82,10 +88,12 @@ if (broken.length) {
   console.log('');
 }
 
-/* The game reads this to know which slots have a recording, so it never
-   requests a file that is not there and never logs a 404 the console does
-   not need — the same reason data/art.js has one. Written every run, so
-   "add the file, run the checklist, reload" is the whole workflow. */
+/* The game reads this to know which slots have a recording. Unlike the
+   art's manifest, which is an optimisation the game can do without (it
+   falls back to probing every slot), this one is REQUIRED: the sound layer
+   loads nothing that is not listed here. So running this tool is not a
+   convenience, it is the step that puts a recording into the game.
+   "Add the file, run the checklist, reload" is the whole workflow. */
 const dir = join(root, 'assets/audio');
 mkdirSync(dir, { recursive: true });
 writeFileSync(join(dir, 'manifest.json'),
@@ -94,6 +102,7 @@ console.log(`  assets/audio/manifest.json updated — ${recorded.length} recordi
 
 console.log(broken.length
   ? 'Fix or remove the files above; everything else is already making noise.\n'
-  : 'Every sound is working. Drop a file at a path above to replace one.\n');
+  : 'Every sound is working. To replace one: drop a file at the path shown,\n' +
+    'run this again so it lands in the manifest, then reload.\n');
 
 process.exit(broken.length ? 1 : 0);

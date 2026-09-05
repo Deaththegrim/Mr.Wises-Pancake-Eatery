@@ -5,11 +5,14 @@
    no files to download, no library, and no build step — the same promise
    the rest of the project makes.
 
-   A slot can still be REPLACED by a real recording: drop a file at `path`
-   and it is used instead of the recipe, picked up on the next reload. That
-   is the same either/or `data/art.js` makes, for the same reason — the
-   audio can be made in any order, by anyone, one sound at a time, and
-   until then the game is never silent.
+   A slot can still be REPLACED by a real recording. Drop a file at `path`,
+   then **run `node tools/audio.js` and reload** — the tool writes the
+   manifest the game loads from, and without that step the file is ignored
+   and the recipe keeps playing. (This is the one place audio differs from
+   `data/art.js`, which really is drop-and-reload because it falls back to
+   probing every slot. Audio does not probe: an unrecorded sound already
+   plays and sounds finished, so fifteen speculative 404s on every load
+   would buy nothing.) Delete the file and the recipe comes back.
 
    Run `node tools/audio.js` for the checklist.
 
@@ -17,7 +20,11 @@
      id       what the code asks for
      when     the moment it plays, in plain words
      path     where a real recording goes, if one is ever made
-     sustain  true if it runs until told to stop (the two held actions)
+     sustain  true if it runs until told to stop (the two held actions).
+               A held slot has no `ms`, so it has no envelope to divide:
+               it fades in over a fixed 5ms and out over a fixed 120ms.
+               Writing `attack`/`release` on one does nothing — which is
+               why the two held rows below do not carry them.
      layers   the recipe: one or more voices, mixed
 
    Each layer:
@@ -27,8 +34,14 @@
      ms        how long the layer lasts
      gain      how loud, 0 to 1, before the master volume
      delay     ms to wait before this layer starts, for two-part sounds
-     attack    fade-in, as a fraction of ms (0.01 is a click, 0.4 is soft)
-     release   fade-out, as a fraction of ms
+     attack    fade-in, as a fraction of ms (0.4 is soft). FLOORED AT 5ms:
+               below that an oscillator starts with an audible click, so
+               anything under it is rounded up. On a short layer that
+               floor is what you get — 130ms x 0.02 is 2.6ms, so 0.02 and
+               0.03 are the same sound there. Lengthen `ms` if you want a
+               fade-in you can actually hear.
+     release   fade-out, as a fraction of ms, floored at 20ms for the same
+               reason. Held slots ignore both (see `sustain` below).
      filter    lowpass · highpass · bandpass, with filterHz — mostly to
                shape `noise` into something that sounds like a liquid
 
@@ -49,8 +62,7 @@ export const SOUNDS = [
     path: 'assets/audio/pour.mp3',
     sustain: true,
     layers: [
-      { wave: 'noise', ms: 0, gain: 0.05, attack: 0.2, release: 0.3,
-        filter: 'lowpass', filterHz: 640 }
+      { wave: 'noise', ms: 0, gain: 0.05, filter: 'lowpass', filterHz: 640 }
     ]
   },
   {
@@ -89,8 +101,7 @@ export const SOUNDS = [
     path: 'assets/audio/drizzle.mp3',
     sustain: true,
     layers: [
-      { wave: 'noise', ms: 0, gain: 0.035, attack: 0.25, release: 0.35,
-        filter: 'bandpass', filterHz: 1500 }
+      { wave: 'noise', ms: 0, gain: 0.035, filter: 'bandpass', filterHz: 1500 }
     ]
   },
 

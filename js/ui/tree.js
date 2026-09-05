@@ -109,8 +109,6 @@ export function renderBench(state, onChange) {
     money.textContent = String(state.money);
   };
   const refreshAll = () => { for (const ing of INGREDIENTS) refreshRow(ing); };
-  // Late-bound: updateChosen is declared further down, after the market rows.
-  let refreshChosen = () => {};
 
   // --- market ---
   const market = el('div', { className: 'card' });
@@ -145,7 +143,7 @@ export function renderBench(state, onChange) {
          kept reading "nothing selected" while two ingredients sat staged
          and "Try it" was about to burn them — Clear updated it, use did
          not. */
-      refreshChosen();
+      updateChosen();
     });
 
     rows.set(ing.id, { stockEl, buyBtn, useBtn });
@@ -186,8 +184,7 @@ export function renderBench(state, onChange) {
     }
     // Blocked experiments consume nothing, so keep the selection to fix it.
     if (!r.blocked) chosen.length = 0;
-    refreshChosen = updateChosen;
-  updateChosen();
+    updateChosen();
     refreshAll();
     if (onChange) onChange();
   });

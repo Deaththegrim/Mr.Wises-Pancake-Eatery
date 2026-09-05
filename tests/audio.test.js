@@ -39,10 +39,12 @@ const walk = dir => readdirSync(dir).flatMap(name => {
    works while everyone remembers the house style is not a guard. */
 const CALL = /\b(?:play|sfx|sfxStart|sfxStop|start|stop)\(\s*['"`]([^'"`]+)['"`]/g;
 
-/* A call whose id is NOT a literal — play(someVar), play(`${x}`), or an id
-   read from a data structure. None of the checks below can see through
-   one, so rather than let them quietly under-report, they are found and
-   named: a sound wired this way has to be justified in the code. */
+/* A call whose id is NOT a literal: play(someVar), a ternary, or an id
+   read from a data structure. The checks below cannot see through one, so
+   rather than let them quietly under-report, they are found and named.
+   (A template literal is NOT in this set — CALL accepts backticks, so
+   play(`${x}`) is caught by the undeclared-id check instead, which is a
+   clearer message anyway.) */
 const COMPUTED = /\b(?:play|sfx|sfxStart|sfxStop)\(\s*(?!['"`)])[^)]/g;
 
 /* Callers only. The data file holds the ids, and ui/audio.js DEFINES
@@ -78,10 +80,13 @@ test('the slots are well formed', () => {
       assert.ok(l.hz != null || l.from != null || l.wave === 'noise',
         `${where}: no pitch, and only noise may go without one`);
 
-      /* Web Audio's exponential ramps cannot touch zero — the pitch glide
-         and every envelope use them, and a 0 here throws inside the audio
-         thread where the try/catch in ui/audio.js would swallow it and the
-         sound would just never play. */
+      /* Exponential ramps cannot pass through zero: the call throws a
+         RangeError synchronously, at the call site. ui/audio.js already
+         clamps the one value that reaches such a ramp
+         (`Math.max(1, layer.to * rate)`), so this does not prevent a
+         throw — it prevents the quieter thing the clamp cannot: a pitch
+         of 0 authored in the data, silently rewritten to 1 Hz or to the
+         440 default, giving a layer nobody chose the pitch of. */
       for (const k of ['hz', 'from', 'to']) {
         if (l[k] != null) assert.ok(l[k] > 0, `${where}: ${k} must be above zero`);
       }
@@ -90,7 +95,17 @@ test('the slots are well formed', () => {
         `${where}: gain ${l.gain} is outside 0–0.3. The house style is quiet; ` +
         'the design note this project keeps returning to is that medium juice beats extreme juice.');
 
-      if (l.filter) assert.ok(filters.has(l.filter), `${where}: unknown filter "${l.filter}"`);
+      if (l.filter) {
+        assert.ok(filters.has(l.filter), `${where}: unknown filter "${l.filter}"`);
+        /* The one field with no check, and `filterHz || 1000` rewrites a 0
+           into 1000 — so "no filtering", the obvious thing a 0 means, is
+           silently a filter at a pitch nobody chose. */
+        assert.ok(l.filterHz > 0,
+          `${where}: filter "${l.filter}" needs a filterHz above zero; a 0 is silently read as 1000`);
+      } else {
+        assert.ok(l.filterHz == null,
+          `${where}: filterHz is set but there is no filter to apply it to`);
+      }
       if (l.attack != null) assert.ok(l.attack >= 0 && l.attack <= 1, `${where}: attack is a fraction of ms`);
       if (l.release != null) assert.ok(l.release >= 0 && l.release <= 1, `${where}: release is a fraction of ms`);
 
@@ -129,11 +144,11 @@ test('every sound the code plays is declared', () => {
 });
 
 test('no sound is played through an id the guards cannot see', () => {
-  /* A computed id — play(someVar), play(`${x}`) — is invisible to every
-     check in this file, so a typo inside one is silent forever and an
-     orphaned slot goes unreported. This has already happened once, with a
-     ternary: play(x ? 'bell_quiet' : 'bell') hid BOTH ids, and the guard
-     could not vouch for either. Two literal calls cost nothing. */
+  /* A computed id — play(someVar), or a ternary — is invisible to the
+     checks above, so a typo inside one is silent forever and an orphaned
+     slot goes unreported. This has already happened once:
+     play(x ? 'bell_quiet' : 'bell') hid BOTH ids and the guard could not
+     vouch for either. Two literal calls cost nothing. */
   const computed = [];
   for (const file of sources) {
     const src = readFileSync(file, 'utf8');
@@ -182,19 +197,53 @@ test('the sound layer cannot break the game', () => {
      must cost the noise and nothing else. Every exported entry point
      therefore has to carry its own try/catch. */
   const src = readFileSync(join(root, 'js/ui/audio.js'), 'utf8');
-  for (const name of ['play', 'start', 'stop']) {
-    const body = src.slice(src.indexOf(`export function ${name}(`));
-    const end = body.indexOf('\n}');
-    assert.ok(body.slice(0, end).includes('try {'),
+
+  /* EVERY export that DOES something, found by reading the file rather
+     than by listing three names. The comment said "every exported entry
+     point" and the loop checked play/start/stop — so stopAll, setMuted,
+     toggleMuted and unlock were unguarded while the test asserted they
+     were not. setMuted was the sharp one: it assigns `muted` before
+     touching the audio graph, so a throw skipped the caller's re-render
+     and left the button's label asserting the opposite of the state the
+     function had already committed.
+
+     The pure readers are exempt by name and by reason: they contain no
+     statement that can throw, and wrapping them would only hide a future
+     mistake. */
+  const PURE = new Set(['isMuted', 'audible', 'envelope']);
+  const exported = [...src.matchAll(/export function (\w+)\(/g)].map(m => m[1]);
+  assert.ok(exported.length >= 6, `expected to find the exports, found ${exported.length}`);
+
+  for (const name of exported) {
+    if (PURE.has(name)) continue;
+    const at = src.indexOf(`export function ${name}(`);
+    const body = src.slice(at, src.indexOf('\n}', at));
+    assert.ok(body.includes('try {'),
       `${name}() has no try/catch — a failure in the audio layer would reach the game`);
   }
 
   /* The context must not be built at import time: browsers refuse before a
-     gesture and log a warning, and smoke.py asserts a clean console so that
-     real warnings stay visible. */
-  const topLevel = src.slice(0, src.indexOf('export function'));
-  assert.ok(!/^\s*(?:const|let)\s+\w+\s*=\s*new\s+(?:window\.)?(?:Audio|webkitAudio)Context/m.test(topLevel),
-    'an AudioContext is built at module scope, which warns before the first click');
+     gesture, hand back a SUSPENDED context, and log a warning — which
+     smoke.py now fails the run on, along with errors. */
+  /* MODULE SCOPE MEANS COLUMN ZERO. The first cut sliced up to the first
+     `export function`, which in this file lands after readMuted, ready(),
+     loadFiles and voice() — so it was checking most of the module's
+     FUNCTION BODIES and calling that module scope. It failed both ways: a
+     correct lazy `new AudioContext()` inside ready() would have been
+     reported as a module-scope build, and a genuine module-scope
+     `ctx = new AudioContext()` (an assignment, not a declaration) matched
+     nothing and sailed through.
+
+     Statements at module scope start at column zero, so that is what this
+     looks for — any construction, declared or assigned. */
+  const moduleScope = src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .filter(line => line.length && !/^\s/.test(line))
+    .join('\n');
+  assert.ok(!/new\s+(?:window\.)?(?:Audio|webkitAudio)Context|new\s+Ctor\b/.test(moduleScope),
+    'an AudioContext is built at module scope; browsers refuse before a gesture ' +
+    'and hand back a suspended context that plays nothing');
 });
 
 test('the mute preference survives a browser that blocks storage', () => {
@@ -256,6 +305,61 @@ test('release actually shapes the sound', () => {
       assert.ok(env.total > 0, `${s.id} layer ${i} has no length`);
     }
   }
+});
+
+test('a held slot declares no field that a held slot ignores', () => {
+  /* THE SAME BUG CLASS AS `release`, one level down. A sustained slot has
+     no `ms`, so it has no envelope to divide: it fades in over a fixed 5ms
+     and out over a fixed 120ms, and `attack`/`release` on such a row are
+     read by nothing. Both held rows carried them anyway — three declared,
+     documented, tunable numbers that did nothing, sitting directly beneath
+     the comment explaining that the envelope refactor exists to stop
+     exactly that.
+
+     The shipped-layer sweep in the envelope test filters `!sustain`, so it
+     structurally cannot see these. This is the check that can. */
+  for (const s of SOUNDS.filter(x => x.sustain)) {
+    for (const [i, l] of s.layers.entries()) {
+      for (const dead of ['attack', 'release']) {
+        assert.ok(!(dead in l),
+          `${s.id} layer ${i} declares "${dead}", which a held sound ignores — ` +
+          'it reads as a knob and is not one. Remove it, or make start()/stop() read it.');
+      }
+    }
+  }
+});
+
+test('the envelope arithmetic has exactly one home', () => {
+  /* voice() and envelope() each had their own copy of the attack formula —
+     `layer.attack || 0.05` against `layer.attack != null ? layer.attack :
+     0.05`. They agreed on every shipped row and diverged on `attack: 0`,
+     which the schema above explicitly permits: one ramped toward 5% of the
+     sound while the other pinned the hold at 5ms, scheduling the peak
+     part-way up the climb. Two formulas for one number is the drift this
+     project has a rule about. */
+  /* Comments stripped first. The paragraph explaining this very drift
+     quotes both old formulas, so a scanner that reads prose as code counts
+     the explanation as the offence — which is the second time in this
+     suite that has happened, and the reason it is worth naming here. */
+  const src = readFileSync(join(root, 'js/ui/audio.js'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/[^\n]*/g, '');
+  /* The precise contract: envelope() is the only place that turns a
+     layer's `attack` into seconds. Counting occurrences was the wrong
+     test — the one correct line mentions it twice in a single ternary. */
+  const bodyOf = name => {
+    const at = src.indexOf(`function ${name}(`);
+    assert.ok(at > 0, `expected to find ${name}() in js/ui/audio.js`);
+    return src.slice(at, src.indexOf('\n}', at));
+  };
+
+  assert.ok(!/layer\.attack/.test(bodyOf('voice')),
+    'voice() computes its own attack again. envelope() owns that arithmetic; ' +
+    'two copies agreed on every shipped row and diverged on attack: 0.');
+  assert.match(bodyOf('voice'), /envelope\(layer\)/,
+    'voice() should take its attack from envelope()');
+  assert.match(bodyOf('envelope'), /layer\.attack/,
+    'envelope() should be the one place a layer\'s attack is read');
 });
 
 test('the recordings folder the slots point into exists', () => {

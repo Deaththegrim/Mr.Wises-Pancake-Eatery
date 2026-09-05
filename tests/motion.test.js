@@ -42,18 +42,28 @@ test('reduced motion is honoured, and blankets the whole stylesheet', () => {
   assert.match(block, /transition-duration:\s*[^;]+!important/,
     'reduced motion must override transition-duration, and must win');
 
-  /* `animation: none` snaps an element to its FROM state, which for a
-     fade-in leaves it invisible forever. Running to the last frame in
-     ~0ms is the state the page is meant to settle in. */
+  /* Why a near-zero DURATION and not `animation: none`. Both look right
+     today — checked, not assumed: `none` resets animation-name and every
+     sub-property, so no keyframe applies and the element renders at its
+     BASE style, and nothing in either sheet carries a static `opacity: 0`
+     for it to be stranded at.
+
+     The difference is what happens next. A zero-length animation still
+     runs: it fills, and it fires `animationend`. `none` does neither, so
+     the first animation anyone writes whose completion something waits on
+     would silently never complete — for reduced-motion users only, which
+     is the hardest possible bug to find. */
   assert.ok(!/animation:\s*none\s*!important/.test(block),
-    'animation:none can strand an element in its starting state — use a near-zero duration');
+    'animation:none stops animationend ever firing, for reduced-motion users only — ' +
+    'use a near-zero duration, which still fills and still fires');
 });
 
 test('nothing animates forever', () => {
   /* Two reasons. The design one: a cozy shop visited for eight weeks must
-     not twitch. The practical one: an infinite animation on anything
-     containing a button makes that button never "stable", so a harness
-     waiting for it to hold still waits forever — a hang, not a failure. */
+     not twitch. The practical one: a harness clicking a button waits for
+     it to stop moving first, so an endlessly animating one burns its whole
+     timeout and then fails pointing at the click rather than at the
+     animation that caused it. */
   const offenders = [];
   for (const { name, src } of sheets) {
     for (const m of src.matchAll(/animation[^;{}]*:\s*([^;}]*)/g)) {

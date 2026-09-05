@@ -60,7 +60,7 @@ def main():
     from playwright.sync_api import sync_playwright
 
     httpd = serve()
-    failures, errors = [], []
+    failures, errors, warnings = [], [], []
 
     def check(cond, label):
         print(("  ok   " if cond else "  FAIL ") + label)
@@ -84,6 +84,16 @@ def main():
         page.on("console", lambda m: errors.append(f"{m.type}: {m.text}")
                 if m.type == "error" else None)
         page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
+
+        # WARNINGS COUNT TOO. Three comments across the codebase justified
+        # themselves with "the smoke test asserts a clean console", and it
+        # did not — only `error` was collected, so every console.warn the
+        # project raises for a real fault sailed past. That is the whole
+        # diagnostic channel for a missing story node, an unknown id in a
+        # save, a stale audio manifest, or a recording that would not
+        # decode. A healthy run emits none, so any at all is a finding.
+        page.on("console", lambda m: warnings.append(f"{m.text}")
+                if m.type == "warning" else None)
 
         page.goto(f"http://127.0.0.1:{PORT}/", wait_until="networkidle")
 
@@ -699,8 +709,15 @@ def main():
             btn.click()
             time.sleep(0.15)
             check(page.inner_text("#btn-sound").strip() == "Sound: off", "clicking it mutes")
-            check(page.get_attribute("#btn-sound", "aria-pressed") == "true",
-                  "and says so to a screen reader")
+
+            # aria-pressed must AGREE with the label. It was set to
+            # isMuted(), so a button reading "Sound: off" announced as
+            # PRESSED — and pressed conventionally means engaged. A screen
+            # reader said "Sound: off, pressed", which reads as a broken
+            # control. Checked in both states, because either one alone
+            # passes for whichever way round the mistake is made.
+            check(page.get_attribute("#btn-sound", "aria-pressed") == "false",
+                  'muted announces as not-pressed, agreeing with "Sound: off"')
 
             stored = page.evaluate("localStorage.getItem('pancake_shop_sound')")
             check(stored == "off", f"the choice is written down: {stored!r}")
@@ -713,6 +730,8 @@ def main():
             page.click("#btn-sound")
             time.sleep(0.15)
             check(page.inner_text("#btn-sound").strip() == "Sound: on", "clicking again unmutes")
+            check(page.get_attribute("#btn-sound", "aria-pressed") == "true",
+                  'and unmuted announces as pressed, agreeing with "Sound: on"')
 
             # The context may only be built after a gesture. By now several
             # real clicks have happened, so one must exist and be running.
@@ -861,12 +880,26 @@ def main():
     else:
         print("no console errors")
 
+    if warnings:
+        print(f"{len(warnings)} console warning(s):")
+        for w in warnings[:20]:
+            print("  " + w)
+    else:
+        print("no console warnings")
+
     if failures:
         print(f"\n{len(failures)} FAILED check(s):")
         for f in failures:
             print("  " + f)
         return 1
     if errors:
+        return 1
+    if warnings:
+        # A healthy run emits none. console.warn is this project's channel
+        # for a fault the player cannot see — a missing story node, an
+        # unknown id in a save, a recording that would not decode — so a
+        # warning IS a failure here, and saying otherwise in three separate
+        # comments is what let this go uncollected for as long as it did.
         return 1
     print("all checks passed")
     return 0

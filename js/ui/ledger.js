@@ -86,6 +86,21 @@ export function renderReceipt(recipe, result, customer, said) {
     card.append(row(result.emergencyCost ? 'stock (emergency prices)' : 'stock', `−${cost}`, 'down'));
     card.append(row('kept', String(result.payout + result.tip - cost), 'total kept'));
   }
+
+  /* THE STAGGER, indexed here rather than in CSS.
+​
+     The rows arrive one after another so the bill is watched adding up —
+     but `:nth-child` counts every child of the card, and the first two are
+     the dish name and what the customer said. So the first money line was
+     really child 3 and started a third of the way into the sequence, while
+     everything past the fourth collapsed onto one shared delay. Numbering
+     the rows themselves is exact however many headers sit above them.
+
+     Capped: past a handful of steps the wait stops reading as a flourish
+     and starts reading as lag, and a parts-priced bill can run long. */
+  const rows = card.querySelectorAll('.receipt-row');
+  rows.forEach((r, i) => r.style.setProperty('--i', String(Math.min(i, 6))));
+
   mount.append(card);
 }
 

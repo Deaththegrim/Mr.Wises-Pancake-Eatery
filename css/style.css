@@ -82,9 +82,12 @@ h1 { font-size: 2.2rem; }
 #hud-title { color: var(--accent); }
 
 /* The sound toggle sits in the HUD but is not HUD information — it is the
-   one control that lives outside a screen, so it is pushed to the far end
-   and drawn quieter than the numbers it sits beside. Transparent rather
-   than a filled slab, to match the rest of the chrome. */
+   one control that lives outside a screen, so it is pushed to the far end.
+   It takes the SAME muted colour as the readouts beside it (not quieter —
+   they are already `--muted`); what keeps it from shouting is that it is
+   transparent rather than a filled slab, with the fainter `--edge` border
+   instead of a control's, so it reads as chrome rather than as a button
+   parked in the header. */
 #btn-sound {
   margin: -4px 0 -4px auto;
   padding: 4px 10px;
@@ -100,7 +103,10 @@ h1 { font-size: 2.2rem; }
    it is the one that most needs saying "you are on me". */
 #btn-sound:hover,
 #btn-sound:focus-visible { color: var(--ink); }
-#btn-sound[aria-pressed="true"] { opacity: 0.65; }
+/* Keyed to a class, not to [aria-pressed]. Styling off the ARIA state
+   couples how it looks to what it announces, so correcting one silently
+   inverts the other — which is exactly how this pair got out of step. */
+#btn-sound.is-muted { opacity: 0.65; }
 
 main { padding: calc(var(--sp) * 2); max-width: 900px; margin: 0 auto; }
 .screen { display: none; }
