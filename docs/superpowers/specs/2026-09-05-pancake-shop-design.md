@@ -636,9 +636,15 @@ not by looking at it.
 ## 12. Build order
 
 **Phase 1 — the bones. ✅ COMPLETE 2026-09-05.** This was the handoff target.
-Built, merged to `master`, pushed private. 121 unit tests, a content validator,
-a balance simulator, and a headless smoke test that plays the game. Plan and
-its deviations: `docs/superpowers/plans/2026-09-05-pancake-shop-phase1.md`.
+Built, merged to `master`, pushed private. **261 unit tests**, a content
+validator, a balance simulator with four player profiles, a headless smoke test
+that plays the real page (77 checks), and a slow playthrough that cross-checks
+the simulator against that page. Plan and its deviations:
+`docs/superpowers/plans/2026-09-05-pancake-shop-phase1.md`.
+
+Everything in §4 (pricing), §5 (the syrup a dish is finished with) and §9 (her
+visits, her impossible orders, the endings' titles) landed after that first pass;
+see the resolved notes in each section.
 
 1. Skeleton, ES module wiring, `index.html`, screen manager
 2. `data/` files with a small but real content set
