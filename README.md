@@ -26,6 +26,11 @@ Node and Python, and none of them can break the game.
     node tools/art.js               # every picture, where it goes, what it shows
     node --test tests/              # proves nothing is broken before you start
 
+And with the server running, **localhost:8000/preview.html** — a workbench
+showing every art slot (the real file if you have drawn one, what it needs
+if not) and every scene playable on its own, so you can read an ending
+without playing eight weeks to reach it.
+
 Then **[CONTENT.md](CONTENT.md)**, which is the whole guide to changing
 things: a pancake, a customer, a syrup, a research node, one of her scenes.
 Everything editable is a plain list in `js/data/` and you never need to open

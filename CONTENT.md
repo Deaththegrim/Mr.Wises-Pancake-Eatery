@@ -266,6 +266,10 @@ That's on purpose — the game should get calmer as it goes, not louder.
 
 ## Writing Synthia — `js/data/scenes.js`
 
+**Open `preview.html`** (with the server running) to read any scene on its
+own, with her sprite and her expression, without playing to it. Choices
+work; nothing is recorded.
+
 **Start with `node tools/writing.js synthia`.** It prints every scene with
 when the player sees it — which week, what they have just done, what her
 face is doing, and what the player can say back — so the lines can be
@@ -365,6 +369,10 @@ The whole workflow:
     2. put the file there
     3. node tools/art.js        # again - it lists the file and tells the game
     4. reload the page
+
+`preview.html` shows every slot side by side — the real file where you have
+drawn one, and what it needs where you have not — so you can check a
+picture without playing to the screen it appears on.
 
 No code change, no registration, no build step. Delete the file and the
 placeholder comes back.

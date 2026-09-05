@@ -108,3 +108,20 @@ test('the writing checklist accounts for every scene', () => {
   assert.deepEqual(orphaned, [],
     'scenes nothing can reach — either wire them up or delete them:\n' + orphaned.join('\n'));
 });
+
+test('the preview page can reach everything it claims to show', () => {
+  /* preview.html is the workbench: every art slot, and every scene
+     playable on its own. It is a separate page from the game, so nothing
+     else would notice if it drifted — it imports modules by path and
+     mounts the story layer into its own copy of that markup. */
+  const html = readFileSync(join(root, 'preview.html'), 'utf8');
+
+  for (const spec of ["'./js/data/art.js'", "'./js/data/scenes.js'", "'./js/ui/vn.js'"]) {
+    assert.ok(html.includes(spec), `preview.html no longer imports ${spec}`);
+  }
+  // The story layer writes into these by id; without them a scene silently
+  // renders nowhere.
+  for (const id of ['vn-name', 'vn-text', 'vn-sprite', 'vn-choices', 'screen-vn', 'notice']) {
+    assert.ok(html.includes(`id="${id}"`), `preview.html is missing #${id}, which ui/vn.js writes to`);
+  }
+});

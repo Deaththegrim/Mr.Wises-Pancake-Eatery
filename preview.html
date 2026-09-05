@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview — art and writing</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/shop.css">
+<style>
+  /* This page is a workbench, not part of the game. It is styled just
+     enough to be readable and deliberately does not try to look like the
+     shop, so nothing here can be mistaken for a screen a player sees. */
+  body { padding: var(--sp); max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 var(--sp); max-width: 62ch; }
+  .tabs { display: flex; gap: 8px; margin: var(--sp) 0; }
+  .tabs button.on { border-color: var(--accent); color: var(--ink); }
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp); }
+  .slot { border: 1px solid var(--edge); border-radius: var(--radius); padding: var(--sp); }
+  .slot h3 { margin: 0 0 2px; font-size: 15px; }
+  .slot .path { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); word-break: break-all; }
+  .slot .needs { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .frame {
+    margin-top: 8px; border: 1px dashed var(--control-edge); border-radius: var(--radius-sm);
+    background: var(--surface-sunken); display: grid; place-items: center;
+    min-height: 120px; overflow: hidden;
+  }
+  .frame img { max-width: 100%; height: auto; display: block; }
+  .frame .empty { color: var(--muted); font-size: 13px; padding: var(--sp); text-align: center; }
+  .have { color: var(--good); } .want { color: var(--muted); }
+  .scene-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+  .scene-list button { margin: 0; text-align: left; }
+  #stage { margin-top: var(--sp); }
+  #screen-vn { display: block; }
+  /* Her sprite is sized for the game's full-height screen; capped here so
+     the scene list stays on screen while you read. */
+  #stage #vn-sprite { max-height: 260px; width: auto; }
+  #stage #vn-stage { min-height: 0; }
+</style>
+</head>
+<body>
+  <h1>Preview</h1>
+  <p class="lede">
+    A workbench for the two jobs that are left. Drop a picture into
+    <code>assets/</code> and reload this page to see it; click a scene to read
+    it in place, with her sprite, without playing to it. Nothing here changes
+    the game or touches a save.
+  </p>
+
+  <div class="tabs">
+    <button id="tab-art" class="on">Art</button>
+    <button id="tab-writing">Writing</button>
+  </div>
+
+  <section id="art" class="slots"></section>
+
+  <section id="writing" hidden>
+    <p class="lede">Every scene, playable on its own. Choices work; nothing is recorded.</p>
+    <div class="scene-list" id="scene-list"></div>
+    <div id="stage">
+      <section id="screen-vn" class="screen active">
+        <div id="vn-stage"><img id="vn-sprite" alt=""></div>
+        <div id="vn-box">
+          <div id="vn-name"></div>
+          <div id="vn-text">Pick a scene above.</div>
+          <div id="vn-choices"></div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <div id="notice" role="status" aria-live="polite" hidden></div>
+
+<script type="module">
+import { ART } from './js/data/art.js';
+import { SCENES } from './js/data/scenes.js';
+import { playScene } from './js/ui/vn.js';
+import { newGame } from './js/engine/state.js';
+import { TIER_THRESHOLDS } from './js/data/affection.js';
+
+/* ART. Each slot shows the real file if there is one and the description
+   of what it needs if there is not — the same either/or the game makes,
+   so what you see here is what the game will draw. */
+const art = document.getElementById('art');
+const filled = [];
+for (const slot of ART) {
+  const card = document.createElement('div');
+  card.className = 'slot';
+  card.innerHTML =
+    `<h3>${slot.id}</h3>` +
+    `<div class="path">${slot.path} &middot; ${slot.w}&times;${slot.h}</div>` +
+    `<div class="frame"></div>` +
+    `<div class="needs">${slot.needs}</div>`;
+  const frame = card.querySelector('.frame');
+
+  const img = new Image();
+  img.alt = slot.id;
+  img.onload = () => {
+    frame.append(img);
+    card.querySelector('.path').innerHTML =
+      `${slot.path} &middot; <span class="have">${img.naturalWidth}&times;${img.naturalHeight} in the game</span>`;
+    filled.push(slot.id);
+  };
+  img.onerror = () => {
+    frame.innerHTML = `<div class="empty">not drawn yet — the game draws<br>${slot.replaces}</div>`;
+  };
+  img.src = slot.path;
+  art.append(card);
+}
+
+/* WRITING. The real VN layer, on a throwaway state, so a scene reads
+   exactly as it will in the game — her expression included. */
+const state = newGame(1);
+const list = document.getElementById('scene-list');
+for (const [id, node] of Object.entries(SCENES)) {
+  const b = document.createElement('button');
+  b.textContent = node.endingTitle ? `${id}  —  "${node.endingTitle}"` : id;
+  b.addEventListener('click', () => {
+    /* Endings are chosen by tier, so preview each at the affection it
+       would really be seen at — that is what sets her face. */
+    const tier = Object.keys(TIER_THRESHOLDS).find(t => id === `ending_${t.toLowerCase()}`);
+    state.synthia.points = tier ? TIER_THRESHOLDS[tier] : 0;
+    playScene(id, state, () => {
+      document.getElementById('vn-text').textContent = '— end of scene —';
+      document.getElementById('vn-choices').replaceChildren();
+    });
+    document.getElementById('stage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  list.append(b);
+}
+
+const tabs = { art: document.getElementById('art'), writing: document.getElementById('writing') };
+const buttons = { art: document.getElementById('tab-art'), writing: document.getElementById('tab-writing') };
+for (const name of Object.keys(tabs)) {
+  buttons[name].addEventListener('click', () => {
+    for (const other of Object.keys(tabs)) {
+      tabs[other].hidden = other !== name;
+      buttons[other].classList.toggle('on', other === name);
+    }
+  });
+}
+</script>
+</body>
+</html>

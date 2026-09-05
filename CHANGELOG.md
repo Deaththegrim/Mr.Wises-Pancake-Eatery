@@ -22,6 +22,11 @@
   the game with, for each one, when the player sees it: which week, what
   they have just done, what her face is doing, what they can say back. All
   of it can be worked through without opening any code, in any order.
+- **`preview.html`** — a workbench for both jobs. Every art slot side by
+  side, showing the real file where one exists and what it needs where it
+  does not; and every scene playable on its own, with her sprite and the
+  expression that scene calls for, so an ending can be read without playing
+  eight weeks to reach it. Separate from the game and touches no save.
 - **A front door in the README** for whoever picks this up: four commands
   that orient you, then CONTENT.md for everything else.
 
