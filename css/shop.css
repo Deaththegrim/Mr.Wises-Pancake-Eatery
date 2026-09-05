@@ -34,6 +34,11 @@
   cursor: crosshair; background: #191325;
 }
 #plate .centre-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--muted); opacity: .5; }
+#plate .aim-cursor {
+  position: absolute; top: 0; bottom: 0; width: 2px;
+  background: var(--accent); margin-left: -1px;
+}
+#plate .aim-cursor[hidden] { display: none; }
 #plate .cake {
   position: absolute; height: 14px; width: 90px; margin-left: -45px;
   border-radius: 7px; background: #c98a4b; border: 1px solid #8a5a2b;

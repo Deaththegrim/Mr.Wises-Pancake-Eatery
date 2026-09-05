@@ -80,6 +80,35 @@ test('no engine module references DOM globals', () => {
   }
 });
 
+/* THE ANTI-DRIFT GUARD.
+
+   Every tuning constant must be read by something the PLAYER runs. The
+   worst bug in this project was that pointsPerNewRecipeServed,
+   pointsPerHighQuality and highQualityAt were referenced only by
+   tools/simulate.js — so the shipped game awarded no research points at
+   all, the tree stayed locked, income never compounded, and the game was
+   unwinnable from week 4 while every balance test passed, because they
+   measured the simulator.
+
+   A tuning constant that only a TOOL reads is a feature the game does not
+   have. This catches the class, not the instance. */
+test('every tuning constant is actually used by the game, not just by a tool', () => {
+  /* Scan engine/ and ui/ only. js/data/ is where the constants are DEFINED,
+     so including it would make every key match itself — which is exactly the
+     bug the first version of this guard had, and why it silently passed. */
+  const dirs = ['../js/engine/', '../js/ui/'].map(d => new URL(d, import.meta.url));
+  const sources = dirs.flatMap(dir =>
+    readdirSync(dir).filter(f => f.endsWith('.js'))
+      .map(f => readFileSync(new URL(f, dir), 'utf8')));
+  sources.push(readFileSync(new URL('../js/main.js', import.meta.url), 'utf8'));
+  const gameSource = sources.join('\n');
+
+  const unused = Object.keys(TUNING).filter(k => !gameSource.includes(k));
+  assert.deepEqual(unused, [],
+    `TUNING keys read by nothing under js/: ${unused.join(', ')}. ` +
+    `If only tools/ reads them, the game does not have that feature.`);
+});
+
 // data/ must stay data.
 test('no data module declares a function or imports', () => {
   const dir = new URL('../js/data/', import.meta.url);

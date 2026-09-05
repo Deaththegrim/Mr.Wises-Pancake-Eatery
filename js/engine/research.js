@@ -116,11 +116,14 @@ export function experiment(state, ingredientIds) {
 
   if (best && bestDist <= best.discover.tolerance) {
     state.unlockedSyrups.push(best.id);
-    return { found: true, syrupId: best.id, points: TUNING.benchFailPoints * 3 };
+    const points = TUNING.benchFailPoints * 3;
+    state.points += points;          // credited here, not in the UI
+    return { found: true, syrupId: best.id, points };
   }
 
   const hint = best
     ? hintFor(blend, best.discover.target)
     : 'Nothing left to find down this road.';
+  state.points += TUNING.benchFailPoints;
   return { found: false, hint, points: TUNING.benchFailPoints };
 }

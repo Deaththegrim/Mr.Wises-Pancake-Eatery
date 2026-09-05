@@ -119,6 +119,21 @@ export function serve(state, recipeId, beats, opts = {}) {
   state.dayEarnings = (state.dayEarnings || 0) + payout + tip;
   state.reputation += reputationGain(quality);
 
+  /* RESEARCH POINTS. These used to be awarded only in tools/simulate.js,
+     so the shipped game granted none at all: the tree costs ~1,130 points
+     and the bench pays about 230 over eight weeks, which left recipes
+     locked, income flat from week 3, and the game unwinnable from week 4.
+     The balance tests could not see it because they asserted against the
+     simulator, which paid the points itself.
+
+     Awarding here — inside the one function both main.js and simulate.js
+     call — is what stops that divergence recurring. */
+  const firstEver = (state.cooked[recipeId] || 0) === 1;   // set just above
+  let pointsEarned = 0;
+  if (firstEver) pointsEarned += TUNING.pointsPerNewRecipeServed;
+  if (quality >= TUNING.highQualityAt) pointsEarned += TUNING.pointsPerHighQuality;
+  state.points += pointsEarned;
+
   let noticed = false;
   if (opts.forSynthia) {
     state.synthiaServedToday = true;
@@ -126,7 +141,7 @@ export function serve(state, recipeId, beats, opts = {}) {
     noticed = checkListening(state.synthia, recipeId).noticed;
   }
 
-  return { quality, breakdown, payout, tip, noticed, ingredientCost, emergencyCost };
+  return { quality, breakdown, payout, tip, noticed, ingredientCost, emergencyCost, pointsEarned };
 }
 
 /* The story runs as long as the quota curve is authored. Past that the

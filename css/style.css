@@ -1,8 +1,17 @@
 /* Palette carried over from god-synthia: violet dream / red nightmare. */
 :root {
   --bg: #14101c;
-  --panel: #1d1729;
+  /* --panel is a quiet surface tier: it only needs to separate a card from
+     the page, and a dark cozy theme would be ruined by lifting it to 3:1. */
+  --panel: #221b31;
   --edge: #2c2340;
+  /* --control-edge is the VISUAL BOUNDARY of an interactive control, and
+     WCAG 1.4.11 wants 3:1 for that against what it sits on. The old border
+     (#3a2f52) measured 1.52:1 against --bg, so buttons on a bare section —
+     New Game, Continue, Open the shop, Close for the day, Research, Next
+     day, Restock — read as flush with the page. This measures 3.14:1.
+     Contrast lives on the OUTLINE, not the fill, so the theme survives. */
+  --control-edge: #6a5a96;
   --ink: #efeaf6;
   --muted: #a396bb;
   --accent: #c9a8ff;
@@ -46,7 +55,7 @@ main { padding: calc(var(--sp) * 2); max-width: 900px; margin: 0 auto; }
 button {
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid #3a2f52;
+  border: 1px solid var(--control-edge);
   border-radius: var(--radius);
   padding: 10px 16px;
   cursor: pointer;

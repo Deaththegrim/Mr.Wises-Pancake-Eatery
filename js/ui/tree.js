@@ -157,8 +157,8 @@ export function renderBench(state, onChange) {
   const go = el('button', { text: 'Try it' });
   go.addEventListener('click', () => {
     if (chosen.length === 0) { showNotice('Pick something first.'); return; }
+    // experiment() credits the points itself; the UI must not do economy.
     const r = experiment(state, [...chosen]);
-    state.points += r.points;
     if (r.found) {
       const s = SYRUPS.find(x => x.id === r.syrupId);
       result.textContent = `You have made something. ${s ? s.name : r.syrupId}.`;

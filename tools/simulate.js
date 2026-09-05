@@ -134,11 +134,11 @@ export function simulate(seed = 2026, profile = 'careful') {
           }
         }
 
-        const first = !s.cooked[order.recipeId];
-        const res = serve(s, order.recipeId, execution(order.recipeId, profile),
-                          { forSynthia: !!order.isSynthia });
-        if (res.quality >= TUNING.highQualityAt) s.points += TUNING.pointsPerHighQuality;
-        if (first) s.points += TUNING.pointsPerNewRecipeServed;
+        // Points are awarded inside serve() now. This file used to award
+        // them itself, which is exactly how it came to be simulating a
+        // different — and much easier — game than the one that shipped.
+        serve(s, order.recipeId, execution(order.recipeId, profile),
+              { forSynthia: !!order.isSynthia });
       }
       const benchRng = makeRng(s.seed + s.week * 77 + s.day);
       const bench = experimentTonight(s, benchRng);

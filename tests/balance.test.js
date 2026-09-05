@@ -66,12 +66,42 @@ test('skill matters — a careful player outperforms a sloppy one', () => {
     'if both profiles score the same, the four beats are decorative');
 });
 
-test('the research tree opens up gradually, not all at once', () => {
+test('the research tree lasts most of the game', () => {
+  /* The property that matters is that the tree is still giving the player
+     something to aim at deep into the run — not an arbitrary fraction by
+     week 2. (It previously asserted week2 < final/2, which encoded nothing
+     real: early nodes are deliberately cheap so a cozy game gives quick
+     wins, and the shape that matters is the long tail after them.) */
   const rows = simulate(2026, 'careful');
-  assert.ok(rows[0].purchased.length < rows[7].purchased.length,
-    'research must continue through the game');
-  assert.ok(rows[1].purchased.length < rows[7].purchased.length / 2,
-    'the tree must not be bought out in the first two weeks');
+  const total = rows[7].purchased.length;
+
+  assert.ok(rows[0].purchased.length < total, 'research must continue past week 1');
+  assert.ok(rows[3].purchased.length < total,
+    'the tree must not be complete by the halfway point');
+  assert.ok(rows[5].purchased.length > rows[2].purchased.length,
+    'and must still be growing in the second half');
+});
+
+test('a sloppy player unlocks materially less of the tree than a careful one', () => {
+  // Research is the main progression lever, so it has to reward playing well.
+  const careful = simulate(2026, 'careful');
+  const sloppy = simulate(2026, 'sloppy');
+  const c = careful[7].purchased.length, s = sloppy[7].purchased.length;
+  assert.ok(c > s * 1.4, `careful ${c}/13 vs sloppy ${s}/13 — skill must matter to progression`);
+});
+
+test('cooking is a real source of research points, not just the bench', () => {
+  /* THE REGRESSION GUARD FOR THE WORST BUG IN THIS PROJECT. serve() used to
+     award no points at all; the awards lived only in tools/simulate.js. The
+     tree costs ~1,130 points and the bench pays ~230 over eight weeks, so
+     the shipped game was unwinnable from week 4 while every balance test
+     passed — because they measured the simulator, which paid itself. */
+  const rows = simulate(2026, 'careful');
+  const totalBench = rows.reduce((a, r) => a + r.benchSpend, 0);
+  assert.ok(rows[7].purchased.length >= 10,
+    `a careful player must get most of the tree (got ${rows[7].purchased.length}/13); ` +
+    `if this drops to ~4, cooking has stopped awarding points again`);
+  assert.ok(totalBench > 0, 'and the bench should still be a real expense');
 });
 
 test('discovery continues all game rather than finishing early', () => {

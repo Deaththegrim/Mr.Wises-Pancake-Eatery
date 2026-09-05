@@ -18,14 +18,14 @@
 
   <main>
     <section id="screen-title" class="screen active">
-      <h1 id="title-text"></h1>
+      <h1 id="title-text" tabindex="-1"></h1>
       <p class="muted">A pancake shop, and the tired god who keeps coming back.</p>
       <button id="btn-new">New Game</button>
       <button id="btn-continue">Continue</button>
     </section>
 
     <section id="screen-morning" class="screen">
-      <h2>Morning</h2>
+      <h2 tabindex="-1">Morning</h2>
       <p class="muted">Choose what goes on the menu today. Early on, a short menu of
         your best work earns more. As you unlock more dishes, breadth starts to pay —
         people order what they came for.</p>
@@ -35,28 +35,28 @@
     </section>
 
     <section id="screen-service" class="screen">
-      <h2>Service</h2>
+      <h2 tabindex="-1">Service</h2>
       <div id="customer-card"></div>
       <div id="griddle-mount"></div>
       <button id="btn-close">Close for the day</button>
     </section>
 
     <section id="screen-evening" class="screen">
-      <h2>Evening</h2>
+      <h2 tabindex="-1">Evening</h2>
       <div id="ledger"></div>
       <button id="btn-research">Research</button>
       <button id="btn-next-day">Next day</button>
     </section>
 
     <section id="screen-research" class="screen">
-      <h2>Research</h2>
+      <h2 tabindex="-1">Research</h2>
       <div id="tree-mount"></div>
       <div id="bench-mount"></div>
       <button id="btn-back-evening">Back</button>
     </section>
 
     <section id="screen-ending" class="screen">
-      <h2 id="ending-title"></h2>
+      <h2 id="ending-title" tabindex="-1"></h2>
       <p class="muted" id="ending-summary"></p>
       <button id="btn-restart">Open again</button>
     </section>
@@ -71,7 +71,7 @@
     </section>
   </main>
 
-  <div id="notice" hidden></div>
+  <div id="notice" role="status" aria-live="polite" hidden></div>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

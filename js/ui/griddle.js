@@ -98,6 +98,19 @@ export function mountGriddle(mount, recipeId, onDone) {
     btn.addEventListener('mouseleave', stop);
     btn.addEventListener('touchstart', e => { e.preventDefault(); start(); });
     btn.addEventListener('touchend', e => { e.preventDefault(); stop(); });
+
+    /* KEYBOARD. A <button> fires `click` on Enter/Space — it does NOT fire
+       mousedown/mouseup. Without this a keyboard user can focus the button,
+       see the focus ring, press Enter, and nothing happens: the first beat
+       of every order is a dead end. Hold-to-pour maps to hold-the-key. */
+    btn.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); start(); }
+    });
+    btn.addEventListener('keyup', e => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); stop(); }
+    });
+    btn.addEventListener('blur', stop);
+    btn.focus();
   }
 
   /* BEAT 2 — FLIP, on canvas.
@@ -185,20 +198,28 @@ export function mountGriddle(mount, recipeId, onDone) {
   // engine/cook.js, not here.
   function doStack() {
     area.append(el('p', { text: `Place ${recipe.stackCount} pancakes. Aim for the centre line.` }));
-    const plate = el('div', { attrs: { id: 'plate' } }, el('div', { className: 'centre-line' }));
+    const plate = el('div', {
+      attrs: { id: 'plate', tabindex: '0', role: 'application',
+               'aria-label': `Place ${recipe.stackCount} pancakes. Arrow keys to aim, Enter to place.` }
+    }, el('div', { className: 'centre-line' }));
+    const cursor = el('div', { className: 'aim-cursor' });
+    plate.append(cursor);
     const read = el('div', { className: 'muted', text: `0 / ${recipe.stackCount}` });
     area.append(plate, read);
 
-    plate.addEventListener('click', ev => {
+    // Keyboard aim, as a fraction of half-width from centre (-1 .. 1).
+    let aim = 0;
+    const showCursor = () => {
+      cursor.hidden = false;
+      cursor.style.left = `${50 + aim * 50}%`;
+    };
+
+    const place = offset => {
       if (beats.offsets.length >= recipe.stackCount) return;
-      const rect = plate.getBoundingClientRect();
-      const centre = rect.left + rect.width / 2;
-      // Normalise to roughly -25..25 so screen width does not change difficulty.
-      const offset = ((ev.clientX - centre) / (rect.width / 2)) * 25;
       beats.offsets.push(offset);
 
       const cake = el('div', { className: 'cake' });
-      cake.style.left = `${ev.clientX - rect.left}px`;
+      cake.style.left = `${50 + (offset / 25) * 50}%`;
       cake.style.bottom = `${8 + (beats.offsets.length - 1) * 15}px`;
       plate.append(cake);
 
@@ -206,7 +227,27 @@ export function mountGriddle(mount, recipeId, onDone) {
       if (beats.offsets.length >= recipe.stackCount) {
         setTimeout(() => { stage = 'drizzle'; render(); }, 350);
       }
+    };
+
+    plate.addEventListener('click', ev => {
+      const rect = plate.getBoundingClientRect();
+      const centre = rect.left + rect.width / 2;
+      // Normalise to roughly -25..25 so screen width does not change difficulty.
+      place(((ev.clientX - centre) / (rect.width / 2)) * 25);
     });
+
+    /* KEYBOARD: arrows aim, Enter/Space places. Without this the plate is a
+       plain div with a click handler — not focusable, not operable, and the
+       run ends here for anyone without a mouse. */
+    plate.addEventListener('keydown', ev => {
+      if (ev.key === 'ArrowLeft')       { aim = Math.max(-1, aim - 0.08); showCursor(); }
+      else if (ev.key === 'ArrowRight') { aim = Math.min(1, aim + 0.08); showCursor(); }
+      else if (ev.key === 'Enter' || ev.key === ' ') { place(aim * 25); }
+      else return;
+      ev.preventDefault();
+    });
+    plate.addEventListener('focus', showCursor);
+    plate.focus();
   }
 
   // BEAT 4 — DRIZZLE. Drag across the cells; each fills while the pointer
@@ -306,6 +347,34 @@ export function mountGriddle(mount, recipeId, onDone) {
       beats.coverage[i] = Math.min(1.2, beats.coverage[i] + 0.09);
       draw();
     };
+
+    /* KEYBOARD: arrows move a column cursor, Enter/Space pours into it.
+       The canvas is otherwise mouse-only, which would end the run here. */
+    let col = Math.floor(COLUMNS / 2);
+    canvas.tabIndex = 0;
+    canvas.setAttribute('role', 'application');
+    canvas.setAttribute('aria-label', 'Drizzle syrup. Arrow keys to move, Enter to pour, then choose Done.');
+    const drawCursor = () => {
+      draw();
+      const x = spanL + (col + 0.5) * (spanW / COLUMNS);
+      ctx.strokeStyle = 'rgba(201,168,255,.9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, 6); ctx.lineTo(x, canvas.height - 6);
+      ctx.stroke();
+    };
+    canvas.addEventListener('keydown', ev => {
+      if (ev.key === 'ArrowLeft')       col = Math.max(0, col - 1);
+      else if (ev.key === 'ArrowRight') col = Math.min(COLUMNS - 1, col + 1);
+      else if (ev.key === 'Enter' || ev.key === ' ') {
+        beats.coverage[col] = Math.min(1.2, beats.coverage[col] + 0.09);
+      } else return;
+      ev.preventDefault();
+      drawCursor();
+    });
+    canvas.addEventListener('focus', drawCursor);
+    canvas.addEventListener('blur', draw);
+    canvas.focus();
 
     canvas.addEventListener('mousedown', e => { down = true; applyAt(e.clientX); });
     canvas.addEventListener('mousemove', e => { if (down) applyAt(e.clientX); });

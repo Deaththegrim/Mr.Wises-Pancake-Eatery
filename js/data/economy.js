@@ -28,7 +28,7 @@
 
    RE-RUN THE SIMULATOR after changing any of this. tests/balance.test.js
    will also fail if the shape breaks. */
-export const QUOTA_CURVE = [300, 900, 2200, 4500, 7000, 9500, 12800, 15500];
+export const QUOTA_CURVE = [300, 900, 2200, 4500, 8000, 11500, 15500, 19000];
 
 export const TUNING = {
   // Diminishing returns: each repeat of the same recipe in one day earns

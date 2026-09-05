@@ -24,6 +24,18 @@ export function showScreen(id) {
   for (const el of document.querySelectorAll('.screen')) {
     el.classList.toggle('active', el.id === `screen-${id}`);
   }
+
+  /* Move focus to the new screen's heading.
+
+     Without this, the control the player just activated gets display:none'd
+     and focus silently falls back to <body> — so a keyboard user loses their
+     place on every transition and a screen-reader user gets no signal that
+     the game moved from Morning to Service at all. The heading carries
+     tabindex="-1" so it is focusable programmatically but not in tab order. */
+  const screen = document.getElementById(`screen-${id}`);
+  if (!screen) return;
+  const heading = screen.querySelector('h1, h2');
+  if (heading) heading.focus({ preventScroll: false });
 }
 
 let noticeTimer = null;
