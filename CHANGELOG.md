@@ -1,5 +1,92 @@
 # Changelog
 
+## 2026-09-06 — the second review pass
+
+Ran the rest of the reviewer panel — comment accuracy, silent failures, a
+UI audit — over the audio and motion work. It found substantially more than
+the first pass, including a bug in code predating this session.
+
+### Fixed — things that were broken
+
+- **A recording that 404s or will not decode was swallowed.** Record a
+  file, run the tool, reload, hear the recipe, conclude it worked. Nothing
+  anywhere said otherwise: `arrayBuffer()` accepts an HTML error body
+  happily and `decodeAudioData` then rejects into an empty catch. Now the
+  response is checked and every failure warns.
+- **`start()` could leave a hiss nothing could stop.** It built its voices
+  with `.map` and registered them afterwards, so a throw part-way through
+  left the earlier layers started, connected, looping, and *absent from the
+  map `stop()` reads* — unstoppable for the rest of the session, with the
+  cause swallowed. It registers as it builds now. Both held slots have one
+  layer today, so it was one data edit from shipping.
+- **`stop()` de-registered before releasing**, so a throw on the first
+  voice stranded the rest unreachable. And `release()` read
+  `ctx.currentTime` outside its own try, so that throw escaped into the
+  caller's catch — after the entry had already been removed.
+- **`voice()` and `envelope()` each had a copy of the attack formula.**
+  They agreed on every shipped row and diverged on `attack: 0`, which the
+  schema explicitly permits. One home now, with a test.
+- **The two held slots declared `ms`/`attack`/`release` that nothing
+  reads** — the same declared-but-unread bug as `release`, one level down,
+  sitting directly under the comment about having fixed that class. The
+  envelope test filters `!sustain`, so it structurally could not see them.
+- **A failed mute *write* silently un-muted the game at every reload,
+  forever.** The rule about storage covered only the read side.
+- **`unlock()` was click-only**, so keyboard-only players built the audio
+  context inside their first beat — the exact case it exists to prevent.
+  The pour beat is keyboard-operable on purpose.
+- **Four exports had no try/catch while a test asserted every export did.**
+  `setMuted` was the sharp one: it assigns `muted` before touching the
+  audio graph, so a throw skipped the caller's re-render and left the
+  button's label asserting the opposite of the state already committed.
+- **`aria-pressed` was inverted** — a button reading "Sound: off"
+  announced as *pressed*. The dimming is keyed to a class now, because
+  styling off the ARIA state is what let the two get out of step.
+- **The preview's hold-to-play buttons were mouse-only**, which is the
+  exact bug the pour beat carries a comment about having fixed once.
+- **The receipt stagger was off by two.** `:nth-child` counts the dish name
+  and the customer's line as well, so the first money row started a third
+  of the way through the sequence and everything past the fourth collapsed
+  onto one delay. Indexed from the rows themselves now.
+- **A bug older than this session:** in the research bench,
+  `refreshChosen` was assigned *inside* the "Try it" handler, so until the
+  player's first experiment every "use" click hit a no-op stub and the
+  summary kept reading "nothing selected" with ingredients staged — which
+  is precisely the bug the comment above it says was fixed.
+
+### Fixed — comments that were wrong
+
+This is its own category on purpose. A wrong comment in this codebase is
+worse than no comment: they cite specific past bugs as justification, so
+they get inherited as fact.
+
+- **The disproved `animation: none` claim survived in `motion.test.js`**
+  after being corrected in the CSS — and the test is where a maintainer
+  actually reads it, because it is attached to the assertion message.
+- **Three comments claimed the smoke test asserts a clean console.** It
+  collected `error` only, so every `console.warn` — this project's whole
+  channel for a fault the player cannot see — sailed straight past. Rather
+  than water the comments down, **smoke.py now fails on warnings too**,
+  which makes the claim true and gives the new audio diagnostics somewhere
+  to land. Verified by planting one.
+- The zero-pitch guard's stated mechanism was wrong (the `RangeError` is
+  synchronous, and a clamp three lines away already prevents it).
+- **The "module scope" AudioContext guard did not check module scope.** It
+  sliced to the first `export`, which in that file lands after four
+  function bodies — so it would have flagged correct lazy construction and
+  missed a genuine module-scope assignment.
+- `localStorage` does not throw in modern private browsing; the real cases
+  are blocked site data and legacy quota errors.
+- The suspended-context branch is about autoplay, not tab backgrounding —
+  and construction never called `resume()`, which is now fixed.
+- `attack` is floored at 5ms, silently overriding 14 of 23 declared values
+  while the docs said "0.01 is a click".
+- `sounds.js` claimed drop-and-reload parity with the art. Audio has no
+  probing fallback, so running the tool is mandatory, not a convenience.
+- Plus an unvalidated `filterHz` (where `|| 1000` rewrites a `0`), an
+  invented "ramps out of order" mechanism, "a hang, not a failure" when
+  Playwright's stability wait is bounded, and an unverified codec claim.
+
 ## 2026-09-06 — the reviewer panel, and what it found
 
 Ran the full reviewer panel over the audio and motion work, plus `uid lint`
