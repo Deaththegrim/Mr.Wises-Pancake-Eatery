@@ -27,6 +27,15 @@ over the UI. Three real defects, all now fixed and mutation-tested.
   previous scheduled point, so the sound did fade. It just faded over the
   wrong span, and by a number the author could not control.
 
+  **How much this changes what you hear today: very little, and that is
+  worth saying plainly.** Every shipped layer happens to use a high release
+  (0.7–0.9), and the broken code faded over `ms - attack` — around 95–99%
+  of the sound — so the two land close together. The fix is not audible
+  drama; it is that the control exists. `release: 0.2` on a 400 ms sound
+  now produces an 80 ms fade where it previously produced a 380 ms one no
+  matter what was typed, so the next person to tune a sound gets the sound
+  they asked for.
+
 - **The sound guards were blind to double quotes.** The call-scanner
   matched `'single'` only, so `play("flipp")` — a typo, silent forever,
   throwing nothing — would have sailed through the one test that exists to
