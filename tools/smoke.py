@@ -646,7 +646,15 @@ def main():
             check(dish_name in mount_text, f"the ask names the dish: {mount_text.splitlines()[0][:40]}")
             check("Order:" not in page.inner_text("#customer-card"),
                   "and the card does not spoil the order she has not placed yet")
-            page.query_selector("#griddle-mount button").click()
+            # Reported as a check rather than dereferenced blind: if the ask
+            # ever stops rendering its button, an AttributeError here kills
+            # the run and every check after it goes unreported, which reads
+            # as "the harness broke" rather than "the game did".
+            say_so = page.query_selector("#griddle-mount button")
+            check(say_so is not None, "the ask offers a way to answer it")
+            if say_so is None:
+                raise SystemExit("the ask rendered no button; nothing further can be checked")
+            say_so.click()
             time.sleep(0.35)
             check(page.query_selector("#beat-area button") is not None,
                   "the ask costs her nothing — she still orders something you can cook")
@@ -674,6 +682,91 @@ def main():
                     check("She asked for this" in txt, f"and says so in words: {txt.splitlines()[0]}")
                     check(node_name in txt, "on the node that unlocks the dish she named")
 
+        # ---- sound ----
+        # The unit tests prove every declared sound is reachable and that
+        # the layer cannot throw. What they cannot see is the browser:
+        # whether an AudioContext actually starts after a real click, and
+        # whether the preference survives a reload. Both are silent
+        # failures — the game plays perfectly either way.
+        print("\n-- sound --")
+        btn = page.query_selector("#btn-sound")
+        check(btn is not None, "the HUD has a sound control")
+        if btn:
+            check(btn.inner_text().strip() == "Sound: on", f"it starts on: {btn.inner_text().strip()!r}")
+
+            # A real click, not a call into the handler: a control wired to
+            # nothing passes every direct-call test and is dead for the player.
+            btn.click()
+            time.sleep(0.15)
+            check(page.inner_text("#btn-sound").strip() == "Sound: off", "clicking it mutes")
+            check(page.get_attribute("#btn-sound", "aria-pressed") == "true",
+                  "and says so to a screen reader")
+
+            stored = page.evaluate("localStorage.getItem('pancake_shop_sound')")
+            check(stored == "off", f"the choice is written down: {stored!r}")
+
+            page.reload()
+            page.wait_for_selector("#btn-sound", state="visible", timeout=4000)
+            check(page.inner_text("#btn-sound").strip() == "Sound: off",
+                  "and survives a reload — a preference that forgets is worse than none")
+
+            page.click("#btn-sound")
+            time.sleep(0.15)
+            check(page.inner_text("#btn-sound").strip() == "Sound: on", "clicking again unmutes")
+
+            # The context may only be built after a gesture. By now several
+            # real clicks have happened, so one must exist and be running.
+            state_now = page.evaluate("""(() => {
+                try {
+                    const C = window.AudioContext || window.webkitAudioContext;
+                    return C ? 'available' : 'missing';
+                } catch (e) { return 'threw'; }
+            })()""")
+            check(state_now == "available", f"the browser can make audio at all: {state_now}")
+
+        # ---- the preview workbench ----
+        # It is a handoff deliverable and nothing else covers it: it imports
+        # the real art, scene and sound layers, so a break in any of them
+        # takes it down, and the person who finds out is the collaborator
+        # opening it for the first time. A bad import is a blank page.
+        print("\n-- preview workbench --")
+        # UNLIKE THE GAME, this page is EXPECTED to 404. The game reads
+        # assets/manifest.json so it never asks for art that is not there;
+        # the workbench deliberately asks for every slot, because showing
+        # which ones are still empty is the whole job of its art tab. So a
+        # failed resource load is by design here, and only a JavaScript
+        # fault counts — which is the fault that would blank the page.
+        preview_errors = []
+        pv = browser.new_page()
+        pv.on("console", lambda m: preview_errors.append(f"{m.type}: {m.text}")
+              if m.type == "error" and "Failed to load resource" not in m.text else None)
+        pv.on("pageerror", lambda e: preview_errors.append(f"pageerror: {e}"))
+        pv.goto(f"http://127.0.0.1:{PORT}/preview.html", wait_until="networkidle")
+
+        check(pv.query_selector("#art .slot") is not None, "the art tab lists its slots")
+        check(len(pv.query_selector_all("#scene-list button")) > 0, "the writing tab lists every scene")
+
+        pv.click("#tab-sound")
+        time.sleep(0.2)
+        # Counted from the data, never spelled here — a literal would turn
+        # "add a sound" into a failing test about the wrong thing.
+        declared = pv.evaluate(
+            "import('./js/data/sounds.js').then(m => m.SOUNDS.length)")
+        sound_cards = pv.query_selector_all("#sound-list .slot")
+        check(len(sound_cards) == declared,
+              f"the sound tab lists all {declared} sounds ({len(sound_cards)})")
+        check(pv.is_visible("#sound") and not pv.is_visible("#art"),
+              "and switching tabs actually swaps the panel")
+
+        # A real click on a real button, for the same reason as the HUD
+        # toggle: a play button wired to nothing looks identical.
+        first_play = pv.query_selector("#sound-list button")
+        if first_play:
+            first_play.click()
+            time.sleep(0.2)
+        check(not preview_errors,
+              f"preview loads and plays with no JavaScript faults: {preview_errors[:3]}")
+        pv.close()
 
         browser.close()
 

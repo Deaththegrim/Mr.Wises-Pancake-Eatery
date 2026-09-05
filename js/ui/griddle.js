@@ -1,6 +1,10 @@
 import { el, clear } from './screens.js';
 import { recipeById } from '../engine/lookup.js';
 import { drawSprite, drawSpriteFit } from './art.js';
+/* Aliased on purpose: the pour and drizzle beats already have local
+   `start`/`stop` for their own hold handling, and an unaliased import
+   would be shadowed inside exactly the two places that need it most. */
+import { play as sfx, start as sfxStart, stop as sfxStop, stopAll as sfxStopAll } from './audio.js';
 
 /* THE COOK SURFACE PALETTE, read from the stylesheet.
 
@@ -112,6 +116,10 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
   mountGriddle._teardown = () => {
     while (teardown.length) teardown.pop()();
   };
+  /* Same reasoning as the loops above, for sound: the two held beats run
+     until told to stop, so abandoning mid-pour must not leave the batter
+     hissing behind whatever the player went to do instead. */
+  teardown.push(sfxStopAll);
 
   clear(mount);
   if (!recipe) {
@@ -188,6 +196,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     let timer = null;
     const start = () => {
       if (timer) return;
+      sfxStart('pour');
       timer = setInterval(() => {
         beats.volume += 2;
         read.textContent = `${beats.volume} ml`;
@@ -196,6 +205,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     };
     const stop = () => {
       if (!timer) return;
+      sfxStop('pour');
       clearInterval(timer);
       timer = null;
       stage = 'flip';
@@ -296,6 +306,11 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     btn.addEventListener('click', () => {
       cancelAnimationFrame(raf);
       beats.msOffset = (performance.now() - t0) - idealAt;
+      sfx('flip');
+      /* The one "well done" in the four beats. It reads the same window
+         engine/cook.js scores against, so the sound cannot congratulate a
+         flip the scorer marked down. */
+      if (Math.abs(beats.msOffset) <= recipe.flip.windowMs / 2) sfx('flip_clean');
       stage = 'stack';
       render();
     }, { once: true });
@@ -339,6 +354,12 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       cake.style.left = `${50 + (absolute / 25) * 50}%`;
       cake.style.bottom = `${8 + (beats.offsets.length - 1) * 15}px`;
       plate.append(cake);
+
+      /* Each pancake lands a little higher than the last. One slot, bent
+         per placement, so a seven-high stack audibly builds rather than
+         repeating one thud — and so the tallest dish in the game sounds
+         like the achievement it is. */
+      sfx('stack_land', { rate: 1 + (beats.offsets.length - 1) * 0.045 });
 
       read.textContent = `${beats.offsets.length} / ${recipe.stackCount}`;
       if (beats.offsets.length >= recipe.stackCount) {
@@ -551,18 +572,21 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     canvas.addEventListener('blur', draw);
     canvas.focus();
 
-    canvas.addEventListener('mousedown', e => { down = true; applyAt(e.clientX); });
+    canvas.addEventListener('mousedown', e => { down = true; sfxStart('drizzle'); applyAt(e.clientX); });
     canvas.addEventListener('mousemove', e => { if (down) applyAt(e.clientX); });
+    canvas.addEventListener('touchstart', () => sfxStart('drizzle'));
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
       applyAt(e.touches[0].clientX);
     });
-    const release = () => { down = false; };
+    canvas.addEventListener('touchend', () => sfxStop('drizzle'));
+    const release = () => { down = false; sfxStop('drizzle'); };
     window.addEventListener('mouseup', release);
     teardown.push(() => window.removeEventListener('mouseup', release));
 
     done.addEventListener('click', () => {
       window.removeEventListener('mouseup', release);
+      sfxStopAll();
       clear(mount);
       onDone(beats);
     }, { once: true });

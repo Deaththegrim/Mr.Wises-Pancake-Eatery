@@ -14,6 +14,7 @@ import { characterOf } from './engine/syrup.js';
 import { TUNING } from './data/economy.js';
 import { SCENES, IMPOSSIBLE_ORDER_LINES } from './data/scenes.js';
 import { syrupById, recipeById, nameOf } from './engine/lookup.js';
+import { play, stopAll, unlock, toggleMuted, isMuted } from './ui/audio.js';
 
 const TITLE_FALLBACK = 'Pancake Shop';
 const title = META.title || TITLE_FALLBACK;
@@ -60,6 +61,7 @@ function toMorning() {
 
 function toService() {
   openDay(state);
+  play('day_open');
   clearReceipt();
   renderShopfrontDecor(state);
   servedToday = 0;
@@ -82,6 +84,17 @@ function nextOrder() {
   // settled on an order yet — so the card must not print one.
   renderCustomer(order, { hideOrder: !!(order && order.impossibleAsk) });
   if (!order) return;
+
+  /* Her bell is lower and slower than everyone else's, so the room
+     changes before the card is read. It is the only place the sound
+     layer knows who walked in, and it costs one branch.
+
+     Written as two literal calls rather than one call with a ternary
+     because the test that proves every declared sound is reachable greps
+     for the id — and a slot it cannot see is a slot it cannot vouch for.
+     The ternary version passed nothing and looked identical. */
+  if (order.isSynthia) play('bell_quiet');
+  else play('bell');
 
   /* When SHE is the customer, she says something first — sometimes
      something she misses, tagged so that researching and serving it weeks
@@ -164,6 +177,8 @@ function cookFor(current) {
     const lines = current.customer.lines || {};
     const said = result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed;
     renderReceipt(recipeById(current.recipeId), result, current.customer.name, said);
+    play('serve');
+    play('till');
 
     saveGame();
 
@@ -198,6 +213,10 @@ function renderEvening() {
 }
 
 function toEvening() {
+  /* Any held beat sound dies with the service screen. Without this a pour
+     whose mouseup landed off the button keeps hissing behind the ledger. */
+  stopAll();
+  play('day_close');
   lastDayResult = closeDay(state);
   const dayResult = lastDayResult;
   renderQuotaBoard(state);   // the week may have rolled; the HUD must agree
@@ -267,6 +286,23 @@ document.getElementById('btn-next-day').addEventListener('click', toMorning);
 document.getElementById('btn-research').addEventListener('click', toResearch);
 document.getElementById('btn-restart').addEventListener('click', () => { state = newGame(); toMorning(); });
 document.getElementById('btn-back-evening').addEventListener('click', () => { renderEvening(); showScreen('evening'); });
+
+/* SOUND. The button reports the state it is in rather than the state it
+   would move to — "Sound: off" next to a silent game is readable; "Turn
+   sound on" next to a silent game reads as a label for the silence. */
+const soundBtn = document.getElementById('btn-sound');
+function renderSound() {
+  soundBtn.textContent = isMuted() ? 'Sound: off' : 'Sound: on';
+  soundBtn.setAttribute('aria-pressed', String(isMuted()));
+}
+soundBtn.addEventListener('click', () => { toggleMuted(); renderSound(); });
+renderSound();
+
+/* Browsers will not start an audio context before the player has
+   interacted with the page, so the first click anywhere wakes it — once,
+   and before any beat needs it, so the first sound is not the one lost
+   while the hardware comes up. */
+document.addEventListener('click', unlock, { once: true });
 
 showScreen('title');
 

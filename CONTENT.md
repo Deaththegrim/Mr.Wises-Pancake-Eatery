@@ -285,6 +285,53 @@ which put the same words twice on one screen and said nothing; they are now
 
 ---
 
+## Sound — `js/data/sounds.js`
+
+**There are no sound files, and the game is not silent.** Each slot carries a
+recipe the browser performs itself, so sound works on a fresh clone with
+nothing downloaded and no build step — the same promise the rest of the
+project makes.
+
+    {
+      id: 'till',
+      when: 'the bill is settled and the receipt prints',
+      path: 'assets/audio/till.mp3',        // where a recording would go
+      layers: [
+        { wave: 'triangle', hz: 880, ms: 130, gain: 0.06, attack: 0.01, release: 0.8 },
+        { wave: 'triangle', hz: 1320, ms: 220, gain: 0.05, delay: 80, attack: 0.01, release: 0.85 }
+      ]
+    }
+
+`wave` is one of sine, triangle, square, sawtooth, noise. `hz` is a steady
+pitch; `from`/`to` slides between two. `ms` is how long, `gain` how loud,
+`delay` staggers a layer so two-part sounds land properly, and `filter`
+(lowpass/highpass/bandpass, with `filterHz`) shapes noise into something
+liquid. Two slots are `sustain: true` — pour and drizzle — because they run
+while a button is held rather than for a fixed time.
+
+**To replace one with a real recording:** drop a file at its `path`, run
+`node tools/audio.js`, reload. The recording is used instead of the recipe.
+Delete it and the recipe comes back. Same either/or as the art.
+
+**Open `preview.html` and click Sound** to hear every one on its own — held
+sounds included, which is the only way to judge whether a pour loops
+cleanly.
+
+**The house style is quiet.** Gains sit between 0.03 and 0.12, and the sound
+for *failing* at the bench is gentler than the one for succeeding, not
+louder. Nothing here is a buzzer. The validator warns above 0.3, and the
+design note this project keeps coming back to is that medium juice beats
+extreme juice for a cozy game — a shop you visit for eight weeks cannot
+shout at you.
+
+**Every slot must be played by something.** A test fails if you declare a
+sound nothing triggers, or trigger one nothing declares. That is not
+pedantry: this project has shipped a syrup system that paid out in nothing
+and an affection chain that was never called, both of which passed every
+test they had.
+
+---
+
 ## Writing Synthia — `js/data/scenes.js`
 
 **Open `preview.html`** (with the server running) to read any scene on its

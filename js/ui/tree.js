@@ -5,6 +5,7 @@ import { unitPriceOf, stockOf, canAfford, buyIngredient } from '../engine/pantry
 import { TUNING } from '../data/economy.js';
 import { el, clear, showNotice } from './screens.js';
 import { recipeById, syrupById, ingredientById, researchById, nameOf } from '../engine/lookup.js';
+import { play } from './audio.js';
 
 /* Why a node is not available yet, in the author's own words. Potion
    Craft's biggest complaint was not knowing where to go next, so a locked
@@ -71,6 +72,7 @@ export function renderTree(state, onChange) {
         btn.disabled = !affordable;
         btn.addEventListener('click', () => {
           const r = purchase(state, node.id);
+          if (r.ok) play('unlock');
           showNotice(r.ok ? `Researched: ${node.name}` : r.reason);
           if (onChange) onChange();
         });
@@ -124,7 +126,7 @@ export function renderBench(state, onChange) {
 
     buyBtn.addEventListener('click', () => {
       const r = buyIngredient(state, ing.id, 1);
-      if (!r.ok) showNotice(r.reason);
+      if (r.ok) play('purchase'); else showNotice(r.reason);
       refreshAll();
       if (onChange) onChange();
     });
@@ -174,8 +176,12 @@ export function renderBench(state, onChange) {
     const r = experiment(state, [...chosen]);
     if (r.found) {
       const s = syrupById(r.syrupId);
+      play('discover');
       result.textContent = `You have made something. ${s ? s.name : r.syrupId}.`;
     } else {
+      /* A blocked attempt spent nothing and is not a miss — sounding one
+         would tell the player they failed at something they never did. */
+      if (!r.blocked) play('bench_miss');
       result.textContent = r.hint;
     }
     // Blocked experiments consume nothing, so keep the selection to fix it.

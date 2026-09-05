@@ -18,27 +18,29 @@ renaming the game is one line.
 
 ## If you've just been handed this
 
-Four commands, in this order. None of them need anything installed beyond
+Five commands, in this order. None of them need anything installed beyond
 Node and Python, and none of them can break the game.
 
     python3 -m http.server 8000     # then open localhost:8000 and play a week
     node tools/writing.js           # every line of prose, and when it is seen
     node tools/art.js               # every picture, where it goes, what it shows
+    node tools/audio.js             # every sound, and whether it is a recipe or a recording
     node --test tests/              # proves nothing is broken before you start
 
 And with the server running, **localhost:8000/preview.html** — a workbench
 showing every art slot (the real file if you have drawn one, what it needs
-if not) and every scene playable on its own, so you can read an ending
-without playing eight weeks to reach it.
+if not), every scene playable on its own so you can read an ending without
+playing eight weeks to reach it, and every sound playable on its own.
 
 Then **[CONTENT.md](CONTENT.md)**, which is the whole guide to changing
 things: a pancake, a customer, a syrup, a research node, one of her scenes.
 Everything editable is a plain list in `js/data/` and you never need to open
 the engine.
 
-The two worklists never fail — they are not tests. They print what is left
-to write and to draw, and both are designed so you can do it a line or a
-picture at a time, in any order, and see the result on the next reload.
+The three worklists never fail — they are not tests. They print what is
+left to write, to draw and to record, and all three are designed so you can
+do it a line, a picture or a sound at a time, in any order, and see the
+result on the next reload.
 
 ## Run it
 
@@ -50,12 +52,13 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 290 unit tests (incl. balance regressions)
+    node --test tests/         # 300 unit tests (incl. balance regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
     python3 tools/smoke.py     # plays the game in a headless browser
     python3 tools/playthrough.py 1   # plays the REAL page for N weeks (slow)
     node tools/art.js          # what art is needed, and what is already in
+    node tools/audio.js        # every sound the game makes
     node tools/writing.js      # every line of prose, and when it is seen
 
 `simulate.js` drives the engine directly, so it is fast enough to run a full
@@ -83,7 +86,8 @@ open the engine.
     js/ui/       the screens. DOM only - no rules live here.
     css/         all colour, including the canvas's - ui/griddle.js reads
                  the cook-surface tokens off the root element at mount
-    tools/       validate.js, simulate.js, smoke.py, playthrough.py
+    tools/       validate.js, simulate.js, smoke.py, playthrough.py,
+                 art.js, audio.js, writing.js
     tests/       one file per engine module
 
 Three of those boundaries are enforced by tests rather than good
@@ -137,7 +141,11 @@ cannot make yet, five endings chosen by how well you listened, save/load,
 and the shop you spend the money on once the tree runs out.
 
 **What's left is writing and art**, and both are set up to be dropped in
-rather than built.
+rather than built. Sound is already there: the game has none of its own
+audio files and is not silent, because every noise it makes is a recipe the
+browser performs. `node tools/audio.js` lists them, and a real recording
+dropped at a slot's path replaces one the same way a PNG replaces a
+placeholder.
 
 The shop around her has had a proper pass — the eleven customers, the
 seven things you can buy for the room, the dish and syrup names — so there

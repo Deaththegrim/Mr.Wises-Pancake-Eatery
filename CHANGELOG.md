@@ -1,5 +1,80 @@
 # Changelog
 
+## 2026-09-06 — sound, with no sound files
+
+### Added
+
+- **The game has audio, and ships none.** Every noise is a recipe in
+  `js/data/sounds.js` that the browser performs with Web Audio — so sound
+  works on a fresh clone with nothing to download, no library, and no build
+  step. That was the whole design constraint: this project's promise is
+  that it still runs in five years from a `git clone` and a static server,
+  and a folder of MP3s is the easiest way to break that.
+
+  Fifteen slots: the four beats (pour and drizzle are *held* — they run
+  while the button is down, because those beats are press-and-hold), the
+  counter (a bell, a plate, a till), the bench and the board, and the
+  opening and closing of the day.
+
+  **A real recording still wins.** Drop a file at a slot's `path`, run
+  `node tools/audio.js`, reload — it is used instead of the recipe, and
+  deleting it brings the recipe back. Identical to how a PNG replaces an
+  art placeholder, and for the same reason: the work can be done in any
+  order, by anyone, one sound at a time.
+
+- **A mute toggle in the HUD**, persisted. It reports the state it is *in*
+  ("Sound: off") rather than the state it would move to — "Turn sound on"
+  beside a silent game reads as a label for the silence.
+
+- **`node tools/audio.js`** — the checklist, and it writes the manifest the
+  game loads from, so the console stays clean instead of reporting fifteen
+  missing files on every load. Same workflow as the art tool.
+
+- **A Sound tab in `preview.html`** — every sound played on its own,
+  through the real layer. Held sounds are hold-to-play, which is the only
+  way to judge whether a pour loops cleanly.
+
+### Design notes worth keeping
+
+- **The house style is quiet.** Gains sit between 0.03 and 0.12, and the
+  sound for *failing* at the bench is gentler than the one for succeeding,
+  not louder — a cozy game with no fail state should not own a buzzer. The
+  validator warns above 0.3.
+- **Her bell is not everyone's bell**: lower, slower, longer. It is the
+  only place the sound layer knows who walked in, and it costs one branch.
+- **The stack sound bends upward per pancake**, so a seven-high tower
+  audibly builds instead of repeating one thud.
+- **`flip_clean` reads the same window `engine/cook.js` scores against**, so
+  the sound cannot congratulate a flip the scorer marked down.
+- **Juice beyond sound was deliberately not built.** The design research
+  says medium juice beats extreme juice for a cozy game, and the beats
+  already animate. Screen-shake in a shop you visit for eight weeks works
+  against the pillar.
+
+### Fixed
+
+- **The reachability test caught a real gap on its first run.** The
+  customer bell was written as one call with a ternary
+  (`play(x ? 'a' : 'b')`), so neither id was greppable and the guard could
+  not vouch for either. Rewritten as two literal calls. The guard was left
+  alone — this project's rule is to fix the code, not the gate.
+
+- **The preview workbench had no test at all**, despite being a handoff
+  deliverable that imports the real art, scene and sound layers — a broken
+  import would have blanked it, and the person who found out would have
+  been the collaborator opening it for the first time. Now covered by
+  smoke.py. Its art 404s are *by design* (the game uses a manifest to avoid
+  them; the workbench must ask for every slot to show which are empty), so
+  the check ignores failed resource loads and fails on JavaScript faults.
+
+- **A latent crash in `smoke.py`** — `query_selector(...).click()` on a
+  possibly-missing button would have raised an AttributeError and killed
+  the run, reporting nothing after it, which reads as a broken harness
+  rather than a broken game.
+
+- README drift the audio work exposed: "Four commands" listed five, "the
+  two worklists" was three, and the test count said 290.
+
 ## 2026-09-06 — the background cast gets a voice
 
 ### Changed

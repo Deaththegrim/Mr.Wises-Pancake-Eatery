@@ -1,6 +1,7 @@
 import { el, clear, showNotice } from './screens.js';
 import { decorFor, buyDecor, ownedDecor } from '../engine/decor.js';
 import { spriteImg } from './art.js';
+import { play } from './audio.js';
 
 /* THE SHOP SCREEN, and the room it furnishes.
 
@@ -50,6 +51,7 @@ export function renderDecorShop(state, onChange) {
       btn.setAttribute('aria-label', `Buy ${item.name} for ${item.cost}`);
       btn.addEventListener('click', () => {
         const r = buyDecor(state, item.id);
+        if (r.ok) play('purchase');
         showNotice(r.ok ? `${r.item.name}. ${r.item.note}` : r.reason, 6000);
         if (onChange) onChange();
       });

@@ -14,6 +14,7 @@ import { CUSTOMERS } from '../js/data/customers.js';
 import { TUNING } from '../js/data/economy.js';
 import { SCENES } from '../js/data/scenes.js';
 import { DECOR } from '../js/data/decor.js';
+import { SOUNDS } from '../js/data/sounds.js';
 import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE } from '../js/data/affection.js';
 
 
@@ -45,6 +46,7 @@ export function validateContent(override = {}) {
   const customers = override.customers || CUSTOMERS;
   const scenes = override.scenes || SCENES;
   const decor = override.decor || DECOR;
+  const sounds = override.sounds || SOUNDS;
 
   /* The scene checks cross-reference recipes and research. When a caller
      overrides those with a synthetic set — which the validator's own
@@ -349,6 +351,48 @@ export function validateContent(override = {}) {
       if (best < 0.5) {
         warnings.push(`syrups.js — no customer scores "${sy.id}" above ${best.toFixed(2)}; ` +
                       `discovering it would never pay off for anyone.`);
+      }
+    }
+  }
+
+  // --- sound ---
+  /* The recipes cannot be checked for how they sound, and nothing here
+     pretends to. What CAN go wrong silently is a slot the browser refuses
+     to play: an unknown wave, a pitch of zero (Web Audio's exponential
+     ramps cannot reach it and throw inside the audio thread, where the
+     sound layer's own try/catch swallows the error), or a gain loud enough
+     to make a cozy game shout. All three are inaudible faults — the sound
+     simply never happens — so they are worth an error rather than a shrug. */
+  const soundIds = new Set();
+  const WAVES = new Set(['sine', 'triangle', 'square', 'sawtooth', 'noise']);
+  for (const s of sounds) {
+    need(s, 'id', 'string', 'sounds.js', s.id || '(no id)');
+    need(s, 'when', 'string', 'sounds.js', s.id);
+    if (soundIds.has(s.id)) {
+      errors.push(`sounds.js — duplicate id "${s.id}"; the second row could never be played.`);
+    }
+    soundIds.add(s.id);
+
+    if (!Array.isArray(s.layers) || s.layers.length === 0) {
+      errors.push(`sounds.js — "${s.id}" has no layers, so it is silent.`);
+      continue;
+    }
+    for (const [i, l] of s.layers.entries()) {
+      if (!WAVES.has(l.wave)) {
+        errors.push(`sounds.js — "${s.id}" layer ${i} uses wave "${l.wave}", which the browser cannot make. Use one of: ${[...WAVES].join(', ')}.`);
+      }
+      for (const k of ['hz', 'from', 'to']) {
+        if (l[k] != null && !(l[k] > 0)) {
+          errors.push(`sounds.js — "${s.id}" layer ${i} has ${k}=${l[k]}; a pitch must be above zero or the sound never plays.`);
+        }
+      }
+      if (!(l.gain > 0)) {
+        errors.push(`sounds.js — "${s.id}" layer ${i} has no gain, so it is silent.`);
+      } else if (l.gain > 0.3) {
+        warnings.push(`sounds.js — "${s.id}" layer ${i} has gain ${l.gain}. The house style is quiet; anything above 0.3 will shout over the rest.`);
+      }
+      if (!s.sustain && !(l.ms > 0)) {
+        errors.push(`sounds.js — "${s.id}" layer ${i} is a one-shot with no duration, so it never stops.`);
       }
     }
   }

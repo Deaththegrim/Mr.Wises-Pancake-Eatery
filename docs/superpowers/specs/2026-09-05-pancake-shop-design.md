@@ -688,8 +688,25 @@ thin content, and the collaborator can start writing.
    composited at runtime (see the art-pipeline note below), plus the seven
    `art` names in `data/decor.js`, each of which currently draws as a labelled
    outline.
-4. ~~Shop decoration~~ — **DONE**, brought forward; see §14.5. Audio and juice
-   remain.
+4. ~~Shop decoration~~ — **DONE**, brought forward; see §14.5.
+5. ~~Audio~~ — **DONE 2026-09-06.** Built as a DATA layer (`js/data/sounds.js`)
+   with no asset files: each of the 15 slots carries a recipe the browser
+   performs with Web Audio, so the game has sound on a fresh clone with
+   nothing to download and the no-dependency promise intact. A real recording
+   dropped at a slot's `path` replaces its recipe, exactly as a PNG replaces
+   an art placeholder. Two slots are held (pour, drizzle) because those beats
+   are press-and-hold. A mute toggle sits in the HUD and persists.
+
+   The tests that matter are the reachability ones, this project's recurring
+   bug class: a declared sound nothing plays, and a played id nothing
+   declares, both fail the suite. The first of them caught a real gap on its
+   first run — the customer bell was written as one call with a ternary, so
+   neither of its two ids was greppable.
+
+   **Juice beyond sound is deliberately not done.** The design notes are
+   explicit that medium juice beats extreme juice for a cozy game, and the
+   four beats already animate. Adding screen-shake and particles to a shop
+   you visit for eight weeks would work against the pillar.
 
 **What is left is writing and art.** Every system the spec describes is built
 and tested: the four beats, the economy and its itemised bill, the research tree

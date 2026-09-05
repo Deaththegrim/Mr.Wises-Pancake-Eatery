@@ -41,15 +41,16 @@
 <body>
   <h1>Preview</h1>
   <p class="lede">
-    A workbench for the two jobs that are left. Drop a picture into
+    A workbench for the jobs that are left. Drop a picture into
     <code>assets/</code> and reload this page to see it; click a scene to read
-    it in place, with her sprite, without playing to it. Nothing here changes
-    the game or touches a save.
+    it in place, with her sprite, without playing to it; play any sound on its
+    own. Nothing here changes the game or touches a save.
   </p>
 
   <div class="tabs">
     <button id="tab-art" class="on">Art</button>
     <button id="tab-writing">Writing</button>
+    <button id="tab-sound">Sound</button>
   </div>
 
   <section id="art" class="slots"></section>
@@ -69,6 +70,17 @@
     </div>
   </section>
 
+  <section id="sound" hidden>
+    <p class="lede">
+      Every sound the game makes, played on its own. None of these are
+      files — the browser performs them from the recipes in
+      <code>js/data/sounds.js</code>, which is why the game has sound on a
+      fresh clone. To replace one, record it, drop it at the path shown, run
+      <code>node tools/audio.js</code>, and reload.
+    </p>
+    <div class="slots" id="sound-list"></div>
+  </section>
+
   <div id="notice" role="status" aria-live="polite" hidden></div>
 
 <script type="module">
@@ -77,6 +89,8 @@ import { SCENES } from './js/data/scenes.js';
 import { playScene } from './js/ui/vn.js';
 import { newGame } from './js/engine/state.js';
 import { TIER_THRESHOLDS } from './js/data/affection.js';
+import { SOUNDS } from './js/data/sounds.js';
+import { play as sfxPlay, start as sfxStart, stop as sfxStop } from './js/ui/audio.js';
 
 /* ART. Each slot shows the real file if there is one and the description
    of what it needs if there is not — the same either/or the game makes,
@@ -129,8 +143,44 @@ for (const [id, node] of Object.entries(SCENES)) {
   list.append(b);
 }
 
-const tabs = { art: document.getElementById('art'), writing: document.getElementById('writing') };
-const buttons = { art: document.getElementById('tab-art'), writing: document.getElementById('tab-writing') };
+/* SOUND. The real layer, so what you hear is what the game plays — held
+   sounds included, which is the only way to judge whether a pour loops
+   cleanly. */
+const soundList = document.getElementById('sound-list');
+for (const slot of SOUNDS) {
+  const card = document.createElement('div');
+  card.className = 'slot';
+  card.innerHTML =
+    `<h3>${slot.id}${slot.sustain ? ' &middot; held' : ''}</h3>` +
+    `<div class="path">${slot.path || '(recipe only)'}</div>` +
+    `<div class="needs">${slot.when}</div>`;
+
+  const btn = document.createElement('button');
+  if (slot.sustain) {
+    /* A held sound has no length of its own, so it is played the way the
+       game plays it: down to start, up to stop. */
+    btn.textContent = 'Hold to play';
+    btn.addEventListener('mousedown', () => sfxStart(slot.id));
+    btn.addEventListener('mouseup', () => sfxStop(slot.id));
+    btn.addEventListener('mouseleave', () => sfxStop(slot.id));
+  } else {
+    btn.textContent = 'Play';
+    btn.addEventListener('click', () => sfxPlay(slot.id));
+  }
+  card.append(btn);
+  soundList.append(card);
+}
+
+const tabs = {
+  art: document.getElementById('art'),
+  writing: document.getElementById('writing'),
+  sound: document.getElementById('sound')
+};
+const buttons = {
+  art: document.getElementById('tab-art'),
+  writing: document.getElementById('tab-writing'),
+  sound: document.getElementById('tab-sound')
+};
 for (const name of Object.keys(tabs)) {
   buttons[name].addEventListener('click', () => {
     for (const other of Object.keys(tabs)) {

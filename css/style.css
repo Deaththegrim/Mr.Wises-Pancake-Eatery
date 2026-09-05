@@ -81,6 +81,21 @@ h1 { font-size: 2.2rem; }
 }
 #hud-title { color: var(--accent); }
 
+/* The sound toggle sits in the HUD but is not HUD information — it is the
+   one control that lives outside a screen, so it is pushed to the far end
+   and drawn quieter than the numbers it sits beside. Transparent rather
+   than a filled slab, to match the rest of the chrome. */
+#btn-sound {
+  margin: -4px 0 -4px auto;
+  padding: 4px 10px;
+  font: inherit;
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--edge);
+}
+#btn-sound:hover { color: var(--ink); }
+#btn-sound[aria-pressed="true"] { opacity: 0.65; }
+
 main { padding: calc(var(--sp) * 2); max-width: 900px; margin: 0 auto; }
 .screen { display: none; }
 .screen.active { display: block; }
