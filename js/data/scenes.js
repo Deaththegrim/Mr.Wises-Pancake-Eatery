@@ -214,3 +214,19 @@ export const SCENES = {
     end: true
   }
 };
+
+/* IMPOSSIBLE ORDERS (spec §9). She periodically asks for something you
+   cannot make yet. It is never a failure — she is unbothered and deadpan
+   about it, and it points the player at the next research target, so her
+   presence drives progression even between story beats.
+
+   Prose lives here, with the rest of the writing, so the collaborator who
+   owns her voice can rewrite these without opening any code. One is
+   picked per impossible order; the dish is named separately by the UI.
+   Placeholders, like every other line in this file. */
+export const IMPOSSIBLE_ORDER_LINES = [
+  '“No. I did not think so.”\n\nShe does not seem surprised, or bothered.',
+  '“Worth asking.”\n\nShe shrugs, and does not leave.',
+  '“One day, then.”',
+  '“Hm.”\n\nA pause. “Write it down somewhere.”'
+];

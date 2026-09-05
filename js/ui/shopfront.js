@@ -4,11 +4,7 @@ import { customersToday } from '../engine/day.js';
 import { el, clear, showNotice } from './screens.js';
 import { recipeById, ingredientById, nameOf } from '../engine/lookup.js';
 
-
-let onChangeRef = null;
-
 export function renderMorning(state, onChange) {
-  onChangeRef = onChange;
   const mount = clear(document.getElementById('menu-picker'));
 
   for (const id of state.unlockedRecipes) {
@@ -39,14 +35,18 @@ export function renderMorning(state, onChange) {
   }
 
   document.getElementById('btn-open').disabled = state.menu.length === 0;
-  renderStockWarning(state);
+  renderStockWarning(state, onChange);
   renderQuotaBoard(state);
 }
 
 /* Cooking now spends ingredients, so the morning needs to say whether you
    can actually get through the day. Running out is not fatal — you buy at
    double price mid-service — but that should be a choice, not a surprise. */
-function renderStockWarning(state) {
+/* Takes onChange so the restock button can redraw the whole morning
+   screen. This used to reach for a module-level `onChangeRef` that
+   renderMorning stashed on every call — a hidden global holding a
+   callback, which quietly breaks the moment two screens render. */
+function renderStockWarning(state, onChange) {
   const mount = document.getElementById('stock-warning');
   if (!mount) return;
   clear(mount);
@@ -82,21 +82,27 @@ function renderStockWarning(state) {
   btn.disabled = state.money < restock;
   btn.addEventListener('click', () => {
     for (const id of short) buyIngredient(state, id, 1);
-    renderMorning(state, onChangeRef);
+    renderMorning(state, onChange);
     showNotice(`Restocked. ${state.money} left in the till.`);
   });
   mount.append(btn);
 }
 
-export function renderCustomer(order) {
+/* `hideOrder` is for the moment she asks for something you cannot make.
+   She has not settled on anything yet, so printing "Order: Plain Stack"
+   above her asking for the souffle contradicts the scene playing directly
+   underneath it and gives away where the beat lands. */
+export function renderCustomer(order, { hideOrder = false } = {}) {
   const mount = clear(document.getElementById('customer-card'));
   if (!order) {
     mount.append(el('div', { className: 'card muted', text: 'Nobody right now. You could close up.' }));
     return;
   }
-  const r = recipeById(order.recipeId);
-  mount.append(el('div', { className: 'card' },
+  const card = el('div', { className: 'card' },
     el('strong', { text: order.customer.name }),
-    el('p', { text: order.customer.lines.greeting }),
-    el('p', { className: 'muted', text: `Order: ${r ? r.name : order.recipeId}` })));
+    el('p', { text: order.customer.lines.greeting }));
+  if (!hideOrder) {
+    card.append(el('p', { className: 'muted', text: `Order: ${nameOf(recipeById, order.recipeId)}` }));
+  }
+  mount.append(card);
 }

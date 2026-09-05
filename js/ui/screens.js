@@ -21,8 +21,8 @@ export function clear(node) {
 }
 
 export function showScreen(id) {
-  for (const el of document.querySelectorAll('.screen')) {
-    el.classList.toggle('active', el.id === `screen-${id}`);
+  for (const section of document.querySelectorAll('.screen')) {
+    section.classList.toggle('active', section.id === `screen-${id}`);
   }
 
   /* Move focus to the new screen's heading.
@@ -40,11 +40,11 @@ export function showScreen(id) {
 
 let noticeTimer = null;
 export function showNotice(msg, ms = 4000) {
-  const el = document.getElementById('notice');
-  el.textContent = msg;
-  el.hidden = false;
+  const notice = document.getElementById('notice');
+  notice.textContent = msg;
+  notice.hidden = false;
   clearTimeout(noticeTimer);
-  noticeTimer = setTimeout(() => { el.hidden = true; }, ms);
+  noticeTimer = setTimeout(() => { notice.hidden = true; }, ms);
 }
 
 /* Used when a story scene starts. A leftover score readout floating over

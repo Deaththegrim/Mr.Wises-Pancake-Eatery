@@ -51,9 +51,16 @@ export function renderTree(state, onChange) {
     const open = isAvailable(node, state);
     const affordable = open && state.points >= node.cost;
 
-    const row = el('div', { className: `node${affordable ? ' affordable' : ''}` });
+    /* SHE ASKED FOR THIS (spec §9). An impossible order is meant to plant
+       a research goal, which only works if the board remembers it. Without
+       this the ask is a line of dialogue that evaporates, and the player
+       has to hold "she wanted the souffle" in their head for weeks. */
+    const askedFor = !done && (state.synthia.wanted || []).includes((node.unlocks || {}).recipe);
+
+    const row = el('div', { className: `node${affordable ? ' affordable' : ''}${askedFor ? ' asked' : ''}` });
     row.append(el('div', { text: `${node.name} — ${node.cost} pts${done ? ' ✓' : ''}` }));
     row.append(el('div', { className: 'why', text: unlockLabel(node) }));
+    if (askedFor) row.append(el('div', { className: 'why asked-note', text: 'She asked for this.' }));
 
     if (!done) {
       const why = blockedReason(node, state);

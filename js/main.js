@@ -1,7 +1,7 @@
 import { newGame, serialize, deserialize } from './engine/state.js';
 import { openDay, closeDay, nextCustomer, serve, customersToday } from './engine/day.js';
 import { META } from './data/meta.js';
-import { showScreen, showNotice } from './ui/screens.js';
+import { showScreen, showNotice, el, clear } from './ui/screens.js';
 import { renderMorning, renderCustomer } from './ui/shopfront.js';
 import { renderLedger, renderQuotaBoard } from './ui/ledger.js';
 import { renderTree, renderBench } from './ui/tree.js';
@@ -11,8 +11,8 @@ import { missSceneFor, mentionSceneFor } from './engine/story.js';
 import { tierFor } from './engine/affection.js';
 import { characterOf, matchLabel } from './engine/syrup.js';
 import { TUNING } from './data/economy.js';
-import { SCENES } from './data/scenes.js';
-import { syrupById } from './engine/lookup.js';
+import { SCENES, IMPOSSIBLE_ORDER_LINES } from './data/scenes.js';
+import { syrupById, recipeById, nameOf } from './engine/lookup.js';
 
 const TITLE_FALLBACK = 'Pancake Shop';
 const title = META.title || TITLE_FALLBACK;
@@ -75,7 +75,9 @@ function nextOrder() {
   }
 
   order = nextCustomer(state);
-  renderCustomer(order);
+  // While she is asking for something you cannot make, she has not
+  // settled on an order yet — so the card must not print one.
+  renderCustomer(order, { hideOrder: !!(order && order.impossibleAsk) });
   if (!order) return;
 
   /* When SHE is the customer, she says something first — sometimes
@@ -86,26 +88,62 @@ function nextOrder() {
     const mention = mentionSceneFor(state);
     if (mention) {
       state.flags[`mentioned_w${state.week}`] = true;
-      playScene(mention, state, () => { showScreen('service'); cookFor(order); });
+      playScene(mention, state, () => { showScreen('service'); proceedWith(order); });
       return;
     }
   }
 
-  cookFor(order);
+  proceedWith(order);
 }
 
-function cookFor(order) {
+/* The single door into cooking. Both callers — a plain order, and one
+   that arrives after her mention scene — must pass through here: the
+   first cut checked for the impossible ask only on the direct path, so
+   whenever she opened with a mention (which is most weeks) the ask was
+   silently skipped and the research goal never got planted. */
+function proceedWith(current) {
+  if (current.impossibleAsk) {
+    askImpossible(current);
+    return;
+  }
+  cookFor(current);
+}
+
+function askImpossible(current) {
+  const dish = nameOf(recipeById, current.impossibleAsk);
+  const line = IMPOSSIBLE_ORDER_LINES[
+    Math.floor(Math.random() * IMPOSSIBLE_ORDER_LINES.length)];
+
+  const mount = clear(document.getElementById('griddle-mount'));
+  const card = el('div', { className: 'card' },
+    el('p', { text: `“${dish}.”` }),
+    el('p', { className: 'muted', text: 'You do not know how to make that yet.' }));
+  for (const para of line.split('\n\n')) card.append(el('p', { text: para }));
+
+  const go = el('button', { text: 'Say so' });
+  go.addEventListener('click', () => {
+    showNotice(`${dish} is on the research board now — she asked for it.`, 6000);
+    renderCustomer(current);          // she settles for what you do have
+    saveGame();
+    cookFor(current);
+  }, { once: true });
+  card.append(go);
+  mount.append(card);
+  go.focus();
+}
+
+function cookFor(current) {
   // What the player can pour today, in the order they unlocked them.
   const syrups = state.unlockedSyrups
     .map(syrupById)
     .filter(Boolean)
     .map(s => ({ id: s.id, name: s.name, character: characterOf(s) }));
 
-  mountGriddle(document.getElementById('griddle-mount'), order.recipeId, beats => {
-    const result = serve(state, order.recipeId, beats, {
-      forSynthia: !!order.isSynthia,
+  mountGriddle(document.getElementById('griddle-mount'), current.recipeId, beats => {
+    const result = serve(state, current.recipeId, beats, {
+      forSynthia: !!current.isSynthia,
       syrupId: beats.syrupId,
-      taste: order.customer && order.customer.taste
+      taste: current.customer && current.customer.taste
     });
     servedToday += 1;
     const b = result.breakdown;
@@ -130,9 +168,9 @@ function cookFor(order) {
        the card has already moved on to whoever is next, and a reaction
        worth a whole extra click per dish would not be worth it at
        eighteen customers a day. */
-    const lines = order.customer && order.customer.lines;
+    const lines = current.customer && current.customer.lines;
     const said = lines
-      ? `${order.customer.name}: “${result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed}”  ·  `
+      ? `${current.customer.name}: “${result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed}”  ·  `
       : '';
 
     showNotice(

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { openDay, closeDay, nextCustomer, serve } from '../js/engine/day.js';
 import { synthiaDueToday, mentionSceneFor } from '../js/engine/story.js';
 import { newGame } from '../js/engine/state.js';
+import { noteMention } from '../js/engine/affection.js';
 import { SCENES } from '../js/data/scenes.js';
 import { RECIPES } from '../js/data/recipes.js';
 
@@ -88,4 +89,79 @@ test('every mention scene points at a REAL recipe', () => {
     assert.ok(RECIPES.some(r => r.id === node.mentions),
       `scene "${id}" mentions "${node.mentions}", which is not a recipe — the listening beat could never fire`);
   }
+});
+
+/* IMPOSSIBLE ORDERS (spec §9).
+
+   She asks for something the player cannot make yet. The design rule
+   these defend: it must never COST her visit. She comes in once a week,
+   so an ask that replaced her order would take away that week's serving
+   grant and the listening chance — the relationship would get worse the
+   more she wanted, which inverts the entire mechanic. It happened that
+   way in the first cut and the balance sim caught it: DEVOTED fell from
+   10 of 10 seeds to 5. */
+
+const synthiaVisit = state => {
+  state.synthiaServedToday = false;
+  // Walk the week to whichever day she is due on.
+  for (let d = 1; d <= 7; d++) { state.day = d; if (synthiaDueToday(state)) break; }
+  openDay(state);
+  let order = null;
+  for (let i = 0; i < 30 && !order; i++) {
+    const o = nextCustomer(state);
+    if (o && o.isSynthia) order = o;
+  }
+  return order;
+};
+
+test('she asks for a dish that is not unlocked, and still orders something', () => {
+  const s = newGame(11);
+  const locked = RECIPES.find(r => !r.unlockedAtStart).id;
+  noteMention(s.synthia, locked);
+
+  const order = synthiaVisit(s);
+  assert.ok(order, 'she must actually visit');
+  assert.equal(order.impossibleAsk, locked, 'she asks for the thing she mentioned');
+  assert.ok(order.recipeId, 'and still places an order she can be served');
+  assert.ok(s.unlockedRecipes.includes(order.recipeId),
+    'the order she actually places must be something the player can cook');
+  assert.notEqual(order.recipeId, locked);
+});
+
+test('the ask is recorded so the research board can show it', () => {
+  const s = newGame(11);
+  const locked = RECIPES.find(r => !r.unlockedAtStart).id;
+  noteMention(s.synthia, locked);
+  synthiaVisit(s);
+  assert.deepEqual(s.synthia.wanted, [locked]);
+});
+
+test('she does not ask for the same dish twice', () => {
+  const s = newGame(11);
+  const locked = RECIPES.find(r => !r.unlockedAtStart).id;
+  noteMention(s.synthia, locked);
+  synthiaVisit(s);
+
+  s.week = 2;
+  const second = synthiaVisit(s);
+  assert.equal(second.impossibleAsk, null, 'she works through her list rather than nagging');
+});
+
+test('once it is unlocked she orders it outright instead of asking', () => {
+  const s = newGame(11);
+  const locked = RECIPES.find(r => !r.unlockedAtStart).id;
+  noteMention(s.synthia, locked);
+  s.unlockedRecipes.push(locked);
+  s.menu.push(locked);
+
+  const order = synthiaVisit(s);
+  assert.equal(order.recipeId, locked, 'the listening payoff must win over the ask');
+  assert.equal(order.impossibleAsk, null);
+});
+
+test('a mention naming a dish that no longer exists is ignored, not asked for', () => {
+  const s = newGame(11);
+  noteMention(s.synthia, 'deleted_recipe');
+  const order = synthiaVisit(s);
+  assert.equal(order.impossibleAsk, null, 'she must not ask for something with no name to print');
 });

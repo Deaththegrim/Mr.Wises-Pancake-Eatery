@@ -507,6 +507,20 @@ is REACHED, not only how it behaves.
 
 ### Impossible orders
 
+**IMPLEMENTED 2026-09-05.** When she has mentioned a dish the player has not
+unlocked, she asks for it on her next visit and is deadpan about its absence;
+`data/scenes.js` holds her lines. The dish is recorded in `synthia.wanted`, and
+the research node that unlocks it is marked *"She asked for this"* on the board —
+without that the ask is a line of dialogue that evaporates and the player has to
+hold "she wanted the souffle" in their head for weeks.
+
+The ask rides **alongside** her real order, never replacing it. She visits once a
+week, so an ask that consumed the visit would cost that week's serving grant and
+the listening chance: the arc would get worse the more she wanted, inverting the
+mechanic. The first cut did exactly that and the balance sim caught it — DEVOTED
+fell from 10 of 10 seeds to 5. She asks once per dish, so she works through her
+list rather than nagging.
+
 She periodically orders something you cannot make yet. It is not a fail — she is
 unbothered, deadpan about it, and it plants the recipe as a visible goal in the
 tree. Her wanting something is how the game points you at the next research

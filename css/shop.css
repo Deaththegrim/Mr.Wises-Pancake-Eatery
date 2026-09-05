@@ -150,3 +150,9 @@
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 .syrup-picker .syrup:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* A research node she has asked for. Marked with the accent on the left
+   edge rather than a fill — the board is a long list, and a highlighted
+   slab would shout over the rows the player can actually afford. */
+.node.asked { border-left: 2px solid var(--accent); padding-left: calc(var(--sp) - 2px); }
+.asked-note { color: var(--accent); }

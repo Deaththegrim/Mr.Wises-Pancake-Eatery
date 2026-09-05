@@ -71,12 +71,32 @@ export function nextCustomer(state) {
       const remembered = menu.find(r =>
         state.synthia.mentions.includes(r.id) && !state.synthia.noticed.includes(r.id));
 
+      /* IMPOSSIBLE ORDER (spec §9). If she has mentioned something the
+         player has NOT unlocked, she asks for it first — and is unbothered
+         when it is not there. It turns a line of dialogue into a visible
+         research goal, which is how her presence drives progression
+         between story beats.
+
+         It rides ALONGSIDE her real order rather than replacing it. She
+         comes in once a week, so an ask that consumed the visit would cost
+         the player that week's serving grant and the listening chance:
+         the arc would get WORSE the more she wanted, which inverts the
+         entire point. She is deadpan about it, not walking out — she still
+         wants breakfast.
+
+         Asked at most once per dish, so she works through her list. */
+      const wanted = state.synthia.wanted || (state.synthia.wanted = []);
+      const impossibleAsk = remembered ? null : state.synthia.mentions.find(id =>
+        !state.unlockedRecipes.includes(id) && !wanted.includes(id) && recipeById(id));
+      if (impossibleAsk) wanted.push(impossibleAsk);
+
       // Otherwise: the most interesting thing on offer.
       const best = [...menu].sort((a, b) => b.base - a.base);
       const pick = remembered || best[Math.floor(rng() * Math.min(2, best.length))];
       state.orderIndex = (state.orderIndex || 0) + 1;
       return {
         isSynthia: true,
+        impossibleAsk: impossibleAsk || null,
         customer: { id: 'synthia', name: 'God Synthia',
                     // Rich and strange: nightmilk is hers. Nobody else's best.
                     taste: { sweet: 7, sharp: 2, rich: 8, strange: 9 },

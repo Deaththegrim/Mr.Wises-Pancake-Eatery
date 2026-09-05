@@ -402,6 +402,61 @@ def main():
               "and the summary reflects the affection tier actually reached")
         check(page.evaluate("window.GAME.state.ended") is True, "the game is marked over")
 
+        # IMPOSSIBLE ORDER (spec §9). Runs LAST: it drives the day loop
+        # itself and leaves the page mid-dish.
+        #  She asks for something not unlocked,
+        # is unbothered, and still orders what she can have. The first cut
+        # only checked for the ask on the direct path, so whenever she
+        # opened with a mention — most weeks — it was silently skipped.
+        print("\n-- she asks for something you cannot make --")
+        # The section before this one runs the game to its ending, so
+        # start a fresh one rather than looking for a morning screen that
+        # no longer exists.
+        page.click("#btn-restart")
+        page.wait_for_selector("#screen-morning", state="visible", timeout=4000)
+        page.evaluate("""(() => {
+            const S = window.GAME.state;
+            S.synthia.mentions = ['souffle'];
+            S.synthia.wanted = [];
+            S.flags = {};
+            window.GAME.save();
+        })()""")
+        asked = False
+        for day in range(1, 8):
+            page.evaluate(f"window.GAME.state.day = {day}; window.GAME.save();")
+            if page.is_visible("#screen-evening"):
+                page.click("#btn-next-day")
+            if not page.is_visible("#screen-service"):
+                page.wait_for_selector("#btn-open", state="visible", timeout=4000)
+                page.click("#btn-open")
+            time.sleep(0.35)
+            while page.is_visible("#screen-vn"):
+                bs = page.query_selector_all("#vn-choices button")
+                if not bs:
+                    break
+                bs[0].click()
+                time.sleep(0.15)
+            first = page.query_selector("#griddle-mount button")
+            if first and first.inner_text() == "Say so":
+                asked = True
+                break
+            if page.is_visible("#screen-service"):
+                page.click("#btn-close")
+                time.sleep(0.2)
+        check(asked, "she asks for a dish that is not unlocked yet")
+        if asked:
+            mount_text = page.inner_text("#griddle-mount")
+            check("Souffle" in mount_text, f"the ask names the dish: {mount_text.splitlines()[0][:40]}")
+            check("Order:" not in page.inner_text("#customer-card"),
+                  "and the card does not spoil the order she has not placed yet")
+            page.query_selector("#griddle-mount button").click()
+            time.sleep(0.35)
+            check(page.query_selector("#beat-area button") is not None,
+                  "the ask costs her nothing — she still orders something you can cook")
+            check("souffle" in page.evaluate("JSON.stringify(window.GAME.state.synthia.wanted)"),
+                  "and the goal is recorded for the research board")
+
+
         browser.close()
 
     httpd.shutdown()
