@@ -26,7 +26,7 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 180 unit tests (incl. balance regressions)
+    node --test tests/         # 227 unit tests (incl. balance regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
     python3 tools/smoke.py     # plays the game in a headless browser
@@ -54,19 +54,26 @@ open the engine.
     js/engine/   the rules. Pure logic, never touches the page,
                  so it unit-tests in Node with no toolchain.
     js/ui/       the screens. DOM only - no rules live here.
-    tools/       validate.js, simulate.js, smoke.py
+    css/         all colour, including the canvas's - ui/griddle.js reads
+                 the cook-surface tokens off the root element at mount
+    tools/       validate.js, simulate.js, smoke.py, playthrough.py
     tests/       one file per engine module
 
-Two of those boundaries are enforced by tests rather than good intentions:
-`js/engine/` fails the suite if it references `document` or `window`, and
-`js/data/` fails if it declares a function. They're what keeps the content
-layer safe to hand to someone who doesn't write JavaScript.
+Three of those boundaries are enforced by tests rather than good
+intentions: `js/engine/` fails the suite if it references `document` or
+`window`, `js/data/` fails if it declares a function, and every tuning
+constant must be read by something the player actually runs — a number
+only a tool reads is a feature the game does not have, which is how the
+shipped build once awarded no research points at all while every balance
+test passed. They're what keeps the content layer safe to hand to someone
+who doesn't write JavaScript.
 
 ## The idea
 
 The loop is four beats — **pour, flip, stack, drizzle** — each scored, with
 per-recipe weights so a souffle lives on the flip and a tall stack lives on
-alignment. Stack error compounds, so an off-centre first pancake leans the
+alignment. At the drizzle you choose which syrup to pour, and a syrup that
+suits the customer pays more; a mismatch is only ordinary, never a penalty. Stack error compounds, so an off-centre first pancake leans the
 whole tower (though a steady hand can nurse it back).
 
 The weekly quota isn't a survival threshold, it's the **story metronome**.

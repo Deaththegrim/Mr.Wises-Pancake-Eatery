@@ -85,6 +85,11 @@ pancake-shop/
 │   │   ├── research.js    # tree resolution + bench experiments
 │   │   ├── economy.js     # money, quota, tips, reputation
 │   │   ├── affection.js   # Synthia's arc state machine
+│   │   ├── syrup.js       # syrup ↔ customer taste pairing
+│   │   ├── lookup.js      # the one place anything is found by id
+│   │   ├── story.js       # which scene fires, and the endings
+│   │   ├── rng.js         # seeded, so runs are reproducible
+│   │   ├── pantry.js      # stock, cost of goods, emergency buying
 │   │   └── vn.js          # dialogue layer, lifted from god-synthia
 │   ├── ui/                # thin shells, DOM only, no rules
 │   │   ├── screens.js
@@ -93,10 +98,20 @@ pancake-shop/
 │   │   ├── tree.js
 │   │   └── ledger.js
 │   └── main.js
-├── tools/validate.js      # content integrity checker (Node)
+├── tools/
+│   ├── validate.js        # content integrity checker (Node)
+│   ├── simulate.js        # 8-week headless balance run
+│   ├── smoke.py           # drives the real page (Playwright)
+│   └── playthrough.py     # plays real weeks, cross-checks simulate.js
 ├── CONTENT.md             # the handoff guide
 └── README.md
 ```
+
+**Colour lives in CSS, including the canvas's.** `css/style.css` owns tokens for
+the cook surface (`--pan`, `--cake`, `--syrup` and friends); `ui/griddle.js` reads
+them off the root element at mount. They were hardcoded in both places and the two
+disagreed — the DOM drew a pancake `#c98a4b` while the canvas drew the same pancake
+`#d9a05b`.
 
 **Rules.** `engine/` holds rules and touches no DOM. `ui/` holds DOM and holds no
 rules. `data/` holds content and holds no functions. Files stay under 800 lines.

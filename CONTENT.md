@@ -81,6 +81,7 @@ menu, and watch it never sell. This actually happened during development.
       name: 'The Baker',
       unlockAt: { reputation: 80 },     // or { week: 3 }, or both
       wants: ['rich', 'delicate'],      // recipe tags
+      taste: { sweet: 5, sharp: 2, rich: 9, strange: 4 },
       lines: {
         greeting: 'Professional curiosity.',
         happy: 'Hm. Better than mine.',
@@ -89,6 +90,18 @@ menu, and watch it never sell. This actually happened during development.
     }
 
 This is the easiest place to add content and see it in-game straight away.
+
+**`taste` is which syrup suits them**, on the same four axes as ingredients
+and syrups. Pouring a well-matched syrup pays more and builds reputation
+faster; a mismatch is just ordinary, never a penalty. Keep it in step with
+`wants` — `basic` is sweet, `bright` is sharp, `rich` is rich, `strange`
+and `divine` are strange — or the tag they order by and the syrup that
+pleases them drift apart. `validate.js` warns if you write a syrup that no
+customer would ever be pleased by.
+
+**`happy` and `disappointed` are shown**, in the result line after you
+serve them. They went unrendered for most of the build, so write them as
+things a person actually says, not as labels.
 
 **There is no `patience` field.** The game has no clock, so it would be a
 number nothing could ever count down. Customers wait forever and never
@@ -142,6 +155,14 @@ every combination and will tell you the closest possible blend and how far
 off you are.
 
 `tolerance` is how close counts. Bigger = easier to find.
+
+**`axes` is not decoration.** At the drizzle beat the player picks which
+syrup to pour, and it is scored against that customer's `taste`. A syrup
+nothing suits is a discovery that pays nothing — the player spends the
+bench's ingredients and gets a name — so `validate.js` warns when no
+customer would score a syrup well. The picker shows a syrup's strongest
+axis ("Lemon Glaze · sharp"); the customer's taste is never printed,
+because it is meant to be learned by serving them.
 
 **Work backwards, don't guess.** Pick the ingredients you want the recipe to
 be — thematically, what *should* make this syrup — then set the target to
@@ -210,6 +231,21 @@ It's the best thing in here. Two notes on using it:
 
 ---
 
+## When she asks for something you cannot make
+
+If she mentions a dish in a scene (`mentions:` on a node) and the player
+has not unlocked it, she will ask for it on her next visit and be deadpan
+about its absence. Her lines for that moment are `IMPOSSIBLE_ORDER_LINES`
+at the bottom of `js/data/scenes.js` — plain strings, rewrite freely.
+
+It costs her nothing: she asks, then orders something you *can* make, and
+the research node that unlocks the dish is marked *"She asked for this"*.
+Do not make the ask replace her order. She visits once a week, so that
+would cost the player that week's affection — the relationship would get
+worse the more she wanted, which is backwards.
+
+---
+
 ## How the relationship works
 
 `js/data/affection.js` holds the numbers. **The player never sees any of
@@ -244,15 +280,23 @@ and they're all probably wrong; change them freely.
 
 It plays a full 8-week game twice — once as a sloppy player, once as a
 careful one — and prints whether each week's quota was reachable. As tuned
-right now:
+right now, on the default seed:
 
-    sloppy player ..... 3 of 8 quotas,  4 of 13 research nodes
-    careful player .... 6 of 8 quotas, 13 of 13 research nodes
+    sloppy player ..... 2 of 8 quotas,  8 of 13 research, tier CONFIDANT
+    careful player .... 6 of 8 quotas, 13 of 13 research, tier DEVOTED
 
 That spread is the design working. Nobody ever fails — a missed quota is a
 Synthia scene, not a game over — but the late weeks are near-misses that
-make you want one more unlock. Week 6 is cleared by 266; week 8 is missed
-by 239.
+make you want one more unlock. Across ten seeds a careful player averages
+6.1 of 8, and only ever misses weeks 7 and 8.
+
+There is a third profile the tests use, `deaf`. It cooks exactly as well
+as `careful` but keeps anything Synthia has mentioned off the menu, so it
+measures whether **listening** is worth anything on its own: 76.8 affection
+against 46.4, two whole tiers. If those two ever converge, the arc has
+quietly gone back to being a function of cooking accuracy and the listening
+beat has stopped mattering — which is precisely the bug it was written to
+catch, and `tests/balance.test.js` fails when it happens.
 
 The late-game lever is the **research tree**: higher-base recipes are what
 close the gap. (Narrowing the menu helps early, but once you have several
@@ -270,4 +314,26 @@ its own, so restricting it just turns people away.)
   content; anything that no longer exists is dropped with a warning rather
   than breaking the file.
 - **Anything else** → run `node tools/validate.js` first. It catches most
-  of it.
+  of it: dead scene links, a mention naming a recipe that no longer
+  exists, a syrup no customer would like, a tier with no sprite, a
+  customer nobody can be served in week 1.
+
+**The three checks, in the order you want them:**
+
+    node tools/validate.js     # content — instant
+    node --test tests/         # rules — a couple of seconds
+    python3 tools/smoke.py     # the real page in a real browser — a minute
+
+`tools/playthrough.py` is the slow one. It plays actual in-game weeks
+through the page and then checks that `tools/simulate.js` agrees with what
+happened. Run it after changing how a turn is driven. It exists because
+for most of this build the simulator called `serve()` the same wrong way
+the UI did, so it faithfully reproduced the bug instead of exposing it — a
+simulator that shares the UI's blind spots is worse than none, because it
+manufactures confidence.
+
+**A note on the colours.** Every colour, including the ones painted on the
+canvas, is a token in `css/style.css`. `ui/griddle.js` reads them at mount.
+Change `--cake` and the pancake changes everywhere; do not hardcode a hex
+in the canvas, which is how the DOM and the canvas ended up drawing the
+same pancake in two different browns.
