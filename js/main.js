@@ -9,6 +9,8 @@ import { mountGriddle } from './ui/griddle.js';
 import { playScene } from './ui/vn.js';
 import { missSceneFor, mentionSceneFor } from './engine/story.js';
 import { tierFor } from './engine/affection.js';
+import { characterOf, matchLabel } from './engine/syrup.js';
+import { SYRUPS } from './data/syrups.js';
 import { SCENES } from './data/scenes.js';
 
 const TITLE_FALLBACK = 'Pancake Shop';
@@ -92,8 +94,18 @@ function nextOrder() {
 }
 
 function cookFor(order) {
+  // What the player can pour today, in the order they unlocked them.
+  const syrups = state.unlockedSyrups
+    .map(id => SYRUPS.find(s => s.id === id))
+    .filter(Boolean)
+    .map(s => ({ id: s.id, name: s.name, character: characterOf(s) }));
+
   mountGriddle(document.getElementById('griddle-mount'), order.recipeId, beats => {
-    const result = serve(state, order.recipeId, beats, { forSynthia: !!order.isSynthia });
+    const result = serve(state, order.recipeId, beats, {
+      forSynthia: !!order.isSynthia,
+      syrupId: beats.syrupId,
+      taste: order.customer && order.customer.taste
+    });
     servedToday += 1;
     const b = result.breakdown;
     // Show the margin, not just the takings — the cost of goods is a real
@@ -101,10 +113,16 @@ function cookFor(order) {
     const cost = result.ingredientCost + result.emergencyCost;
     const emergency = result.emergencyCost
       ? ` (${result.emergencyCost} emergency stock!)` : '';
+    /* The syrup's verdict is reported HERE, after serving — the spec's
+       "its full effect is revealed by serving it to a customer". It is how
+       the player learns a customer's taste, so it has to be legible. */
+    const syrup = result.syrupId ? SYRUPS.find(s => s.id === result.syrupId) : null;
+    const syrupNote = syrup ? `  ·  ${syrup.name}: ${matchLabel(result.syrupScore)}` : '';
+
     showNotice(
       `${result.quality}%  ·  pour ${b.pour} flip ${b.flip} stack ${b.stack} drizzle ${b.drizzle}` +
       `  ·  +${result.payout}${result.tip ? ` +${result.tip} tip` : ''}` +
-      `${cost ? ` −${cost} stock${emergency}` : ''}`, 5000);
+      `${cost ? ` −${cost} stock${emergency}` : ''}${syrupNote}`, 5000);
     saveGame();
 
     // She remembered that she mentioned it. This is the payoff.
@@ -113,7 +131,7 @@ function cookFor(order) {
       return;
     }
     nextOrder();
-  });
+  }, { syrups });
 }
 
 function toEvening() {

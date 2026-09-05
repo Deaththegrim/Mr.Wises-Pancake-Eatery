@@ -360,6 +360,37 @@ ingredients; if the blend lands inside a target's tolerance, you discover it.
 | Out-of-order discovery leads to brute-forcing | Targets are tiered; a blend far outside any tier returns the tier hint instead of silence. |
 | Results are instantly, freely legible | Discovery names the syrup; its *full* effect is revealed by serving it to a customer. |
 
+### What a syrup is worth (implemented 2026-09-05)
+
+The line above — *its full effect is revealed by serving it to a customer* — went
+unimplemented for most of the build. No runtime code read a syrup's `axes`, and the
+drizzle beat did not know which syrup it was pouring, so discovering one moved a
+counter on the ledger and changed nothing else. Since syrups are half of what the
+research tree awards, half the grind paid out in nothing.
+
+How it works now:
+
+- Every customer carries a `taste` on the same four axes (`data/customers.js`),
+  read off the tags they already order by: `basic` is sweet, `bright` is sharp,
+  `rich` is rich, `strange` and `divine` are strange.
+- At the drizzle beat the player picks from the syrups they have unlocked. The
+  picker is a radiogroup — one tab stop, arrow keys between options — and each
+  button names the syrup's own dominant axis ("Lemon Glaze · sharp").
+- `engine/syrup.js` scores the poured syrup against that customer's taste.
+  A match multiplies the payout by up to `1 + syrupMatchBonus` and adds up to
+  `syrupMatchReputation` to the reputation gain.
+- **A mismatch is never a penalty.** The multiplier floors at 1. Discovering a
+  syrup can only ever hand the player a new option, never a new way to lose money.
+- The customer's taste is never printed. The player learns it from the result line
+  after serving ("Maple Syrup: exactly right") and from the greetings, which
+  already telegraph it — *"something heavy"*, *"something with fruit in it"*.
+  That is what "revealed by serving it" means in practice.
+
+The quota curve was raised at the same time (`[300, 1000, 2600, 5200, 9000, 13500,
+18500, 24000]`). Pairing is a real income lever worth up to +25%, and against the
+old curve a careful player cleared all eight weeks, which stopped the quota being
+a decision at all.
+
 **A failed experiment never returns nothing.** It always yields a hint and a small
 number of research points. The generalised lesson from the research: the search
 space must be forgiving enough that failure is informative rather than wasted.

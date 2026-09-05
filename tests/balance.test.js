@@ -150,3 +150,39 @@ test('the quota curve is reachable in principle at every week', () => {
       `week ${r.week} quota ${r.quota} is far beyond any income (${r.earned}) — unreachable, not hard`);
   }
 });
+
+/* THE ARC IS REACHABLE BY PLAYING, NOT JUST IN PRINCIPLE.
+
+   tests/affection.test.js proves DEVOTED is reachable by calling
+   checkListening() directly. That is the same mistake as every other bug
+   in this project: the MECHANISM was tested and the PATH to it was not.
+   She used to order whatever was priciest on the menu, so a player who
+   heard her mention a dish, spent weeks researching it and put it out had
+   no way to actually serve it to her — the payoff landed only if the RNG
+   happened to pick it. DEVOTED came up on 2 of 10 seeds. */
+test('an attentive player reaches DEVOTED by playing', () => {
+  const tiers = [];
+  for (let seed = 2001; seed <= 2010; seed++) tiers.push(simulate(seed, 'careful')[7].tier);
+  const devoted = tiers.filter(t => t === 'DEVOTED').length;
+  assert.ok(devoted >= 7,
+    `the full arc must be a reward for attention, not a lottery: ${devoted}/10 seeds reached DEVOTED (${tiers.join(', ')})`);
+});
+
+test('and listening is what gets them there — not just cooking well', () => {
+  /* The 'deaf' profile cooks EXACTLY as well as 'careful' but keeps
+     anything she mentioned off the menu. If these two ever converge, the
+     listening beat has stopped mattering and the arc has quietly become a
+     function of execution again. */
+  const tier = s => simulate(s, 'careful')[7].affection;
+  const deaf = s => simulate(s, 'deaf')[7].affection;
+  let attentive = 0, inattentive = 0;
+  for (let seed = 2001; seed <= 2010; seed++) { attentive += tier(seed); inattentive += deaf(seed); }
+  assert.ok(attentive > inattentive * 1.4,
+    `hearing her must be worth substantially more than cooking alone: ` +
+    `attentive ${(attentive / 10).toFixed(1)} vs deaf ${(inattentive / 10).toFixed(1)} affection`);
+
+  const deafTiers = [];
+  for (let seed = 2001; seed <= 2010; seed++) deafTiers.push(simulate(seed, 'deaf')[7].tier);
+  assert.ok(!deafTiers.includes('DEVOTED'),
+    `a player who ignores what she says must NOT reach her closest tier (${deafTiers.join(', ')})`);
+});

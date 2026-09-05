@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateContent } from '../tools/validate.js';
+import { SCENES } from '../js/data/scenes.js';
+import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION } from '../js/data/affection.js';
 
 test('the shipped content validates clean', () => {
   const { errors } = validateContent();
@@ -162,4 +164,71 @@ test('no customer available in week 1 is an error (the shop opens to nobody)', (
                   lines: { greeting: 'a', happy: 'b', disappointed: 'c' } }]
   });
   assert.ok(errors.some(e => /week 1|nobody/i.test(e)));
+});
+
+/* SCENE AND TIER RULES.
+
+   Every one of these breaks the game SILENTLY. A mention pointing at a
+   renamed recipe does not throw — she just mentions something the player
+   can never serve back, and the listening bonus (about half the affection
+   arc) stops paying with no symptom at all. These tests plant each fault
+   and assert the validator names it. A rule nobody has watched catch
+   something is a comment, not a check. */
+const withScene = (id, patch, fn) => {
+  const before = { ...SCENES[id] };
+  Object.assign(SCENES[id], patch);
+  try { return fn(); } finally {
+    for (const k of Object.keys(patch)) delete SCENES[id][k];
+    Object.assign(SCENES[id], before);
+  }
+};
+
+test('a scene that continues to a missing node is caught', () => {
+  const id = Object.keys(SCENES)[0];
+  const errs = withScene(id, { next: 'no_such_node' }, () => validateContent().errors);
+  assert.ok(errs.some(e => e.includes('no_such_node')), errs.join('\n'));
+});
+
+test('a choice leading nowhere is caught', () => {
+  const id = Object.keys(SCENES)[0];
+  const errs = withScene(id, { choices: [{ text: 'x', next: 'ghost' }] }, () => validateContent().errors);
+  assert.ok(errs.some(e => e.includes('ghost')), errs.join('\n'));
+});
+
+test('an empty scene text is caught', () => {
+  const id = Object.keys(SCENES)[0];
+  const errs = withScene(id, { text: '' }, () => validateContent().errors);
+  assert.ok(errs.some(e => e.includes('no text')), errs.join('\n'));
+});
+
+test('a mention naming a recipe that no longer exists is caught', () => {
+  const id = Object.keys(SCENES).find(k => SCENES[k].mentions);
+  const errs = withScene(id, { mentions: 'renamed_dish' }, () => validateContent().errors);
+  assert.ok(errs.some(e => e.includes('renamed_dish')),
+    'a dead mention must be an error — it silently removes half the affection arc');
+});
+
+test('tier thresholds that do not ascend are caught', () => {
+  const tier = TIER_ORDER[2];
+  const saved = TIER_THRESHOLDS[tier];
+  TIER_THRESHOLDS[tier] = 0;
+  try {
+    const errs = validateContent().errors;
+    assert.ok(errs.some(e => e.includes('ascending')), errs.join('\n'));
+  } finally { TIER_THRESHOLDS[tier] = saved; }
+});
+
+test('a tier with no sprite expression is caught', () => {
+  const tier = TIER_ORDER[2];
+  const saved = TIER_EXPRESSION[tier];
+  delete TIER_EXPRESSION[tier];
+  try {
+    const errs = validateContent().errors;
+    assert.ok(errs.some(e => e.includes('expression')), errs.join('\n'));
+  } finally { TIER_EXPRESSION[tier] = saved; }
+});
+
+test('the real content still passes after every fault is restored', () => {
+  const { errors } = validateContent();
+  assert.deepEqual(errors, [], 'the shipped content must be clean');
 });

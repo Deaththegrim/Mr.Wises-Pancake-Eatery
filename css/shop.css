@@ -123,3 +123,30 @@
 .stock-row .why { flex: 0 0 118px; text-align: right; font-size: 12px; }
 .stock-row button { margin: 0; padding: 4px 10px; font-size: 13px; min-width: 74px; }
 #bench-mount .card h3 { margin-top: 0; }
+
+/* THE SYRUP PICKER at the drizzle beat. A radiogroup, so it is one tab
+   stop and arrow keys move between options — nine syrups in the tab order
+   would bury the Done button. Selection is marked by the accent OUTLINE
+   rather than a fill: contrast on the outline is what keeps this readable
+   without giving the control an opaque slab of colour. */
+.syrup-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--sp) / 2);
+  margin: 0 0 var(--sp);
+}
+.syrup-picker .syrup {
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: transparent;
+  border: 1px solid var(--control-edge);
+  color: var(--muted);
+}
+.syrup-picker .syrup:hover:not([disabled]) { color: var(--ink); }
+.syrup-picker .syrup.selected {
+  border-color: var(--accent);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.syrup-picker .syrup:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

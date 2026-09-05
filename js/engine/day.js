@@ -8,6 +8,7 @@ import { TUNING } from '../data/economy.js';
 import { payForCooking } from './pantry.js';
 import { endingFor, synthiaDueToday } from './story.js';
 import { QUOTA_CURVE } from '../data/economy.js';
+import { matchScore, syrupById } from './syrup.js';
 
 const DAYS_PER_WEEK = 7;
 const recipeById = id => RECIPES.find(r => r.id === id);
@@ -57,13 +58,29 @@ export function nextCustomer(state) {
     const rng = makeRng(state.seed + state.week * 13 + state.day);
     const menu = state.menu.map(recipeById).filter(Boolean);
     if (menu.length) {
-      // She asks for the most interesting thing on offer.
+      /* THE LISTENING LOOP, CLOSED. If she has mentioned something in
+         passing and it is now on the menu — because the player heard her,
+         researched it over weeks, and put it out — that is what she asks
+         for. Anything else makes the payoff a coincidence: previously she
+         ordered whatever was priciest, so a player who did everything
+         right still only reached DEVOTED on 2 of 10 seeds, and had no way
+         to serve her the dish deliberately.
+
+         Skips what she has already noticed, so each mention pays once and
+         she keeps moving through her list rather than re-ordering a
+         favourite forever. */
+      const remembered = menu.find(r =>
+        state.synthia.mentions.includes(r.id) && !state.synthia.noticed.includes(r.id));
+
+      // Otherwise: the most interesting thing on offer.
       const best = [...menu].sort((a, b) => b.base - a.base);
-      const pick = best[Math.floor(rng() * Math.min(2, best.length))];
+      const pick = remembered || best[Math.floor(rng() * Math.min(2, best.length))];
       state.orderIndex = (state.orderIndex || 0) + 1;
       return {
         isSynthia: true,
         customer: { id: 'synthia', name: 'God Synthia',
+                    // Rich and strange: nightmilk is hers. Nobody else's best.
+                    taste: { sweet: 7, sharp: 2, rich: 8, strange: 9 },
                     lines: { greeting: 'Something worth the walk.', happy: 'Hm.', disappointed: 'Hm.' } },
         recipeId: pick.id
       };
@@ -109,7 +126,15 @@ export function serve(state, recipeId, beats, opts = {}) {
 
   const repeatCount = state.todayServed[recipeId] || 0;
   const { quality, breakdown } = scoreDish(recipe, beats, state.upgrades);
-  const payout = payoutFor(recipe, quality, repeatCount);
+  const basePayout = payoutFor(recipe, quality, repeatCount);
+
+  /* THE SYRUP PAIRING. A syrup suited to this customer pays more and
+     builds reputation faster; anything else is simply ordinary. Applied
+     here rather than in the UI so the simulator cannot drift from the
+     shipped game — which is exactly how research points came to be
+     awarded by tools/simulate.js and by nothing the player ever ran. */
+  const syrupScore = opts.syrupId ? matchScore(syrupById(opts.syrupId), opts.taste) : 0;
+  const payout = Math.round(basePayout * (1 + syrupScore * TUNING.syrupMatchBonus));
   const tip = tipFor(payout, quality);
 
   state.todayServed[recipeId] = repeatCount + 1;
@@ -117,7 +142,7 @@ export function serve(state, recipeId, beats, opts = {}) {
   state.money += payout + tip;
   state.weekEarnings += payout + tip;
   state.dayEarnings = (state.dayEarnings || 0) + payout + tip;
-  state.reputation += reputationGain(quality);
+  state.reputation += reputationGain(quality) + syrupScore * TUNING.syrupMatchReputation;
 
   /* RESEARCH POINTS. These used to be awarded only in tools/simulate.js,
      so the shipped game granted none at all: the tree costs ~1,130 points
@@ -141,7 +166,8 @@ export function serve(state, recipeId, beats, opts = {}) {
     noticed = checkListening(state.synthia, recipeId).noticed;
   }
 
-  return { quality, breakdown, payout, tip, noticed, ingredientCost, emergencyCost, pointsEarned };
+  return { quality, breakdown, payout, tip, noticed, ingredientCost, emergencyCost, pointsEarned,
+           syrupId: opts.syrupId || null, syrupScore };
 }
 
 /* The story runs as long as the quota curve is authored. Past that the

@@ -28,6 +28,7 @@ import { newGame } from '../js/engine/state.js';
 import { makeRng } from '../js/engine/rng.js';
 import { openDay, closeDay, serve, nextCustomer, customersToday } from '../js/engine/day.js';
 import { mentionSceneFor } from '../js/engine/story.js';
+import { bestSyrupFor } from '../js/engine/syrup.js';
 import { noteMention } from '../js/engine/affection.js';
 import { SCENES } from '../js/data/scenes.js';
 import { availableNodes, purchase, experiment } from '../js/engine/research.js';
@@ -110,7 +111,14 @@ function buyEverythingAffordable(state) {
   }
 }
 
+/* `deaf` models a player who cooks exactly as well as `careful` but never
+   acts on what she says: anything she has mentioned is kept OFF the menu.
+   It exists to prove the listening beat is load-bearing. Without it, the
+   careful/sloppy gap only measures cooking accuracy, and the arc could
+   silently go back to being a function of luck without any test noticing. */
 export function simulate(seed = 2026, profile = 'careful') {
+  const deaf = profile === 'deaf';
+  if (deaf) profile = 'careful';
   const s = newGame(seed);
   const rows = [];
   for (let w = 1; w <= WEEKS; w++) {
@@ -118,7 +126,10 @@ export function simulate(seed = 2026, profile = 'careful') {
     let weekBenchSpend = 0;
     for (let d = 0; d < 7; d++) {
       openDay(s);
-      s.menu = [...s.unlockedRecipes];
+      s.menu = deaf
+        ? s.unlockedRecipes.filter(id => !s.synthia.mentions.includes(id))
+        : [...s.unlockedRecipes];
+      if (s.menu.length === 0) s.menu = [...s.unlockedRecipes];   // never stall the shop
       const todays = customersToday(s);
       for (let i = 0; i < todays; i++) {
         const order = nextCustomer(s);
@@ -137,8 +148,18 @@ export function simulate(seed = 2026, profile = 'careful') {
         // Points are awarded inside serve() now. This file used to award
         // them itself, which is exactly how it came to be simulating a
         // different — and much easier — game than the one that shipped.
+        /* Mirror cookFor(): the player picks a syrup at the drizzle beat.
+           A careful player pours the one that suits the customer; a sloppy
+           one grabs whatever is first on the shelf. If this ever stops
+           matching what main.js does, the balance numbers describe a game
+           nobody is playing — which has happened here twice already. */
+        const taste = order.customer && order.customer.taste;
+        const syrupId = profile === 'careful'
+          ? bestSyrupFor(s.unlockedSyrups, taste)
+          : (s.unlockedSyrups[0] || null);
+
         serve(s, order.recipeId, execution(order.recipeId, profile),
-              { forSynthia: !!order.isSynthia });
+              { forSynthia: !!order.isSynthia, syrupId, taste });
       }
       const benchRng = makeRng(s.seed + s.week * 77 + s.day);
       const bench = experimentTonight(s, benchRng);
@@ -157,6 +178,7 @@ export function simulate(seed = 2026, profile = 'careful') {
       }
     }
   }
+  rows.state = s;   // exposed so tests can audit WHERE affection came from
   return rows;
 }
 

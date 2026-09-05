@@ -11,6 +11,8 @@ import { RECIPES } from '../js/data/recipes.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { RESEARCH } from '../js/data/research.js';
 import { CUSTOMERS } from '../js/data/customers.js';
+import { SCENES } from '../js/data/scenes.js';
+import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE } from '../js/data/affection.js';
 
 const AXES = ['sweet', 'sharp', 'rich', 'strange'];
 
@@ -40,6 +42,15 @@ export function validateContent(override = {}) {
   const syrups = override.syrups || SYRUPS;
   const research = override.research || RESEARCH;
   const customers = override.customers || CUSTOMERS;
+  const scenes = override.scenes || SCENES;
+
+  /* The scene checks cross-reference recipes and research. When a caller
+     overrides those with a synthetic set — which the validator's own
+     tests do, to plant one fault at a time — the real scenes would all
+     report their mentions as unreachable, burying the fault under noise.
+     So the cross-content half of the scene pass runs only against real
+     content. Shape checks on the scenes themselves always run. */
+  const crossContent = !override.recipes && !override.research;
 
   const errors = [], warnings = [];
   const ingIds = new Set(ingredients.map(x => x.id));
@@ -245,6 +256,126 @@ export function validateContent(override = {}) {
       if (!c.lines || !c.lines[key]) {
         warnings.push(`customers.js — customer "${c.id}" is missing the "${key}" line`);
       }
+    }
+  }
+
+  // --- syrups and tastes: the pairing is only as good as its data ---
+  /* A syrup with no axes silently scores zero against everyone, so it
+     looks discovered and pays nothing. A customer with no taste does the
+     same from the other side. Neither throws. */
+  for (const sy of syrups) {
+    if (need(sy, 'axes', 'object', 'syrups.js', sy.id)) {
+      for (const ax of AXES) need(sy, `axes.${ax}`, 'number', 'syrups.js', sy.id);
+      for (const k of Object.keys(sy.axes)) {
+        if (!AXES.includes(k)) {
+          errors.push(`syrups.js — "${sy.id}" has an unknown axis "${k}". Valid axes are ${AXES.join(', ')}.`);
+        }
+      }
+    }
+  }
+
+  for (const c of customers) {
+    if (need(c, 'taste', 'object', 'customers.js', c.id)) {
+      for (const ax of AXES) need(c, `taste.${ax}`, 'number', 'customers.js', c.id);
+    }
+  }
+
+  /* A syrup nobody has much time for is a discovery that pays nothing —
+     the player spends the bench's ingredients on it and gets a name. A
+     warning rather than an error: it may be deliberate flavour. */
+  if (crossContent) {
+    const dist = (a, b) => AXES.reduce((d, ax) => d + Math.abs((a[ax] || 0) - (b[ax] || 0)), 0);
+    for (const sy of syrups) {
+      if (!sy.axes) continue;
+      let best = 0;
+      for (const c of customers) {
+        if (!c.taste) continue;
+        best = Math.max(best, Math.max(0, 1 - dist(sy.axes, c.taste) / 20));
+      }
+      if (best < 0.5) {
+        warnings.push(`syrups.js — no customer scores "${sy.id}" above ${best.toFixed(2)}; ` +
+                      `discovering it would never pay off for anyone.`);
+      }
+    }
+  }
+
+  // --- scenes: the story is content too, and it was never checked ---
+  /* Every failure in here is SILENT. A mention pointing at a renamed
+     recipe does not crash — she simply mentions something the player can
+     never serve back to her, and the arc's best beat quietly stops
+     firing. That is exactly the class of bug this project keeps shipping,
+     so it gets a validator rule rather than trust. */
+  const sceneIds = new Set(Object.keys(scenes));
+
+  for (const [id, node] of Object.entries(scenes)) {
+    if (!node || typeof node !== 'object') {
+      errors.push(`scenes.js — "${id}" is not a scene object.`);
+      continue;
+    }
+    if (typeof node.text !== 'string' || !node.text.trim()) {
+      errors.push(`scenes.js — "${id}" has no text, so it renders as an empty speech box.`);
+    }
+
+    if (node.next !== undefined && !sceneIds.has(node.next)) {
+      errors.push(`scenes.js — "${id}" continues to "${node.next}", which does not exist. ` +
+                  `The player gets a "Skipping ahead" notice instead of the scene.`);
+    }
+
+    for (const c of node.choices || []) {
+      if (!c || !c.text) {
+        errors.push(`scenes.js — a choice in "${id}" has no text, so it is dropped from the screen.`);
+        continue;
+      }
+      if (!c.next) {
+        errors.push(`scenes.js — choice "${c.text}" in "${id}" has no next node.`);
+      } else if (!sceneIds.has(c.next)) {
+        errors.push(`scenes.js — choice "${c.text}" in "${id}" leads to "${c.next}", which does not exist.`);
+      }
+      if (c.affection !== undefined && typeof c.affection !== 'number') {
+        errors.push(`scenes.js — choice "${c.text}" in "${id}" has a non-numeric affection value.`);
+      }
+    }
+
+    if (!node.next && !node.end && !(node.choices || []).length) {
+      warnings.push(`scenes.js — "${id}" has no next, no choices and is not marked end; ` +
+                    `it will show "This scene has no ending" and skip.`);
+    }
+
+    // THE LISTENING BEAT. A mention must name a real, obtainable dish.
+    if (node.mentions !== undefined && crossContent) {
+      if (!recipeIds.has(node.mentions)) {
+        errors.push(`scenes.js — "${id}" has her mention "${node.mentions}", which is not a recipe. ` +
+                    `She would ask for something that cannot exist, and the listening bonus ` +
+                    `— roughly half the affection arc — would never pay out.`);
+      } else {
+        const r = recipes.find(x => x.id === node.mentions);
+        const unlockable = r.unlockedAtStart ||
+          research.some(n => n.unlocks && n.unlocks.recipe === r.id);
+        if (!unlockable) {
+          errors.push(`scenes.js — she mentions "${node.mentions}", but no research node unlocks it ` +
+                      `and it is not available at start, so the player can never serve it back to her.`);
+        }
+      }
+    }
+  }
+
+  // --- affection tiers: every tier needs a full row of presentation ---
+  for (const tier of TIER_ORDER) {
+    if (typeof TIER_THRESHOLDS[tier] !== 'number') {
+      errors.push(`affection.js — tier "${tier}" has no numeric threshold, so tierFor() can never return it.`);
+    }
+    if (typeof TIER_EXPRESSION[tier] !== 'string') {
+      errors.push(`affection.js — tier "${tier}" has no expression; her sprite would fail to load at that tier.`);
+    }
+    if (typeof TIER_POSE[tier] !== 'string') {
+      warnings.push(`affection.js — tier "${tier}" has no pose.`);
+    }
+  }
+  const ordered = TIER_ORDER.map(t => TIER_THRESHOLDS[t]);
+  for (let i = 1; i < ordered.length; i++) {
+    if (!(ordered[i] > ordered[i - 1])) {
+      errors.push(`affection.js — TIER_ORDER is not strictly ascending at "${TIER_ORDER[i]}" ` +
+                  `(${ordered[i - 1]} then ${ordered[i]}); tierFor() would skip a tier entirely.`);
     }
   }
 

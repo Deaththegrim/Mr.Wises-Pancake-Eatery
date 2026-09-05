@@ -27,8 +27,13 @@
    late-game lever is the research tree — unlocking higher-base recipes.
 
    RE-RUN THE SIMULATOR after changing any of this. tests/balance.test.js
-   will also fail if the shape breaks. */
-export const QUOTA_CURVE = [300, 900, 2200, 4500, 8000, 11500, 15500, 19000];
+   will also fail if the shape breaks.
+
+   RAISED when syrup pairing landed: pouring a syrup that suits the
+   customer is worth up to +25% on the payout, which is a real income
+   lever the old curve knew nothing about. Left alone, a careful player
+   cleared all eight weeks and the quota stopped being a decision. */
+export const QUOTA_CURVE = [300, 1000, 2600, 5200, 9000, 13500, 18500, 24000];
 
 export const TUNING = {
   // Diminishing returns: each repeat of the same recipe in one day earns
@@ -38,6 +43,16 @@ export const TUNING = {
 
   // Quality 0-100 maps onto this payout multiplier range.
   payoutMinMultiplier: 0.5,
+
+  /* SYRUP PAIRING. A syrup matching the customer's taste multiplies the
+     payout by up to 1 + syrupMatchBonus and adds up to syrupMatchReputation
+     to the reputation gain. A mismatch scores zero and is simply ordinary —
+     never a penalty, so discovering a syrup can only ever help.
+     syrupMatchRange is the Manhattan distance across the four axes at
+     which a syrup stops counting as "theirs" at all (worst case is 40). */
+  syrupMatchBonus: 0.25,
+  syrupMatchReputation: 0.6,
+  syrupMatchRange: 20,
   payoutMaxMultiplier: 1.5,
 
   // Tips only start above this quality, then scale to maxTipRate of base.

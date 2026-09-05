@@ -7,7 +7,7 @@ import { el, clear } from './screens.js';
    where it is unit-tested. Keep it that way — if you find yourself writing
    a number comparison in here, it belongs in the engine. */
 
-export function mountGriddle(mount, recipeId, onDone) {
+export function mountGriddle(mount, recipeId, onDone, opts = {}) {
   const recipe = RECIPES.find(r => r.id === recipeId);
 
   /* Tear down anything the PREVIOUS dish left running. "Close for the day"
@@ -27,7 +27,14 @@ export function mountGriddle(mount, recipeId, onDone) {
     return;
   }
 
-  const beats = { volume: 0, msOffset: 0, offsets: [], coverage: [] };
+  const beats = { volume: 0, msOffset: 0, offsets: [], coverage: [], syrupId: null };
+
+  /* Which syrups the player has to choose from at the drizzle beat. The
+     griddle MEASURES what the player did and never scores it, so this
+     records the choice and hands it back with the rest of the beats;
+     engine/day.js decides what it was worth. */
+  const syrups = opts.syrups || [];
+  beats.syrupId = syrups.length ? syrups[0].id : null;
   let stage = 'pour';
 
   const card = el('div', { className: 'card' });
@@ -286,6 +293,52 @@ export function mountGriddle(mount, recipeId, onDone) {
   function doDrizzle() {
     const COLUMNS = 12;                       // finer than the old 6 cells
     beats.coverage = new Array(COLUMNS).fill(0);
+
+    /* THE SYRUP CHOICE. Discovering a syrup used to change a counter and
+       nothing else — half the research tree paid out in nothing. Now the
+       one you pour is the one that gets scored against this customer's
+       taste. Each button names the syrup's own character; what a given
+       customer likes is learned by serving them, not read off the screen. */
+    if (syrups.length > 1) {
+      const row = el('div', { className: 'syrup-picker' });
+      row.setAttribute('role', 'radiogroup');
+      row.setAttribute('aria-label', 'Choose a syrup');
+      const buttons = [];
+      const select = id => {
+        beats.syrupId = id;
+        for (const b of buttons) {
+          const on = b.dataset.syrup === id;
+          b.classList.toggle('selected', on);
+          b.setAttribute('aria-checked', on ? 'true' : 'false');
+          // Only the selected option stays in the tab order, so a
+          // radiogroup is one stop rather than nine.
+          b.tabIndex = on ? 0 : -1;
+        }
+      };
+      syrups.forEach(sy => {
+        const b = el('button', { className: 'syrup', text: `${sy.name} · ${sy.character}` });
+        b.dataset.syrup = sy.id;
+        b.setAttribute('role', 'radio');
+        b.addEventListener('click', () => { select(sy.id); b.focus(); });
+        b.addEventListener('keydown', e => {
+          const i = syrups.findIndex(x => x.id === beats.syrupId);
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const n = buttons[(i + 1) % buttons.length];
+            select(n.dataset.syrup); n.focus();
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const n = buttons[(i - 1 + buttons.length) % buttons.length];
+            select(n.dataset.syrup); n.focus();
+          }
+        });
+        buttons.push(b);
+        row.append(b);
+      });
+      area.append(row);
+      select(beats.syrupId);
+    }
+
     area.append(el('p', { text: 'Drag across the stack. Even coverage, no puddles.' }));
 
     const canvas = el('canvas', { attrs: { id: 'drizzle', width: '560', height: '170' } });

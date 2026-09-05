@@ -2,8 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tierFor, expressionFor, poseFor, grant, noteMention, checkListening, grantWeekly, grantForServing } from '../js/engine/affection.js';
 import { GRANTS, TIER_THRESHOLDS } from '../js/data/affection.js';
+import { SCENES } from '../js/data/scenes.js';
 
 const fresh = () => ({ points: 0, mentions: [], noticed: [], log: [] });
+
+/* Read from the content, so adding or removing a mention scene updates
+   these tests instead of quietly invalidating them. */
+const MENTIONED_DISHES = Object.values(SCENES).filter(n => n.mentions).map(n => n.mentions);
 
 test('tiers resolve by threshold', () => {
   assert.equal(tierFor(0), 'STRANGER');
@@ -101,16 +106,25 @@ test('the arc is slow - weekly persistence alone cannot reach DEVOTED in 8 weeks
 });
 
 test('a dedicated player CAN reach DEVOTED in 8 weeks', () => {
-  // 8 weeks of showing up, serving her well each week, some good dialogue
-  // choices, and catching three of her mentions. The arc must be
-  // achievable, not merely slow.
+  /* Modelled on what the GAME contains, not on a generous hypothetical.
+     This test used to grant 2 dialogue points every week — 16 points the
+     content cannot supply, since exactly one scene node offers an
+     affection choice and it pays at most 2, once. It also caught only
+     three mentions, one of which ('buttermilk_stack') is not a mention
+     scene at all. So it modelled a player who earned more from talking
+     than the game allows and less from listening than the game gives,
+     and the two errors cancelled into a passing test.
+
+     The real shape, confirmed against a full simulated run: five mention
+     scenes exist, an attentive player catches all five, and listening is
+     roughly half of the final total. */
   const s = fresh();
   for (let w = 0; w < 8; w++) {
     grantWeekly(s);
     grantForServing(s, 95);
-    grant(s, 2, 'a choice she liked');
   }
-  for (const dish of ['souffle', 'impossible', 'buttermilk_stack']) {
+  grant(s, 2, 'the one dialogue choice in the game that pays affection');
+  for (const dish of MENTIONED_DISHES) {
     noteMention(s, dish); checkListening(s, dish);
   }
   assert.equal(tierFor(s.points), 'DEVOTED', `only reached ${tierFor(s.points)} at ${s.points} points`);
@@ -124,9 +138,9 @@ test('DEVOTED is unreachable WITHOUT the listening mechanic', () => {
   for (let w = 0; w < 8; w++) {
     grantWeekly(s);
     grantForServing(s, 100);
-    grant(s, 2, 'a choice she liked');
   }
+  grant(s, 2, 'the one dialogue choice in the game that pays affection');
   assert.notEqual(tierFor(s.points), 'DEVOTED',
     `reached DEVOTED at ${s.points} points with no listening catches — the arc's best beat must be required`);
-  assert.equal(tierFor(s.points), 'CONFIDANT');
+  assert.equal(tierFor(s.points), 'FAMILIAR');
 });

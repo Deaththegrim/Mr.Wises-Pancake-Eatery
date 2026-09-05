@@ -70,6 +70,12 @@ def main():
         # ignored. Content variety is covered by the seed sweep in the unit
         # tests; smoke's job is to prove the wiring, reproducibly.
         page.evaluate("window.GAME.state.seed = 2026; window.GAME.save();")
+        # Give the player a shelf. The game starts with ONE syrup, so
+        # without this the picker never renders and every check below
+        # passes by never running — which is how the first version of
+        # this block "passed" while proving nothing.
+        page.evaluate("""window.GAME.state.unlockedSyrups =
+            ['maple_syrup', 'lemon_glaze', 'ash_glaze']; window.GAME.save();""")
         check(page.is_visible("#screen-morning"), "morning screen visible")
         boxes = page.query_selector_all("#menu-picker input[type=checkbox]")
         check(len(boxes) >= 1, f"menu lists {len(boxes)} unlocked recipe(s)")
@@ -124,6 +130,31 @@ def main():
             time.sleep(0.12)
         time.sleep(0.5)
         check("drizzle" in stage(page), "stack advanced to drizzle")
+
+        # THE SYRUP PICKER. Discovering a syrup used to move a counter and
+        # nothing else; the choice now reaches the payout, so the control
+        # that makes it has to actually be there and be operable.
+        print("\n-- the syrup picker --")
+        picker = page.query_selector(".syrup-picker")
+        check(picker is not None,
+              "the picker renders when the player owns more than one syrup")
+        if picker is not None:
+            opts = page.query_selector_all(".syrup-picker .syrup")
+            check(len(opts) >= 2, f"the picker offers {len(opts)} syrups")
+            check(picker.get_attribute("role") == "radiogroup",
+                  "the picker is a radiogroup, so it is one tab stop rather than nine")
+            sel = [o for o in opts if "selected" in (o.get_attribute("class") or "")]
+            check(len(sel) == 1, "exactly one syrup starts selected, so a dish always gets syrup")
+            check([o.get_attribute("tabindex") for o in opts].count("0") == 1,
+                  "only the selected option is in the tab order")
+            first = sel[0].inner_text()
+            opts[0].focus()
+            page.keyboard.press("ArrowRight")
+            now = [o.inner_text() for o in page.query_selector_all(".syrup-picker .syrup")
+                   if "selected" in (o.get_attribute("class") or "")]
+            check(now and now[0] != first, "arrow keys move the selection")
+            check(page.evaluate("document.activeElement.textContent") == now[0],
+                  "and focus follows the selection")
 
         # BEAT 4 drizzle — drag across the cells
         wb = bbox(page.wait_for_selector("#drizzle"), "drizzle strip")
