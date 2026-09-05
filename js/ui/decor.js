@@ -13,6 +13,17 @@ import { decorFor, buyDecor, ownedDecor } from '../engine/decor.js';
    for. Nobody needs the window boxes. That is the point of them. */
 
 export function renderDecorShop(state, onChange) {
+  /* Which row had focus, so it can be given back after the rebuild.
+     Buying clears and redraws the whole card, which destroys the button
+     the player just pressed and drops focus to <body> — ui/screens.js
+     carries a long comment about exactly this symptom, because a keyboard
+     player loses their place on every single purchase and a second Enter
+     goes nowhere. */
+  const hadFocus = document.activeElement;
+  const focusedId = hadFocus && hadFocus.closest && hadFocus.closest('.decor-row')
+    ? hadFocus.closest('.decor-row').dataset.decor
+    : null;
+
   const mount = clear(document.getElementById('decor-shop'));
   const items = decorFor(state);
   const card = el('div', { className: 'card' });
@@ -26,6 +37,7 @@ export function renderDecorShop(state, onChange) {
 
   for (const item of items) {
     const row = el('div', { className: `decor-row${item.owned ? ' owned' : ''}` });
+    row.dataset.decor = item.id;
     row.append(el('span', { className: 'decor-name', text: item.name }));
     row.append(el('span', { className: 'why', text: item.note }));
 
@@ -45,6 +57,17 @@ export function renderDecorShop(state, onChange) {
     card.append(row);
   }
   mount.append(card);
+
+  /* Give the keyboard its place back. The row just bought no longer has a
+     button, so focus moves to the next thing that does — which is where
+     the player was heading anyway. */
+  if (focusedId) {
+    const rows = [...card.querySelectorAll('.decor-row')];
+    const at = rows.findIndex(r => r.dataset.decor === focusedId);
+    const next = rows.slice(Math.max(0, at)).map(r => r.querySelector('button')).find(Boolean)
+      || rows.map(r => r.querySelector('button')).find(Boolean);
+    if (next) next.focus();
+  }
 }
 
 /* The room itself, above the counter. Each owned thing is drawn as a

@@ -163,3 +163,29 @@ test('and a save with none of those lists still loads', () => {
   assert.deepEqual(state.synthia.wanted, []);
   assert.deepEqual(state.synthia.mentions, []);
 });
+
+test('an id list that is not a list loads instead of killing Continue', () => {
+  /* prune() used `arr || []`, so a save holding a STRING or an object
+     where a list belongs threw straight out of deserialize — and loadGame
+     does not catch, so the player clicked Continue and nothing happened.
+     No notice, no screen change, no way to know it had failed.
+
+     Which is exactly what the coercion block in this module promises not
+     to do. The numeric scalars got that treatment; the six id lists did
+     not, and the live state object is exposed on the page for editing. */
+  for (const junk of ['window_boxes', {}, 42, true]) {
+    const g = newGame(1);
+    const { ok, state } = deserialize(JSON.stringify({ ...g, decor: junk, menu: junk }));
+    assert.ok(ok, `decor/menu = ${JSON.stringify(junk)} must load`);
+    assert.ok(Array.isArray(state.decor));
+    assert.ok(state.menu.length > 0, 'and the player is never left with nothing to sell');
+  }
+});
+
+test('a hand-edited save cannot smuggle in a duplicate', () => {
+  // Buying guards against it, but the room would draw the same thing
+  // twice while the shop header counted it once.
+  const g = newGame(1);
+  const { state } = deserialize(JSON.stringify({ ...g, decor: ['corner_lamp', 'corner_lamp'] }));
+  assert.deepEqual(state.decor, ['corner_lamp']);
+});

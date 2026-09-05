@@ -241,9 +241,39 @@ test('and the shop is not cleared in a single run', () => {
 });
 
 test('decoration is never the reason a quota is met', () => {
-  /* It must not become an economic lever by the back door. A run that
-     spends on the shop and one that does not must clear the same weeks —
-     if they ever differ, decoration has started paying for itself. */
-  const spent = simulate(2026, 'careful').filter(r => r.met).length;
-  assert.ok(spent >= 4, `spending on the shop must not cost the player the early weeks (${spent}/8)`);
+  /* It must not become an economic lever by the back door: a run that
+     spends on the shop and one that does not must earn identically.
+
+     This test used to describe that comparison and then run one
+     simulation and check it cleared four weeks — which would have passed
+     just as well if decoration paid a reputation dividend. The invariant
+     named in the title was not tested at all.
+
+     It is not an idle invariant either. payForCooking hands out free
+     ingredients when the player is broke, and the bench abandons the
+     evening the moment a buy fails; both trigger on money, so spending
+     too much on the shop WOULD move earnings. */
+  for (const profile of ['careful', 'shelf', 'sloppy']) {
+    for (const seed of [2026, 4007, 4013]) {
+      const withShop = simulate(seed, profile);
+      const without = simulate(seed, profile, { noDecor: true });
+      assert.deepEqual(
+        withShop.map(r => [r.week, r.earned, r.met, r.points]),
+        without.map(r => [r.week, r.earned, r.met, r.points]),
+        `${profile} @ ${seed}: buying for the shop changed what the game paid`);
+      /* The only thing it may change is how much is left in the till —
+         and only for a player who could afford anything at all. A sloppy
+         run never has the spare money to buy a single thing, so the two
+         runs are identical down to the last coin, which is itself worth
+         asserting: the shop must not quietly hand out what is not paid for. */
+      const bought = withShop.at(-1).decor;
+      if (bought > 0) {
+        assert.ok(withShop.at(-1).money < without.at(-1).money,
+          `${profile} @ ${seed} bought ${bought} things and ended no poorer for it`);
+      } else {
+        assert.equal(withShop.at(-1).money, without.at(-1).money,
+          `${profile} @ ${seed} bought nothing, so the till must be untouched`);
+      }
+    }
+  }
 });

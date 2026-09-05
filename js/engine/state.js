@@ -85,11 +85,25 @@ export function deserialize(json) {
   const validRecipes = new Set(RECIPES.map(r => r.id));
   const validSyrups = new Set(SYRUPS.map(s => s.id));
   const validDecor = new Set(DECOR.map(d => d.id));
-  const prune = (arr, valid, label) => (arr || []).filter(id => {
-    if (valid.has(id)) return true;
-    console.warn(`[save] dropping unknown ${label}: ${id}`);
-    return false;
-  });
+  /* Array.isArray, not `arr || []`: a save holding a STRING or an object
+     where a list belongs threw straight out of deserialize, and loadGame
+     does not catch — so the player clicked Continue and nothing happened
+     at all. No notice, no screen change, no way to tell it had failed.
+
+     That is precisely what the coercion block above was written to stop
+     ("never a blank screen or a thrown error"). The numeric scalars got
+     the treatment and the six id lists did not.
+
+     Deduped as well: buying cannot produce a repeat, but a hand-edited
+     save can, and the room would then draw the same thing twice while
+     the shop counted it once. */
+  const prune = (arr, valid, label) => [...new Set(
+    (Array.isArray(arr) ? arr : []).filter(id => {
+      if (valid.has(id)) return true;
+      console.warn(`[save] dropping unknown ${label}: ${id}`);
+      return false;
+    })
+  )];
   state.unlockedRecipes = prune(state.unlockedRecipes, validRecipes, 'recipe');
   /* The dishes she has asked for. Pruned like every other id list: a
      removed recipe would otherwise sit in here forever, matching no

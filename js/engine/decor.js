@@ -14,7 +14,7 @@ import { DECOR } from '../data/decor.js';
 
 export const decorById = id => DECOR.find(d => d.id === id) || null;
 
-export const owns = (state, id) => (state.decor || []).includes(id);
+export const owns = (state, id) => (Array.isArray(state.decor) ? state.decor : []).includes(id);
 
 /* Cheapest first, matching data order, with what the player can act on. */
 export function decorFor(state) {
@@ -42,7 +42,11 @@ export function buyDecor(state, id) {
 /* What the shop front draws. Owned only, in the order they were bought,
    so the room fills up in the order the player chose to fill it. */
 export function ownedDecor(state) {
-  return (state.decor || []).map(decorById).filter(Boolean);
+  // Array.isArray for the same reason prune() uses it: this runs inside
+  // toService(), AFTER openDay() has reset the day but BEFORE the screen
+  // is shown, so a throw here opens the day underneath a player who is
+  // still looking at the morning screen.
+  return (Array.isArray(state.decor) ? state.decor : []).map(decorById).filter(Boolean);
 }
 
 export const totalDecorCost = () => DECOR.reduce((a, d) => a + d.cost, 0);

@@ -371,6 +371,24 @@ def main():
         check(str(money_after) in ledger,
               f"the ledger above it shows the new till, not the old one ({money_after})")
 
+        # THE STALE PANEL. Research is a separate screen spending from the
+        # same till, and "Back" used to be nothing but showScreen('evening')
+        # — so returning showed a header, a ledger and a row of shop buttons
+        # that disagreed about how much money there was.
+        page.click("#btn-research")
+        page.wait_for_timeout(300)
+        page.evaluate("window.GAME.state.money = 150; window.GAME.save();")
+        page.click("#btn-back-evening")
+        page.wait_for_timeout(300)
+        ledger_back = page.inner_text("#ledger")
+        check("150" in ledger_back,
+              "coming back from Research redraws the ledger with the real till")
+        live = [b for b in page.query_selector_all(".decor-row button") if b.is_enabled()]
+        check(len(live) == 0,
+              f"and nothing costing more than 150 still looks buyable ({len(live)} live buttons)")
+        page.evaluate("window.GAME.state.money = 3000; window.GAME.save();")
+
+
         # THE VISIBLE HALF. Buying is pointless if the room never shows it —
         # the same gap as the research board's "She asked for this.", which
         # could be deleted with every gate still green.

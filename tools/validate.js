@@ -363,6 +363,10 @@ export function validateContent(override = {}) {
     need(d, 'name', 'string', 'decor.js', d.id);
     need(d, 'cost', 'number', 'decor.js', d.id);
     need(d, 'note', 'string', 'decor.js', d.id);
+    /* Names the sprite that will replace the drawn placeholder. Nothing
+       reads it yet, deliberately — but without this an item added now is
+       silently art-less on the day the renderer lands. */
+    need(d, 'art', 'string', 'decor.js', d.id);
     if (decorIds.has(d.id)) {
       errors.push(`decor.js — duplicate id "${d.id}"; the second row could never be bought.`);
     }

@@ -176,22 +176,32 @@ function cookFor(current) {
   }, { syrups });
 }
 
-function toEvening() {
-  const dayResult = closeDay(state);
-  renderLedger(state, dayResult);
-  renderQuotaBoard(state);   // the week may have rolled; the HUD must agree
-  /* Buying re-renders in place, and that has to include the LEDGER: it
-     prints "In the till" directly above the shop, so spending left the
-     header saying 4,700 and the ledger saying 6,000 on the same screen.
-     Same contradiction as the week rollover once had, one panel down. */
-  const refreshShop = () => {
-    renderLedger(state, dayResult);
-    renderDecorShop(state, refreshShop);
-    renderQuotaBoard(state);
-    saveGame();
-  };
-  refreshShop();
+/* The evening screen shows the till in three places at once — the header,
+   the ledger's "In the till", and which shop buttons are live — so all
+   three have to be redrawn together, from wherever money moves.
+
+   Kept at module scope because the player leaves this screen and comes
+   back: research is a separate screen that spends from the same till, and
+   "Back" used to be nothing but showScreen('evening'). Spend 2,800 at the
+   bench and return, and the header said 200 while the ledger four lines
+   below said 3,000 and the shop offered a lamp at 2,600 with a live
+   button. Buying it was safe — buyDecor re-reads the money and refuses —
+   but the refusal was the only sign the panel had been lying. */
+let lastDayResult = null;
+
+function renderEvening() {
+  if (!state) return;
+  renderLedger(state, lastDayResult);
+  renderDecorShop(state, renderEvening);
+  renderQuotaBoard(state);
   saveGame();
+}
+
+function toEvening() {
+  lastDayResult = closeDay(state);
+  const dayResult = lastDayResult;
+  renderQuotaBoard(state);   // the week may have rolled; the HUD must agree
+  renderEvening();
 
   if (dayResult.weekRolled) {
     // The quota is the story metronome. Hitting it opens the next beat;
@@ -256,7 +266,7 @@ document.getElementById('btn-close').addEventListener('click', toEvening);
 document.getElementById('btn-next-day').addEventListener('click', toMorning);
 document.getElementById('btn-research').addEventListener('click', toResearch);
 document.getElementById('btn-restart').addEventListener('click', () => { state = newGame(); toMorning(); });
-document.getElementById('btn-back-evening').addEventListener('click', () => showScreen('evening'));
+document.getElementById('btn-back-evening').addEventListener('click', () => { renderEvening(); showScreen('evening'); });
 
 showScreen('title');
 

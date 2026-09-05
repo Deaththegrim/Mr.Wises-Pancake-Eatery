@@ -123,7 +123,13 @@ function buyEverythingAffordable(state) {
    It exists to prove the listening beat is load-bearing. Without it, the
    careful/sloppy gap only measures cooking accuracy, and the arc could
    silently go back to being a function of luck without any test noticing. */
-export function simulate(seed = 2026, profile = 'careful') {
+/* `opts.noDecor` runs the same game without ever buying for the shop, so
+   a test can compare the two and prove decoration pays nothing back. That
+   invariant is not idle: payForCooking hands out free ingredients when the
+   player is broke, and experimentTonight abandons the evening the moment a
+   buy fails — both trigger on money, so a decoration that left the float
+   too thin WOULD change earnings. */
+export function simulate(seed = 2026, profile = 'careful', opts = {}) {
   const deaf = profile === 'deaf';
   if (deaf) profile = 'careful';
 
@@ -191,7 +197,7 @@ export function simulate(seed = 2026, profile = 'careful') {
            to do with and the table reports a till climbing to ~21,000 —
            which is precisely the hole decoration exists to fill, so a run
            that never buys any does not measure the game as played. */
-        for (const item of decorFor(s)) {
+        for (const item of (opts.noDecor ? [] : decorFor(s))) {
           if (item.owned) continue;
           if (s.money - item.cost < 1500) break;   // keep the shelves stocked
           buyDecor(s, item.id);
