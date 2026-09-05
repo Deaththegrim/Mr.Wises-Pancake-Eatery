@@ -28,7 +28,11 @@ export function unitsFor(servings) {
   return Math.ceil(servings / TUNING.servingsPerUnit);
 }
 
-export function priceOf(ingredientId) {
+/* What a UNIT of stock costs the SHOP. Not to be confused with
+   economy.js priceOf(), which is what a DISH bills the CUSTOMER — the two
+   are opposite sides of the ledger, and sharing the obvious name between
+   them once collided in ui/shopfront.js and stopped the page loading. */
+export function unitPriceOf(ingredientId) {
   const ing = ingredientById(ingredientId);
   return ing ? ing.cost : 0;
 }
@@ -38,11 +42,11 @@ export function stockOf(state, ingredientId) {
 }
 
 export function restockCost(ingredientIds) {
-  return (ingredientIds || []).reduce((sum, id) => sum + priceOf(id), 0);
+  return (ingredientIds || []).reduce((sum, id) => sum + unitPriceOf(id), 0);
 }
 
 export function canAfford(state, ingredientId, qty = 1) {
-  return state.money >= priceOf(ingredientId) * qty;
+  return state.money >= unitPriceOf(ingredientId) * qty;
 }
 
 export function buyIngredient(state, ingredientId, qty = 1) {

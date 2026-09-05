@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buyIngredient, stockOf, priceOf, servingsFor, unitsFor, consumeForCooking } from '../js/engine/pantry.js';
+import { buyIngredient, stockOf, unitPriceOf, servingsFor, unitsFor, consumeForCooking } from '../js/engine/pantry.js';
 import { priceOf as dishPrice } from '../js/engine/economy.js';
 import { serve, openDay } from '../js/engine/day.js';
 import { newGame } from '../js/engine/state.js';
@@ -46,7 +46,7 @@ test('cooking is PROFITABLE at normal stock prices', () => {
   // If a dish costs more to make than it sells for, the whole economy is
   // upside down. Check every recipe at perfect quality.
   for (const r of RECIPES) {
-    const cogs = r.ingredients.reduce((sum, id) => sum + priceOf(id) / TUNING.servingsPerUnit, 0);
+    const cogs = r.ingredients.reduce((sum, id) => sum + unitPriceOf(id) / TUNING.servingsPerUnit, 0);
     const revenue = dishPrice(r) * TUNING.payoutMaxMultiplier;
     assert.ok(revenue > cogs * 2,
       `${r.id}: sells for ${revenue.toFixed(1)} but costs ${cogs.toFixed(1)} to make — margin too thin`);
@@ -66,7 +66,7 @@ test('running out does NOT block the sale - it buys emergency stock at a markup'
 
 test('emergency stock costs more than planning ahead', () => {
   const plain = RECIPES.find(r => r.id === 'plain');
-  const planned = plain.ingredients.reduce((a, id) => a + priceOf(id), 0);
+  const planned = plain.ingredients.reduce((a, id) => a + unitPriceOf(id), 0);
 
   const s = newGame(1);
   s.money = 5000; s.pantry = {};

@@ -183,3 +183,18 @@ test('the printed lines add up to the printed total — every bill, always', () 
   }
   assert.ok(checked > 1000, `expected a broad sweep, only checked ${checked}`);
 });
+
+test('the quality adjustment says WHY the bill moved, not just that it did', () => {
+  /* Emptying this label passed the whole suite. It is the line that tells
+     the player their cooking changed the price — without it the bill has a
+     number appearing from nowhere, which on an itemised receipt reads as a
+     mistake rather than as feedback. */
+  const r = recipe('plain');
+  const labelAt = q => (billFor(r, { quality: q }).lines.find(l => l.adjustment) || {}).label;
+  assert.equal(labelAt(100), 'made perfectly');
+  assert.equal(labelAt(70), 'made 70%');
+  assert.equal(labelAt(0), 'made 0%');
+  for (const q of [0, 25, 70, 100]) {
+    assert.ok((labelAt(q) || '').trim().length > 3, `quality ${q} produced a blank label`);
+  }
+});

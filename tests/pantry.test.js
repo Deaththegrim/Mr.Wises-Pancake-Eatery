@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { priceOf, stockOf, canAfford, buyIngredient, hasIngredients, consumeIngredients, consumeForCooking, restockCost } from '../js/engine/pantry.js';
+import { unitPriceOf, stockOf, canAfford, buyIngredient, hasIngredients, consumeIngredients, consumeForCooking, restockCost } from '../js/engine/pantry.js';
 import { experiment } from '../js/engine/research.js';
 import { newGame } from '../js/engine/state.js';
 import { INGREDIENTS } from '../js/data/ingredients.js';
@@ -23,8 +23,8 @@ test('a new game starts with an empty pantry and no money', () => {
 
 test('every ingredient has a price', () => {
   for (const ing of INGREDIENTS) {
-    assert.equal(typeof priceOf(ing.id), 'number', `${ing.id} has no cost`);
-    assert.ok(priceOf(ing.id) > 0, `${ing.id} must cost something`);
+    assert.equal(typeof unitPriceOf(ing.id), 'number', `${ing.id} has no cost`);
+    assert.ok(unitPriceOf(ing.id) > 0, `${ing.id} must cost something`);
   }
 });
 
@@ -34,7 +34,7 @@ test('buying spends money and adds stock', () => {
   const r = buyIngredient(s, 'maple', 3);
   assert.equal(r.ok, true);
   assert.equal(stockOf(s, 'maple'), (5 + 3) * UNIT, 'each unit adds a bulk number of servings');
-  assert.equal(s.money, before - priceOf('maple') * 3, 'but you pay per unit, not per serving');
+  assert.equal(s.money, before - unitPriceOf('maple') * 3, 'but you pay per unit, not per serving');
 });
 
 test('buying what you cannot afford fails and spends nothing', () => {
@@ -62,7 +62,7 @@ test('buying a non-positive quantity is refused', () => {
 
 test('canAfford reflects the real price', () => {
   const s = stocked();
-  s.money = priceOf('maple') * 2;
+  s.money = unitPriceOf('maple') * 2;
   assert.equal(canAfford(s, 'maple', 2), true);
   assert.equal(canAfford(s, 'maple', 3), false);
 });
@@ -101,7 +101,7 @@ test('cooking costs far less per dish than one bench experiment', () => {
 });
 
 test('restockCost prices a whole blend', () => {
-  assert.equal(restockCost(['maple', 'lemon']), priceOf('maple') + priceOf('lemon'));
+  assert.equal(restockCost(['maple', 'lemon']), unitPriceOf('maple') + unitPriceOf('lemon'));
 });
 
 // --- the point of all this: the bench now costs money ---

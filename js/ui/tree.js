@@ -1,7 +1,7 @@
 import { RESEARCH } from '../data/research.js';
 import { INGREDIENTS } from '../data/ingredients.js';
 import { purchase, isAvailable, gateMet, experiment } from '../engine/research.js';
-import { priceOf, stockOf, canAfford, buyIngredient } from '../engine/pantry.js';
+import { unitPriceOf, stockOf, canAfford, buyIngredient } from '../engine/pantry.js';
 import { TUNING } from '../data/economy.js';
 import { el, clear, showNotice } from './screens.js';
 import { recipeById, syrupById, ingredientById, researchById, nameOf } from '../engine/lookup.js';
@@ -99,7 +99,7 @@ export function renderBench(state, onChange) {
     const used = chosen.filter(x => x === ing.id).length;
     row.stockEl.textContent = `${stock} servings` + (used ? ` · using ${used}` : '');
     row.buyBtn.disabled = !canAfford(state, ing.id, 1);
-    row.buyBtn.textContent = `buy ${priceOf(ing.id)}`;
+    row.buyBtn.textContent = `buy ${unitPriceOf(ing.id)}`;
     // One experiment burns a whole unit, so you need a full unit spare.
     row.useBtn.disabled = stock - used * TUNING.servingsPerUnit < TUNING.servingsPerUnit
                           || chosen.length >= 3;

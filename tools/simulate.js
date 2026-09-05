@@ -32,7 +32,7 @@ import { bestSyrupFor } from '../js/engine/syrup.js';
 import { noteMention } from '../js/engine/affection.js';
 import { SCENES } from '../js/data/scenes.js';
 import { availableNodes, purchase, experiment } from '../js/engine/research.js';
-import { buyIngredient, priceOf } from '../js/engine/pantry.js';
+import { buyIngredient, unitPriceOf } from '../js/engine/pantry.js';
 import { INGREDIENTS } from '../js/data/ingredients.js';
 import { quotaForWeek } from '../js/engine/economy.js';
 import { tierFor } from '../js/engine/affection.js';

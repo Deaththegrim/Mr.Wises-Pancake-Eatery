@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { simulate } from '../tools/simulate.js';
 import { quotaForWeek } from '../js/engine/economy.js';
 import { RECIPES } from '../js/data/recipes.js';
-import { priceOf as unitPrice } from '../js/engine/pantry.js';
+import { unitPriceOf } from '../js/engine/pantry.js';
 import { priceOf } from '../js/engine/economy.js';
 import { TUNING } from '../js/data/economy.js';
 
@@ -136,7 +136,7 @@ test('every recipe is profitable to cook', () => {
   // A dish that costs more to make than it sells for would quietly bleed
   // the player. Checked at the WORST payout multiplier, not the best.
   for (const r of RECIPES) {
-    const cogs = r.ingredients.reduce((sum, id) => sum + unitPrice(id) / TUNING.servingsPerUnit, 0);
+    const cogs = r.ingredients.reduce((sum, id) => sum + unitPriceOf(id) / TUNING.servingsPerUnit, 0);
     const worstRevenue = priceOf(r) * TUNING.payoutMinMultiplier;
     assert.ok(worstRevenue > cogs,
       `${r.id}: even a poor one sells for ${worstRevenue.toFixed(1)} but costs ${cogs.toFixed(1)}`);

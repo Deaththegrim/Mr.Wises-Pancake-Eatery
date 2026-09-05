@@ -1,5 +1,5 @@
 import { renderQuotaBoard } from './ledger.js';
-import { stockOf, priceOf as unitPrice, buyIngredient } from '../engine/pantry.js';
+import { stockOf, unitPriceOf, buyIngredient } from '../engine/pantry.js';
 import { customersToday } from '../engine/day.js';
 import { el, clear, showNotice } from './screens.js';
 import { recipeById, ingredientById, nameOf } from '../engine/lookup.js';
@@ -67,7 +67,7 @@ function renderStockWarning(state, onChange) {
   }
 
   const names = short.map(id => nameOf(ingredientById, id));
-  const restock = short.reduce((a, id) => a + unitPrice(id), 0);
+  const restock = short.reduce((a, id) => a + unitPriceOf(id), 0);
 
   mount.append(el('p', { className: 'hint',
     text: `Low on ${names.join(', ')} for ~${expected} customers. ` +
