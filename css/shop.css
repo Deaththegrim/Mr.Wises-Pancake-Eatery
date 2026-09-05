@@ -207,3 +207,17 @@
   border-radius: var(--radius-sm);
   color: var(--muted); font-size: 13px;
 }
+
+/* Artwork in the room. Height-capped so a picture of ANY size drops in
+   without taking over the screen — supply 2x for a sharp screen and it
+   still sits in the strip at the same height as everything else. The
+   placeholder outline is sized to match, so the row does not jump when
+   one item gets art and its neighbours have not yet. */
+.decor-art {
+  height: 64px; width: auto; max-width: 160px;
+  object-fit: contain; display: block;
+}
+.decor-token {
+  display: inline-flex; align-items: center;
+  height: 64px; max-width: 160px;
+}

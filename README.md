@@ -26,11 +26,12 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 284 unit tests (incl. balance regressions)
+    node --test tests/         # 290 unit tests (incl. balance regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
     python3 tools/smoke.py     # plays the game in a headless browser
     python3 tools/playthrough.py 1   # plays the REAL page for N weeks (slow)
+    node tools/art.js          # what art is needed, and what is already in
 
 `simulate.js` drives the engine directly, so it is fast enough to run a full
 eight weeks — but it is only as correct as its imitation of `main.js`, and it
@@ -110,11 +111,17 @@ finished with, Synthia's weekly visits and the dishes she asks for that you
 cannot make yet, five endings chosen by how well you listened, save/load,
 and the shop you spend the money on once the tree runs out.
 
-**What's left is writing and art.** Every line in `js/data/scenes.js` is a
-placeholder — the systems for the arc exist, the voice does not, and that
-is the collaborator's. The food, the room and the seven things you can buy
-for it all draw as shapes and labelled outlines until real art exists. No
-part of that needs an engine change.
+**What's left is writing and art**, and both are set up to be dropped in
+rather than built.
+
+Every line in `js/data/scenes.js` is a placeholder — the systems for the
+arc exist, the voice does not, and that is the collaborator's.
+
+For art, `node tools/art.js` prints every picture the game can use: where
+the file goes, what size, what it has to show, and which placeholder it
+replaces. Put a file at the path and it is in the game on the next reload —
+no code change and no build step. Delete it and the placeholder comes back.
+Nothing needs to be drawn in any particular order, or at all.
 
 Design docs live in `docs/superpowers/`, and the genre research they argue
 from is in `research/genre-loops.md`.

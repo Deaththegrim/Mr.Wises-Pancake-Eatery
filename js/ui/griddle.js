@@ -1,5 +1,6 @@
 import { el, clear } from './screens.js';
 import { recipeById } from '../engine/lookup.js';
+import { drawSprite, drawSpriteFit } from './art.js';
 
 /* THE COOK SURFACE PALETTE, read from the stylesheet.
 
@@ -64,10 +65,22 @@ function rgb(hex) {
    deliberately a different ellipse and keeps its own. */
 const PAN_RX = 130, PAN_RY = 78;
 function drawPan(ctx, cx, cy) {
+  if (drawSprite(ctx, 'griddle', cx, cy, PAN_RX * 2)) return;
   const p = palette();
   ctx.fillStyle = p.pan;
   ctx.beginPath(); ctx.ellipse(cx, cy, PAN_RX, PAN_RY, 0, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = p.rim; ctx.lineWidth = 2; ctx.stroke();
+}
+
+/* One pancake. Every place that draws food goes through here, so a single
+   file at assets/food/pancake.png replaces all of them at once — the batter
+   in the pour, the pancake cooking in the flip, and every layer of the
+   stack under the drizzle. `over` swaps to the overcooked sprite. */
+function drawCake(ctx, cx, cy, rx, { over = false, fill, stroke } = {}) {
+  if (drawSprite(ctx, over ? 'pancake_over' : 'pancake', cx, cy, rx * 2)) return;
+  ctx.fillStyle = fill;
+  ctx.beginPath(); ctx.ellipse(cx, cy, rx, rx * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
 }
 
 const alpha = (hex, a) => { const [r, g, b] = rgb(hex); return `rgba(${r},${g},${b},${a})`; };
@@ -163,10 +176,11 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       const r = radiusFor(beats.volume);
       if (r > 0) {
         const over = beats.volume > recipe.pour.target + recipe.pour.band;
-        ctx.fillStyle = over ? palette().over : palette().cake;
-        ctx.beginPath(); ctx.ellipse(cx, cy, r, r * 0.6, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = over ? palette().overEdge : palette().cakeEdge;
-        ctx.lineWidth = 2; ctx.stroke();
+        drawCake(ctx, cx, cy, r, {
+          over,
+          fill: over ? palette().over : palette().cake,
+          stroke: over ? palette().overEdge : palette().cakeEdge
+        });
       }
     };
     draw();
@@ -247,9 +261,11 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       // the pancake, darkening as it cooks past the window
       const over = Math.max(0, t - 1.3);
       const shade = Math.max(0, 1 - over * 0.6);
-      ctx.fillStyle = darken(palette().cake, shade);
-      ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = palette().cakeEdge; ctx.lineWidth = 2; ctx.stroke();
+      drawCake(ctx, cx, cy, R, {
+        over: shade < 0.8,
+        fill: darken(palette().cake, shade),
+        stroke: palette().cakeEdge
+      });
 
       // bubbles: rise, peak at t=1, then pop
       for (const b of bubbles) {
@@ -451,6 +467,9 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
 
       // the stack, bottom-up, at its real offsets
       for (const c of cakes) {
+        // Fitted, not scaled: the drizzle beat scores coverage across this
+        // exact shape, so the art must not move what the player aims at.
+        if (drawSpriteFit(ctx, 'pancake_stacked', c.x, c.y, CAKE_W, CAKE_H)) continue;
         ctx.fillStyle = palette().cake;
         ctx.strokeStyle = palette().cakeEdge;
         ctx.lineWidth = 2;

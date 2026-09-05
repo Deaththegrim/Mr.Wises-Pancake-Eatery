@@ -1,5 +1,6 @@
 import { el, clear, showNotice } from './screens.js';
 import { decorFor, buyDecor, ownedDecor } from '../engine/decor.js';
+import { spriteImg } from './art.js';
 
 /* THE SHOP SCREEN, and the room it furnishes.
 
@@ -81,7 +82,17 @@ export function renderShopfrontDecor(state) {
   const strip = el('div', { className: 'decor-strip' });
   strip.setAttribute('aria-label', 'The shop, as you have furnished it');
   for (const item of items) {
-    strip.append(el('span', { className: 'decor-token', text: item.name, attrs: { title: item.note } }));
+    /* The picture if one exists, the labelled outline if not. Each item's
+       `art` field names its slot in data/art.js; dropping a PNG at that
+       path is the whole of "adding the artwork". */
+    const img = spriteImg(item.art, item.name);
+    if (img) {
+      img.className = 'decor-art';
+      img.title = item.note;
+      strip.append(img);
+    } else {
+      strip.append(el('span', { className: 'decor-token', text: item.name, attrs: { title: item.note } }));
+    }
   }
   mount.append(strip);
 }

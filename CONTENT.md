@@ -346,6 +346,57 @@ true — there's a test that fails if it stops being.
 
 ---
 
+## Adding artwork — drop a file in
+
+Every picture the game can use is listed in `js/data/art.js`. **Nothing
+there needs to exist.** Each one draws a placeholder until a file appears
+at its path, and picks the file up the moment one does.
+
+The whole workflow:
+
+    1. node tools/art.js        # what is needed, where it goes, what size
+    2. put the file there
+    3. node tools/art.js        # again - it lists the file and tells the game
+    4. reload the page
+
+No code change, no registration, no build step. Delete the file and the
+placeholder comes back.
+
+`node tools/art.js` prints, for every empty slot, the exact path, the size,
+what the picture has to show, and which placeholder it replaces — so you
+can look at what you are replacing before drawing anything. For filled
+slots it prints the size it found, and warns if the shape is different from
+what that slot expects.
+
+**Why step 3 exists.** Asking the browser for a file that is not there logs
+an error, and a missing picture is the normal state here — eleven of them
+would bury the warnings the console is actually for. So `tools/art.js`
+writes `assets/manifest.json` listing what exists, and the game only asks
+for those. Skip step 3 and the game still finds your file, it is just noisy
+about the ones that are missing.
+
+**Sizes are a suggestion, shape is not.** Supply 2x for a sharp screen —
+anything is scaled to fit. But two slots (`pancake_stacked`, and the room's
+decorations) are drawn into a fixed box, because the stack beat measures a
+leaning tower and the drizzle beat scores coverage across it: the art must
+not move the thing the player is aiming at. Those want the aspect the slot
+states, or they will be squashed to it.
+
+**Transparent PNG throughout.** Everything is drawn over something.
+
+To add a slot that does not exist yet, add a row to `js/data/art.js` and
+read it with `sprite('<your-id>')` from `js/ui/art.js` wherever it should
+draw. The checklist and the tests pick it up automatically.
+
+### Synthia's sprites are already in
+
+Her 29 expressions and poses live in `assets/sprites/synthia_casual/` and
+are wired: the story screen picks the one matching her mood, and her
+expression shifts with the relationship on its own. Adding an expression is
+a file in that folder plus a line in `js/data/affection.js`.
+
+---
+
 ## Changing the difficulty — `js/data/economy.js`
 
 The quota curve and every tuning number live here. They're all placeholders

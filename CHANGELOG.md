@@ -1,8 +1,22 @@
 # Changelog
 
-## 2026-09-06 — the shop
+## 2026-09-06 — the shop, and somewhere to put the art
 
 ### Added
+
+- **Art slots.** Every picture the game can use is declared in
+  `js/data/art.js` with its path, its size, what it has to show and which
+  placeholder it replaces. **None of it needs to exist** — each slot draws a
+  placeholder until a file appears, and picks it up on the next reload. No
+  code change, no registration, no build step; delete the file and the
+  placeholder comes back. `node tools/art.js` prints the checklist and
+  writes the manifest the game loads from, so the console stays clean
+  instead of reporting eleven missing files on every load.
+
+  Eleven slots wired so far: the pancake in the pan, the same pancake
+  overcooked, a pancake seen edge-on as one layer of a stack, the griddle,
+  and one for each of the seven things you can buy for the room. Synthia's
+  29 existing sprites were already in and are untouched.
 
 - **Decoration** — seven things to buy for the room: window boxes, a second
   table, a repainted sign, a corner lamp, a shelf of jars, the good griddle,
