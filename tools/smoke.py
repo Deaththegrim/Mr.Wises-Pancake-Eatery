@@ -141,6 +141,10 @@ def main():
 
         print("\n-- service: cook one dish through all four beats --")
         page.click("#btn-open")
+        # Day one of week one, so no visit is due on the pinned seed — but
+        # guarded anyway, because "safe for this seed" is the kind of
+        # property that quietly stops being true.
+        clear_scenes(page)
         # Wait for the transition rather than asserting in the same tick.
         try:
             page.wait_for_selector("#screen-service", state="visible", timeout=4000)
@@ -409,6 +413,11 @@ def main():
         page.click("#btn-next-day")
         page.wait_for_selector("#btn-open", state="visible", timeout=4000)
         page.click("#btn-open")
+        # Same guard as everywhere else that opens the shop: a scene here
+        # would hide #shopfront-decor, and this would fail as "the room is
+        # empty" rather than naming the cause. A no-op when none is open.
+        clear_scenes(page)
+        dismiss_ask(page)
         page.wait_for_timeout(300)
         room = page.inner_text("#shopfront-decor")
         check(room.strip() != "", f"the room shows what was bought for it: {room.strip()[:40]}")
