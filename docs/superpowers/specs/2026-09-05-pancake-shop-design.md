@@ -731,11 +731,12 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
    pour and drizzle move to `<canvas>` in Phase 2, drawn over the real
    stack. No engine change required.
 3. **Eight weeks** — the right length? Long enough for a slow burn to breathe,
-   short enough to finish. `tools/simulate.js` says the quota curve works over
-   8 weeks (sloppy 3/8, careful 6/8, with week 6 cleared by 266 and week 8
-   missed by 239), but whether 8 weeks
-   is enough time for the *relationship* to breathe is a question only reading
-   the finished writing can answer. Revisit once the collaborator's scenes exist.
+   short enough to finish. Measured over 30 seeds (2026-09-05): a careful player
+   clears 6.2 of 8 and misses only weeks 7 and 8; a sloppy one clears exactly 2;
+   a player who cooks as well as the careful one but ignores what Synthia mentions
+   clears 4.6 and never reaches her closest tier. So the curve works. Whether 8
+   weeks is enough for the *relationship* to breathe is a question only reading the
+   finished writing can answer. Revisit once the collaborator's scenes exist.
 4. **Demon Synthia's role**, if any. Collaborator's call; system supports it free.
 5. ~~**Decoration layer**~~ — resolved. Phase 2, and it does **not** feed
    reputation. Decoration is a money sink and a self-expression outlet only, per
@@ -743,3 +744,16 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
    into reputation would make reputation two systems wearing one name and would put
    an art-dependent feature on Phase 1's critical path. It stays cosmetic, so it
    can be added any time after handoff without touching the economy.
+
+   **The measured cost of deferring it** (2026-09-05): a careful player finishes
+   the research tree in **week 7**, and from there the till climbs — 11,440 at the
+   end of week 7 to 21,480 at the end of week 8 — because the only remaining money
+   sink is the bench, which is still hunting the last two syrups but cannot absorb
+   the income. The last two weeks therefore have no *economic* decision left, only
+   execution and the menu. Nothing breaks and nobody fails, but decoration is what
+   gives that money somewhere to go, so it is the first thing to build in Phase 2
+   rather than a nice-to-have.
+
+6. **Per-dish pricing** — resolved 2026-09-05, see §4. There is no price control:
+   a dish is priced from its parts and shown as an itemised bill. The player prices
+   by choosing what goes in.
