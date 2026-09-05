@@ -90,6 +90,22 @@ were easy to reach.
   the drizzle's Done handler — but "safe because of what the last screen
   happened to do" is not a property worth resting on.
 
+### Added — touch coverage, because there was none
+
+The pour bug above was found by *reading* the code. Every check in the
+smoke test drives a mouse, so a game that is fully touch-operable had no
+touch coverage at all — which is exactly how that bug lived in it.
+
+There is now a touch section: a real touch-enabled context, a real
+`touchstart`, and a `touchcancel` dispatched the way a phone does when the
+system takes a gesture over. It asserts the pour actually starts (otherwise
+everything after it passes by never running), then that the beat advances
+and the readout stops.
+
+Verified against the bug itself: removing the `touchcancel` handler leaves
+the stage stuck on `pour` with the readout still ticking, and both checks
+fail.
+
 ### Fixed — comments that were wrong
 
 This is its own category on purpose. A wrong comment in this codebase is

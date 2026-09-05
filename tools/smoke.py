@@ -868,6 +868,73 @@ def main():
         check(not rm_errors, f"with no page errors: {rm_errors[:2]}")
         rm.close()
 
+        # ---- touch ----
+        # The game is fully touch-operable and had NO touch coverage at all,
+        # which is how a real bug lived in it: an interrupted gesture on the
+        # pour left the batter pouring with nobody touching the screen, the
+        # measured volume climbing past any target, and the beat stuck. That
+        # was found by reading the code, not by running it. Every check
+        # above drives a mouse, so this drives fingers.
+        print("\n-- touch --")
+        touch_errors = []
+        tp = browser.new_page(has_touch=True, is_mobile=True,
+                              viewport={"width": 420, "height": 860})
+        tp.on("pageerror", lambda e: touch_errors.append(f"pageerror: {e}"))
+        tp.on("console", lambda m: touch_errors.append(f"{m.type}: {m.text}")
+              if m.type in ("error", "warning") else None)
+        tp.goto(f"http://127.0.0.1:{PORT}/", wait_until="networkidle")
+        tp.tap("#btn-new")
+        tp.wait_for_selector("#screen-morning", state="visible", timeout=4000)
+        tp.evaluate("window.GAME.state.seed = 2026; window.GAME.save();")
+        tp.tap("#btn-open")
+        tp.wait_for_selector("#screen-service", state="visible", timeout=4000)
+        clear_scenes(tp)
+        dismiss_ask(tp)
+
+        # POUR by touch, then CANCEL the gesture the way a phone does —
+        # touchcancel, never touchend. The beat must still advance.
+        btn = tp.wait_for_selector("#beat-area button", timeout=4000)
+        check(btn is not None, "the pour button is reachable on a touch device")
+        if btn:
+            box = bbox(btn, "pour button (touch)")
+            x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+            tp.evaluate("""([x, y]) => {
+                const el = document.elementFromPoint(x, y);
+                const mk = (type) => {
+                    const t = new Touch({identifier: 1, target: el, clientX: x, clientY: y});
+                    return new TouchEvent(type, {
+                        touches: type === 'touchstart' ? [t] : [],
+                        changedTouches: [t], bubbles: true, cancelable: true});
+                };
+                el.dispatchEvent(mk('touchstart'));
+                window.__pourStarted = true;
+                setTimeout(() => el.dispatchEvent(mk('touchcancel')), 400);
+            }""", [x, y])
+            # While the touch is still down, the pour must actually be
+            # running — otherwise everything below passes by never starting.
+            time.sleep(0.25)
+            pouring = tp.evaluate(
+                "document.getElementById('pour-read') && document.getElementById('pour-read').textContent")
+            check(bool(pouring) and pouring != "0 ml",
+                  f"a touch actually pours ({pouring!r}) — without this the rest proves nothing")
+
+            # Now the cancel lands (scheduled above). stop() silences the
+            # sound, clears the 30ms interval AND advances the beat, so the
+            # stage moving on is the observable proof that all three ran.
+            # Unfixed, the stage stays "pour" and the volume climbs forever.
+            time.sleep(1.2)
+            after = stage(tp)
+            check("pour" not in after,
+                  f"a cancelled touch ends the pour instead of leaving it running (stage: {after})")
+
+            still_pouring = tp.evaluate(
+                "!!document.getElementById('pour-read')")
+            check(not still_pouring,
+                  "and the pour readout is gone, so no interval is still ticking behind it")
+
+        check(not touch_errors, f"no faults on a touch device: {touch_errors[:3]}")
+        tp.close()
+
         browser.close()
 
     httpd.shutdown()
