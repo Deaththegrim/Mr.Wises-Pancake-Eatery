@@ -7,6 +7,8 @@ import { unitPriceOf } from '../js/engine/pantry.js';
 import { priceOf } from '../js/engine/economy.js';
 import { TUNING } from '../js/data/economy.js';
 import { DECOR } from '../js/data/decor.js';
+import { SYRUPS } from '../js/data/syrups.js';
+import { RESEARCH } from '../js/data/research.js';
 
 /* BALANCE REGRESSION TESTS.
 
@@ -276,4 +278,45 @@ test('decoration is never the reason a quota is met', () => {
       }
     }
   }
+});
+
+test('everything in the shop is affordable to someone who wants it', () => {
+  /* The shop deliberately costs more than one run can clear, so the
+     cheapest-first simulator never reaches the dearest item — that is the
+     design, not a defect. But "not bought by this strategy" and "cannot be
+     bought at all" look identical from the outside, and one of them is
+     dead content. This separates them: a player who saves instead of
+     buying the cheap things must be able to afford the most expensive one.
+
+     Same question that found the unreachable ending — not "does the code
+     handle this value" but "can the game actually produce it". */
+  const dearest = DECOR.reduce((a, b) => (b.cost > a.cost ? b : a));
+  let affordable = 0;
+  for (let seed = 7001; seed <= 7010; seed++) {
+    const peak = Math.max(...simulate(seed, 'careful', { noDecor: true }).map(r => r.money));
+    if (peak >= dearest.cost) affordable += 1;
+  }
+  assert.ok(affordable >= 8,
+    `"${dearest.name}" costs ${dearest.cost} and a saving player could afford it in only ` +
+    `${affordable}/10 runs — it is priced out of the game rather than expensive`);
+});
+
+test('every recipe, syrup and research node is reached by ordinary play', () => {
+  /* Content nobody ever sees is content nobody should have written. The
+     validator proves each is reachable in principle — a research node
+     unlocks it, a customer wants its tag — and this proves the game
+     actually gets there. */
+  const seen = { recipes: new Set(), syrups: new Set(), research: new Set() };
+  for (let seed = 6001; seed <= 6010; seed++) {
+    for (const profile of ['careful', 'shelf', 'sloppy']) {
+      const s = simulate(seed, profile).state;
+      s.unlockedRecipes.forEach(x => seen.recipes.add(x));
+      s.unlockedSyrups.forEach(x => seen.syrups.add(x));
+      s.purchased.forEach(x => seen.research.add(x));
+    }
+  }
+  const missing = (all, got) => all.filter(x => !got.has(x.id)).map(x => x.id);
+  assert.deepEqual(missing(RECIPES, seen.recipes), [], 'recipes never unlocked in any run');
+  assert.deepEqual(missing(SYRUPS, seen.syrups), [], 'syrups never discovered in any run');
+  assert.deepEqual(missing(RESEARCH, seen.research), [], 'research nodes never bought in any run');
 });
