@@ -21,6 +21,18 @@
   **Not touched: a single line of Synthia's.** Those remain the
   collaborator's, as agreed.
 
+- **Two research nodes were named after their own dishes.** All thirteen
+  nodes name a *skill* — Citrus Work, Practised Eye, Steady Hands, Working
+  With Ash — except the two late ones, which were called *The Impossible
+  Stack* and *The Quiet Stack*. That put the same words twice on one screen
+  and told the player nothing about what they were learning. Now **The
+  Seventh Layer** (it is the dish that stands seven high) and **Working In
+  Silence**, which rhymes with *Working With Ash* directly upstream of it.
+  The convention is written down in `CONTENT.md` so the next node added
+  follows it. Ingredient names were reviewed and left alone — Flour through
+  Bottled Starlight and Quiet Milk is already a clean ordinary-to-uncanny
+  gradient.
+
 - **Two names.** `Souffle Pancake` → **Soufflé Stack** (accent restored;
   it now joins the Stack family it belongs to), and `Void Syrup` →
   **Starless** — the one abstract name in a list of concrete ones

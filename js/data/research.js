@@ -54,11 +54,11 @@ export const RESEARCH = [
   { id: 'r_steady', name: 'Steady Hands', cost: 120, prereqs: ['r_guide'],
     gate: null, unlocks: { upgrade: 'stack_forgiveness' } },
 
-  { id: 'r_impossible', name: 'The Impossible Stack', cost: 185, prereqs: ['r_souffle', 'r_guide'],
+  { id: 'r_impossible', name: 'The Seventh Layer', cost: 185, prereqs: ['r_souffle', 'r_guide'],
     gate: { cooked: { souffle: 5 } }, unlocks: { recipe: 'impossible' } },
 
   // --- the end of the tree ---
-  { id: 'r_quiet', name: 'The Quiet Stack', cost: 240, prereqs: ['r_impossible', 'r_ember'],
+  { id: 'r_quiet', name: 'Working In Silence', cost: 240, prereqs: ['r_impossible', 'r_ember'],
     gate: { cooked: { impossible: 3 } }, unlocks: { recipe: 'quiet_stack' } }
 ];
 

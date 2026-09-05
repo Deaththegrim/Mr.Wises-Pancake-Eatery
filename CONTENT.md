@@ -275,6 +275,14 @@ when the real art arrives.
 griddle alarm marks the flip window, a measured ladle widens the pour band.
 That's on purpose — the game should get calmer as it goes, not louder.
 
+**Name a node for the skill, not for the thing it unlocks.** *Citrus Work*,
+*Practised Eye*, *Steady Hands*, *Working With Ash* — the board then reads as
+a list of things the cook is learning, which is what makes a research tree
+feel like getting better rather than like a shop. Two nodes were originally
+named after their own dishes (*The Impossible Stack*, *The Quiet Stack*),
+which put the same words twice on one screen and said nothing; they are now
+*The Seventh Layer* and *Working In Silence*.
+
 ---
 
 ## Writing Synthia — `js/data/scenes.js`
