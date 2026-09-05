@@ -4,6 +4,8 @@ import { billFor, priceOf, payoutFor, qualityMultiplier } from '../js/engine/eco
 import { RECIPES } from '../js/data/recipes.js';
 import { INGREDIENTS } from '../js/data/ingredients.js';
 import { SYRUPS } from '../js/data/syrups.js';
+import { CUSTOMERS } from '../js/data/customers.js';
+import { matchScore } from '../js/engine/syrup.js';
 import { TUNING } from '../js/data/economy.js';
 
 /* THE BILL.
@@ -111,4 +113,29 @@ test('every dish is worth more than the flour it is made of', () => {
     assert.ok(priceOf(r) > r.stackCount * TUNING.pricePerPancake * 0.9,
       `${r.id} bills less than its own pancakes`);
   }
+});
+
+test('no syrup, on any dish, for any customer, can ever cost the player money', () => {
+  /* THE INVARIANT, asserted through the REAL billing path over every
+     recipe x syrup x customer combination — 891 of them.
+
+     It used to be checked against a `payoutMultiplier()` helper that the
+     game did not call: billFor() applied its own copy of the rule. So the
+     test guarded a function nobody ran, which is the precise shape of the
+     bug that made the shipped game unwinnable for a week. */
+  let worst = Infinity, worstCase = '';
+  for (const r of RECIPES) {
+    const plain = billFor(r, { quality: 80 }).total;
+    for (const syrup of SYRUPS) {
+      for (const c of CUSTOMERS) {
+        const withSyrup = billFor(r, { quality: 80, syrup, syrupScore: matchScore(syrup, c.taste) }).total;
+        if (withSyrup - plain < worst) {
+          worst = withSyrup - plain;
+          worstCase = `${r.id} + ${syrup.id} for ${c.id}`;
+        }
+      }
+    }
+  }
+  assert.ok(worst >= 0,
+    `pouring a syrup must never reduce the bill; worst case was ${worstCase} at ${worst}`);
 });

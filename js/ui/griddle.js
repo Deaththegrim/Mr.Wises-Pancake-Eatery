@@ -44,6 +44,17 @@ function rgb(hex) {
   const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
+/* The pan itself. Both the pour and the flip drew it with identical
+   six-statement blocks, magic radii and all — the drizzle beat's plate is
+   deliberately a different ellipse and keeps its own. */
+const PAN_RX = 130, PAN_RY = 78;
+function drawPan(ctx, cx, cy) {
+  const p = palette();
+  ctx.fillStyle = p.pan;
+  ctx.beginPath(); ctx.ellipse(cx, cy, PAN_RX, PAN_RY, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = p.rim; ctx.lineWidth = 2; ctx.stroke();
+}
+
 const alpha = (hex, a) => { const [r, g, b] = rgb(hex); return `rgba(${r},${g},${b},${a})`; };
 /* Returns HEX, not an rgb() string, so it composes with alpha() — the
    first cut returned rgb() and alpha(darken(...)) parsed it as a hex,
@@ -120,22 +131,18 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     // Radius scales with volume; the target radius maps to recipe target.
     const R_MAX = 78;
     const radiusFor = ml => Math.min(R_MAX + 26, Math.sqrt(ml / recipe.pour.target) * R_MAX);
-    const targetR = R_MAX;
     const bandR = Math.sqrt((recipe.pour.target + recipe.pour.band) / recipe.pour.target) * R_MAX;
     const bandRLow = Math.sqrt(Math.max(0, recipe.pour.target - recipe.pour.band) / recipe.pour.target) * R_MAX;
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // griddle
-      ctx.fillStyle = palette().pan;
-      ctx.beginPath(); ctx.ellipse(cx, cy, 130, 78, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = palette().rim; ctx.lineWidth = 2; ctx.stroke();
+      drawPan(ctx, cx, cy);
 
       // the acceptable band, drawn as a soft ring
       ctx.strokeStyle = alpha(palette().accent, 0.30);
       ctx.lineWidth = Math.max(2, (bandR - bandRLow) * 0.6);
-      ctx.beginPath(); ctx.ellipse(cx, cy, targetR, targetR * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(cx, cy, R_MAX, R_MAX * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
 
       // the batter
       const r = radiusFor(beats.volume);
@@ -220,10 +227,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       const t = (performance.now() - t0) / idealAt;      // 1.0 == the ideal moment
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // griddle
-      ctx.fillStyle = palette().pan;
-      ctx.beginPath(); ctx.ellipse(cx, cy, 130, 78, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = palette().rim; ctx.lineWidth = 2; ctx.stroke();
+      drawPan(ctx, cx, cy);
 
       // the pancake, darkening as it cooks past the window
       const over = Math.max(0, t - 1.3);
@@ -345,6 +349,15 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
      the stack beat rather than a separate abstract task. */
   function doDrizzle() {
     const COLUMNS = 12;                       // finer than the old 6 cells
+    /* How fast syrup builds under the pointer, and how deep a puddle can
+       get. The mouse path and the keyboard path both pour, and these two
+       numbers were written out at both — so a tuning change could land on
+       one route and not the other, and the keyboard route is the one
+       nobody plays and nobody would notice. */
+    const POUR_STEP = 0.09, POUR_MAX = 1.2;
+    const pourInto = i => {
+      beats.coverage[i] = Math.min(POUR_MAX, beats.coverage[i] + POUR_STEP);
+    };
     beats.coverage = new Array(COLUMNS).fill(0);
 
     /* THE SYRUP CHOICE. Discovering a syrup used to change a counter and
@@ -472,7 +485,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       const x = (clientX - rect.left) * (canvas.width / rect.width);
       const i = Math.floor(((x - spanL) / spanW) * COLUMNS);
       if (i < 0 || i >= COLUMNS) return;      // off the stack: syrup on the plate, wasted
-      beats.coverage[i] = Math.min(1.2, beats.coverage[i] + 0.09);
+      pourInto(i);
       draw();
     };
 
@@ -495,7 +508,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       if (ev.key === 'ArrowLeft')       col = Math.max(0, col - 1);
       else if (ev.key === 'ArrowRight') col = Math.min(COLUMNS - 1, col + 1);
       else if (ev.key === 'Enter' || ev.key === ' ') {
-        beats.coverage[col] = Math.min(1.2, beats.coverage[col] + 0.09);
+        pourInto(col);
       } else return;
       ev.preventDefault();
       drawCursor();

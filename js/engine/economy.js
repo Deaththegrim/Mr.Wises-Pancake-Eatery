@@ -1,6 +1,6 @@
 import { QUOTA_CURVE, TUNING } from '../data/economy.js';
 import { ingredientById } from './lookup.js';
-import { matchLabel } from './syrup.js';
+import { matchLabel, payoutBonus } from './syrup.js';
 
 export function quotaForWeek(week) {
   if (!Number.isInteger(week) || week < 1) throw new Error(`week must be a positive integer, got ${week}`);
@@ -82,7 +82,7 @@ export function billFor(recipe, opts = {}) {
   }
 
   if (syrup) {
-    const syrupAmount = Math.round(total * TUNING.syrupMatchBonus * syrupScore);
+    const syrupAmount = payoutBonus(total, syrupScore);
     /* The verdict rides on the bill's own line. It is the only place the
        player ever learns what a customer's taste is — spec: "its full
        effect is revealed by serving it to a customer". */
@@ -93,7 +93,8 @@ export function billFor(recipe, opts = {}) {
   return { lines, subtotal, total: Math.round(total) };
 }
 
-const ordinal = n => (n === 1 ? 'first' : n === 2 ? 'second' : n === 3 ? 'third' : `${n}th`);
+const ORDINALS = ['first', 'second', 'third'];
+const ordinal = n => ORDINALS[n - 1] || `${n}th`;
 
 /* What a dish is worth before anything is cooked. Used to sort the menu by
    value for the demand shift, and to check a dish is worth making at all. */

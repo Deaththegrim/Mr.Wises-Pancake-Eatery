@@ -6,7 +6,7 @@
 
    Errors block; warnings are worth a look but do not break the game. */
 
-import { INGREDIENTS } from '../js/data/ingredients.js';
+import { INGREDIENTS, AXES } from '../js/data/ingredients.js';
 import { RECIPES } from '../js/data/recipes.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { RESEARCH } from '../js/data/research.js';
@@ -14,7 +14,6 @@ import { CUSTOMERS } from '../js/data/customers.js';
 import { SCENES } from '../js/data/scenes.js';
 import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE } from '../js/data/affection.js';
 
-const AXES = ['sweet', 'sharp', 'rich', 'strange'];
 
 /* Mirrors engine/research.js blendAxes/axisDistance. Duplicated rather
    than imported so the validator keeps working even if the engine is

@@ -1,5 +1,6 @@
 import { TUNING } from '../data/economy.js';
 import { syrupById } from './lookup.js';
+import { AXES } from '../data/ingredients.js';
 
 /* WHAT A SYRUP IS WORTH.
 
@@ -13,7 +14,6 @@ import { syrupById } from './lookup.js';
    not is merely ordinary. There is no penalty, ever — a discovery should
    feel like gaining an option, never like a new way to lose money. */
 
-const AXES = ['sweet', 'sharp', 'rich', 'strange'];
 
 export { syrupById };
 
@@ -28,14 +28,21 @@ export function matchScore(syrup, taste) {
   return Math.max(0, 1 - d / TUNING.syrupMatchRange);
 }
 
-/* Always >= 1. See the note above about never punishing a discovery. */
-export function payoutMultiplier(syrupId, taste) {
-  return 1 + matchScore(syrupById(syrupId), taste) * TUNING.syrupMatchBonus;
-}
+/* What a match is worth, in money and in reputation. Both take the SCORE
+   rather than the ids: the caller has already computed it to bill the dish,
+   and scoring it twice invites the two answers to drift.
 
-export function reputationBonus(syrupId, taste) {
-  return matchScore(syrupById(syrupId), taste) * TUNING.syrupMatchReputation;
-}
+   These used to take ids and be called by nothing but their own tests,
+   while economy.js and day.js each re-typed the same formula inline. That
+   put both syrup tuning constants in two spellings in two files — the exact
+   pattern this project's history keeps producing, and the "tested but
+   unreachable" shape that hid the research-points bug for a week. Now the
+   live paths call these, so each constant is read in one place. */
+export const payoutBonus = (total, score) =>
+  Math.round(total * TUNING.syrupMatchBonus * Math.max(0, score));
+
+export const reputationBonus = score =>
+  Math.max(0, score) * TUNING.syrupMatchReputation;
 
 /* What the player is choosing between. Sorted best-first so the UI can
    show a hint without doing its own scoring — the UI measures and

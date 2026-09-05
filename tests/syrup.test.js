@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { matchScore, payoutMultiplier, rankSyrups, bestSyrupFor, matchLabel, characterOf, syrupById }
+import { matchScore, payoutBonus, reputationBonus, rankSyrups, bestSyrupFor, matchLabel, characterOf, syrupById }
   from '../js/engine/syrup.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { CUSTOMERS } from '../js/data/customers.js';
@@ -30,11 +30,13 @@ test('an exact match scores 1 and a total mismatch scores 0', () => {
     Math.max(0, 1 - (s.axes.sweet + s.axes.sharp + s.axes.rich + s.axes.strange) / TUNING.syrupMatchRange));
 });
 
-test('the multiplier is never below 1 — a mismatch must not be a punishment', () => {
+test('the bonus is never negative — a mismatch must not be a punishment', () => {
   for (const s of SYRUPS) {
     for (const c of CUSTOMERS) {
-      assert.ok(payoutMultiplier(s.id, c.taste) >= 1,
+      const score = matchScore(s, c.taste);
+      assert.ok(payoutBonus(100, score) >= 0,
         `${s.id} for ${c.id} would cost the player money for pouring the wrong syrup`);
+      assert.ok(reputationBonus(score) >= 0, `${s.id} for ${c.id} would cost reputation`);
     }
   }
 });
@@ -42,7 +44,7 @@ test('the multiplier is never below 1 — a mismatch must not be a punishment', 
 test('missing or unknown syrups score zero rather than throwing', () => {
   assert.equal(matchScore(null, taste('first_light')), 0);
   assert.equal(matchScore(syrupById('no_such_syrup'), taste('first_light')), 0);
-  assert.equal(payoutMultiplier(undefined, taste('first_light')), 1);
+  assert.equal(payoutBonus(100, matchScore(syrupById('no_such_syrup'), taste('first_light'))), 0);
   assert.equal(matchScore(SYRUPS[0], undefined), 0);
 });
 

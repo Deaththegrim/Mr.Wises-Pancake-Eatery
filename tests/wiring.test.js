@@ -99,3 +99,36 @@ test('every screen main.js switches to is a real screen', () => {
   }
   assert.deepEqual(missing, [], missing.join('\n'));
 });
+
+test('the canvas fallback colours still match the stylesheet', () => {
+  /* ui/griddle.js reads the cook-surface tokens off the root element, but
+     carries a hardcoded fallback for each — getComputedStyle returns '' if
+     the stylesheet has not applied, and an empty fillStyle silently keeps
+     the previous colour, which paints the food the colour of the pan.
+
+     Those fallbacks are a second copy of the palette with nothing holding
+     the two together, which is precisely the drift the palette reader was
+     built to end: before it, the DOM drew a pancake #c98a4b while the
+     canvas drew the same pancake #d9a05b. Edit a token in the stylesheet
+     and forget the fallback, and the canvas quietly renders the old colour
+     for anyone whose CSS is slow. */
+  const css = readFileSync(join(root, 'css/style.css'), 'utf8');
+  const tokens = new Map(
+    [...css.matchAll(/(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g)].map(m => [m[1], m[2].toLowerCase()]));
+
+  const griddle = readFileSync(join(root, 'js/ui/griddle.js'), 'utf8');
+  const fallbacks = [...griddle.matchAll(/read\(\s*'(--[\w-]+)'\s*,\s*'(#[0-9a-fA-F]{3,8})'\s*\)/g)];
+
+  assert.ok(fallbacks.length >= 8,
+    `expected to find the palette fallbacks, found ${fallbacks.length}`);
+
+  const drifted = [];
+  for (const [, name, fallback] of fallbacks) {
+    if (!tokens.has(name)) {
+      drifted.push(`${name}: griddle.js falls back to ${fallback}, but style.css no longer defines it`);
+    } else if (tokens.get(name) !== fallback.toLowerCase()) {
+      drifted.push(`${name}: style.css says ${tokens.get(name)}, griddle.js falls back to ${fallback}`);
+    }
+  }
+  assert.deepEqual(drifted, [], drifted.join('\n'));
+});

@@ -156,10 +156,11 @@ function cookFor(current) {
        So the notice carries only what a receipt cannot: the customer
        saying something, and the verdict on the syrup — which is how the
        player learns a taste they are never shown. */
-    const lines = current.customer && current.customer.lines;
-    const said = lines
-      ? (result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed)
-      : '';
+    // nextCustomer() always returns a customer with the order, so this is
+    // not defended against — guarding here and then reading .name unguarded
+    // two lines down told two different stories about the same object.
+    const lines = current.customer.lines || {};
+    const said = result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed;
     renderReceipt(recipeById(current.recipeId), result, current.customer.name, said);
 
     saveGame();
@@ -205,19 +206,20 @@ function toEvening() {
    score — this is a cozy game, and there is nothing to win. */
 function showEnding(endingId) {
   const node = SCENES[endingId] || {};
-  let title = node.endingTitle;
+  // Not `title` — that is the shop's name, at module scope.
+  let endingTitle = node.endingTitle;
   if (!title) {
     // Walk to the terminal node, which is where the title lives.
     let id = endingId, hops = 0;
     while (id && hops < 20) {
       const n = SCENES[id];
       if (!n) break;
-      if (n.endingTitle) { title = n.endingTitle; break; }
+      if (n.endingTitle) { endingTitle = n.endingTitle; break; }
       id = n.next || (n.choices && n.choices[0] && n.choices[0].next);
       hops += 1;
     }
   }
-  document.getElementById('ending-title').textContent = title || 'The season turns';
+  document.getElementById('ending-title').textContent = endingTitle || 'The season turns';
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const cooked = Object.values(state.cooked).reduce((a, b) => a + b, 0);
   document.getElementById('ending-summary').textContent =

@@ -11,6 +11,13 @@
    After changing a price, run `node tools/simulate.js` — the bench is the
    main money sink, so these numbers decide whether profit has a purpose. */
 
+/* The four flavour axes, named once. Ingredients, syrups and customer
+   tastes all use them, and they were spelled out separately in the engine,
+   the validator and the tests — four copies of a list whose whole job is to
+   agree. A typo in one of them silently changed what flavour meant in that
+   file, with nothing to catch it. */
+export const AXES = ['sweet', 'sharp', 'rich', 'strange'];
+
 export const INGREDIENTS = [
   // staples — always affordable, so experimenting is never fully blocked
   { id: 'flour',      name: 'Flour',             cost: 6, sell: 2,   axes: { sweet: 1, sharp: 0, rich: 2, strange: 0 } },

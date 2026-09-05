@@ -1,13 +1,13 @@
 import { makeRng, pick } from './rng.js';
 import { scoreDish } from './cook.js';
-import { payoutFor, tipFor, reputationGain, rollWeek, priceOf, billFor } from './economy.js';
+import { tipFor, reputationGain, rollWeek, priceOf, billFor } from './economy.js';
 import { grantWeekly, grantForServing, checkListening } from './affection.js';
 import { CUSTOMERS } from '../data/customers.js';
 import { TUNING } from '../data/economy.js';
 import { payForCooking } from './pantry.js';
 import { endingFor, synthiaDueToday } from './story.js';
 import { QUOTA_CURVE } from '../data/economy.js';
-import { matchScore, syrupById } from './syrup.js';
+import { matchScore, syrupById, reputationBonus } from './syrup.js';
 import { recipeById } from './lookup.js';
 
 const DAYS_PER_WEEK = 7;
@@ -47,71 +47,80 @@ function dayRng(state) {
   return makeRng(state.seed + state.week * 1000 + state.day * 10 + (state.orderIndex || 0));
 }
 
+/* HER VISIT. Extracted from nextCustomer, which was two functions wearing
+   one name: this path is three ifs deep and ends in its own return, and
+   the ordinary path below shares none of it. Returns her order, or null
+   when it is not her turn. */
+function synthiaOrder(state) {
+  if (!synthiaDueToday(state) || state.synthiaServedToday) return null;
+
+  const menu = state.menu.map(recipeById).filter(Boolean);
+  if (!menu.length) return null;
+
+  const rng = makeRng(state.seed + state.week * 13 + state.day);
+
+  /* THE LISTENING LOOP, CLOSED. If she has mentioned something in passing
+     and it is now on the menu — because the player heard her, researched it
+     over weeks, and put it out — that is what she asks for. Anything else
+     makes the payoff a coincidence: previously she ordered whatever was
+     priciest, so a player who did everything right still only reached
+     DEVOTED on 2 of 10 seeds, and had no way to serve her the dish
+     deliberately.
+
+     Skips what she has already noticed, so each mention pays once and she
+     keeps moving through her list rather than re-ordering a favourite. */
+  const remembered = menu.find(r =>
+    state.synthia.mentions.includes(r.id) && !state.synthia.noticed.includes(r.id));
+
+  /* IMPOSSIBLE ORDER (spec §9). If she has mentioned something the player
+     has NOT unlocked, she asks for it first — and is unbothered when it is
+     not there. It turns a line of dialogue into a visible research goal,
+     which is how her presence drives progression between story beats.
+
+     It rides ALONGSIDE her real order rather than replacing it. She comes
+     in once a week, so an ask that consumed the visit would cost the player
+     that week's serving grant and the listening chance: the arc would get
+     WORSE the more she wanted, which inverts the entire point. She is
+     deadpan about it, not walking out — she still wants breakfast.
+
+     Asked at most once per dish, so she works through her list. */
+  const wanted = state.synthia.wanted || (state.synthia.wanted = []);
+  const impossibleAsk = remembered ? null : state.synthia.mentions.find(id =>
+    !state.unlockedRecipes.includes(id) && !wanted.includes(id) && recipeById(id));
+  if (impossibleAsk) wanted.push(impossibleAsk);
+
+  // Otherwise: the most interesting thing on offer.
+  const best = [...menu].sort((a, b) => priceOf(b) - priceOf(a));
+  const pick = remembered || best[Math.floor(rng() * Math.min(2, best.length))];
+
+  state.orderIndex = (state.orderIndex || 0) + 1;
+  return {
+    isSynthia: true,
+    impossibleAsk: impossibleAsk || null,
+    customer: { id: 'synthia', name: 'God Synthia',
+                // Rich and strange: nightmilk is hers. Nobody else's best.
+                taste: { sweet: 7, sharp: 2, rich: 8, strange: 9 },
+                lines: { greeting: 'Something worth the walk.', happy: 'Hm.', disappointed: 'Hm.' } },
+    recipeId: pick.id
+  };
+}
+
 export function nextCustomer(state) {
   const pool = customerPool(state);
   if (pool.length === 0 || state.menu.length === 0) return null;
 
-  /* She comes in once a week, as an actual customer you cook for. This is
-     what makes serving her — and the listening beat — reachable at all. */
-  if (synthiaDueToday(state) && !state.synthiaServedToday) {
-    const rng = makeRng(state.seed + state.week * 13 + state.day);
-    const menu = state.menu.map(recipeById).filter(Boolean);
-    if (menu.length) {
-      /* THE LISTENING LOOP, CLOSED. If she has mentioned something in
-         passing and it is now on the menu — because the player heard her,
-         researched it over weeks, and put it out — that is what she asks
-         for. Anything else makes the payoff a coincidence: previously she
-         ordered whatever was priciest, so a player who did everything
-         right still only reached DEVOTED on 2 of 10 seeds, and had no way
-         to serve her the dish deliberately.
+  // She comes in once a week, as an actual customer you cook for. This is
+  // what makes serving her — and the listening beat — reachable at all.
+  const hers = synthiaOrder(state);
+  if (hers) return hers;
 
-         Skips what she has already noticed, so each mention pays once and
-         she keeps moving through her list rather than re-ordering a
-         favourite forever. */
-      const remembered = menu.find(r =>
-        state.synthia.mentions.includes(r.id) && !state.synthia.noticed.includes(r.id));
-
-      /* IMPOSSIBLE ORDER (spec §9). If she has mentioned something the
-         player has NOT unlocked, she asks for it first — and is unbothered
-         when it is not there. It turns a line of dialogue into a visible
-         research goal, which is how her presence drives progression
-         between story beats.
-
-         It rides ALONGSIDE her real order rather than replacing it. She
-         comes in once a week, so an ask that consumed the visit would cost
-         the player that week's serving grant and the listening chance:
-         the arc would get WORSE the more she wanted, which inverts the
-         entire point. She is deadpan about it, not walking out — she still
-         wants breakfast.
-
-         Asked at most once per dish, so she works through her list. */
-      const wanted = state.synthia.wanted || (state.synthia.wanted = []);
-      const impossibleAsk = remembered ? null : state.synthia.mentions.find(id =>
-        !state.unlockedRecipes.includes(id) && !wanted.includes(id) && recipeById(id));
-      if (impossibleAsk) wanted.push(impossibleAsk);
-
-      // Otherwise: the most interesting thing on offer.
-      const best = [...menu].sort((a, b) => priceOf(b) - priceOf(a));
-      const pick = remembered || best[Math.floor(rng() * Math.min(2, best.length))];
-      state.orderIndex = (state.orderIndex || 0) + 1;
-      return {
-        isSynthia: true,
-        impossibleAsk: impossibleAsk || null,
-        customer: { id: 'synthia', name: 'God Synthia',
-                    // Rich and strange: nightmilk is hers. Nobody else's best.
-                    taste: { sweet: 7, sharp: 2, rich: 8, strange: 9 },
-                    lines: { greeting: 'Something worth the walk.', happy: 'Hm.', disappointed: 'Hm.' } },
-        recipeId: pick.id
-      };
-    }
-  }
   const rng = dayRng(state);
   const customer = pick(rng, pool);
-  const wanted = state.menu
-    .map(recipeById)
-    .filter(r => r && r.tags.some(t => customer.wants.includes(t)));
 
-  const choices = wanted.length ? wanted : state.menu.map(recipeById).filter(Boolean);
+  // Built once, so the two lists provably agree on what "on the menu" means.
+  const onMenu = state.menu.map(recipeById).filter(Boolean);
+  const wanted = onMenu.filter(r => r.tags.some(t => customer.wants.includes(t)));
+  const choices = wanted.length ? wanted : onMenu;
   if (choices.length === 0) return null;
 
   /* Demand shift: sort what they'd accept by value, then bias the pick
@@ -164,7 +173,7 @@ export function serve(state, recipeId, beats, opts = {}) {
   state.money += payout + tip;
   state.weekEarnings += payout + tip;
   state.dayEarnings = (state.dayEarnings || 0) + payout + tip;
-  state.reputation += reputationGain(quality) + syrupScore * TUNING.syrupMatchReputation;
+  state.reputation += reputationGain(quality) + reputationBonus(syrupScore);
 
   /* RESEARCH POINTS. These used to be awarded only in tools/simulate.js,
      so the shipped game granted none at all: the tree costs ~1,130 points

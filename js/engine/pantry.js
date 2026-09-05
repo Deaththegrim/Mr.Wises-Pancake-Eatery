@@ -1,5 +1,5 @@
 import { TUNING } from '../data/economy.js';
-import { ingredientById } from './lookup.js';
+import { ingredientById, nameOf } from './lookup.js';
 
 /* THE PANTRY — the money sink, and what makes research a grind.
 
@@ -14,7 +14,6 @@ import { ingredientById } from './lookup.js';
    purpose. Now profit converts into capability, which is the ratchet the
    quota curve was designed around. */
 
-const byId = ingredientById;
 
 /* Stock is bought in UNITS and held in SERVINGS. One unit is a bulk
    quantity that makes TUNING.servingsPerUnit pancakes. Cooking spends one
@@ -30,7 +29,7 @@ export function unitsFor(servings) {
 }
 
 export function priceOf(ingredientId) {
-  const ing = byId(ingredientId);
+  const ing = ingredientById(ingredientId);
   return ing ? ing.cost : 0;
 }
 
@@ -47,7 +46,7 @@ export function canAfford(state, ingredientId, qty = 1) {
 }
 
 export function buyIngredient(state, ingredientId, qty = 1) {
-  const ing = byId(ingredientId);
+  const ing = ingredientById(ingredientId);
   if (!ing) return { ok: false, reason: `Unknown ingredient: ${ingredientId}` };
   if (!Number.isInteger(qty) || qty < 1) return { ok: false, reason: 'Buy at least one.' };
 
@@ -82,7 +81,7 @@ export function hasIngredients(state, ingredientIds) {
 export function missingIngredients(state, ingredientIds) {
   return Object.entries(benchNeeds(ingredientIds))
     .filter(([id, servings]) => stockOf(state, id) < servings)
-    .map(([id]) => (byId(id) || { name: id }).name);
+    .map(([id]) => nameOf(ingredientById, id));
 }
 
 /* The bench: a whole unit of each ingredient, gone. */
@@ -113,7 +112,7 @@ export function payForCooking(state, ingredientIds) {
   let emergencyCost = 0, normalCost = 0;
 
   for (const id of ingredientIds || []) {
-    const ing = byId(id);
+    const ing = ingredientById(id);
     if (!ing) continue;                       // unknown id: costs nothing, never throws
     const perServing = ing.cost / TUNING.servingsPerUnit;
 

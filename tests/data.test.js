@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { INGREDIENTS } from '../js/data/ingredients.js';
+import { INGREDIENTS, AXES } from '../js/data/ingredients.js';
 import { RECIPES } from '../js/data/recipes.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { RESEARCH } from '../js/data/research.js';
@@ -10,7 +10,6 @@ import { QUOTA_CURVE, TUNING } from '../js/data/economy.js';
 import { META } from '../js/data/meta.js';
 import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE } from '../js/data/affection.js';
 
-const AXES = ['sweet', 'sharp', 'rich', 'strange'];
 
 test('every ingredient has all four axes as numbers', () => {
   for (const ing of INGREDIENTS) {

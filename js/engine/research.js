@@ -1,11 +1,10 @@
 import { RESEARCH } from '../data/research.js';
-import { INGREDIENTS } from '../data/ingredients.js';
+import { INGREDIENTS, AXES } from '../data/ingredients.js';
 import { SYRUPS } from '../data/syrups.js';
+import { researchById, ingredientById } from './lookup.js';
 import { TUNING } from '../data/economy.js';
 import { hasIngredients, missingIngredients, consumeIngredients } from './pantry.js';
 
-const AXES = ['sweet', 'sharp', 'rich', 'strange'];
-const byId = (coll, id) => coll.find(x => x.id === id) || null;
 
 export function gateMet(node, state) {
   if (!node.gate) return true;
@@ -28,7 +27,7 @@ export function availableNodes(state) {
 }
 
 export function purchase(state, nodeId) {
-  const node = byId(RESEARCH, nodeId);
+  const node = researchById(nodeId);
   if (!node) return { ok: false, reason: `Unknown research node: ${nodeId}` };
   if (state.purchased.includes(nodeId)) return { ok: false, reason: 'Already researched.' };
   if (!node.prereqs.every(p => state.purchased.includes(p))) return { ok: false, reason: 'Prerequisites not met.' };
@@ -45,8 +44,8 @@ export function purchase(state, nodeId) {
 }
 
 export function blendAxes(ingredientIds) {
-  const found = (ingredientIds || []).map(id => byId(INGREDIENTS, id)).filter(Boolean);
-  const out = { sweet: 0, sharp: 0, rich: 0, strange: 0 };
+  const found = (ingredientIds || []).map(id => ingredientById(id)).filter(Boolean);
+  const out = Object.fromEntries(AXES.map(ax => [ax, 0]));
   if (found.length === 0) return out;
   // Tolerant of a malformed row so the bench degrades to a hint, not a throw.
   for (const ing of found) for (const ax of AXES) out[ax] += Number(ing.axes?.[ax]) || 0;
