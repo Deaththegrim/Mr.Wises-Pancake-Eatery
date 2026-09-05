@@ -1,6 +1,59 @@
 import { el, clear } from './screens.js';
 import { recipeById } from '../engine/lookup.js';
 
+/* THE COOK SURFACE PALETTE, read from the stylesheet.
+
+   These colours were hardcoded at eighteen call sites in here and again in
+   css/shop.css, and the two disagreed: the DOM drew a pancake #c98a4b
+   while this canvas drew the same pancake #d9a05b. Reading the tokens off
+   the root element keeps the stylesheet as the one source, so a canvas
+   beat cannot drift from the DOM beat next to it.
+
+   Cached after the first read — this is called inside animation frames.
+   The fallbacks matter: getComputedStyle returns '' if the stylesheet has
+   not applied yet, and an empty fillStyle silently leaves the previous
+   colour in place, which paints the food the colour of the pan. */
+let PALETTE = null;
+function palette() {
+  if (PALETTE) return PALETTE;
+  const css = getComputedStyle(document.documentElement);
+  const read = (name, fallback) => (css.getPropertyValue(name) || '').trim() || fallback;
+  PALETTE = {
+    pan: read('--pan', '#241d33'),
+    rim: read('--pan-rim', '#3a2f52'),
+    cake: read('--cake', '#d9a05b'),
+    cakeEdge: read('--cake-edge', '#a8712f'),
+    over: read('--cake-over', '#c07a3a'),
+    overEdge: read('--cake-over-edge', '#8a4f22'),
+    syrup: read('--syrup', '#b4762f'),
+    syrupWet: read('--syrup-wet', '#ba742a'),
+    syrupEdge: read('--syrup-edge', '#8a5a2b'),
+    syrupPool: read('--syrup-pool', '#7e4816'),
+    syrupDeep: read('--syrup-deep', '#5a320e'),
+    accent: read('--accent', '#c9a8ff')
+  };
+  return PALETTE;
+}
+
+/* The canvas also needs these colours faded and darkened — wet syrup, a
+   puddle, a pancake browning past its window. Deriving them from the same
+   tokens keeps one source: hand-typed rgba() triplets are how the DOM and
+   the canvas came to disagree in the first place. */
+function rgb(hex) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+const alpha = (hex, a) => { const [r, g, b] = rgb(hex); return `rgba(${r},${g},${b},${a})`; };
+/* Returns HEX, not an rgb() string, so it composes with alpha() — the
+   first cut returned rgb() and alpha(darken(...)) parsed it as a hex,
+   producing rgba(NaN,NaN,NaN) and painting nothing at all. */
+const darken = (hex, k) => {
+  const [r, g, b] = rgb(hex);
+  const to = v => Math.max(0, Math.min(255, Math.round(v * k))).toString(16).padStart(2, '0');
+  return `#${to(r)}${to(g)}${to(b)}`;
+};
+
 /* Four beats: pour, flip, stack, drizzle.
 
    This module MEASURES; it does not score. Scoring lives in engine/cook.js
@@ -75,12 +128,12 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // griddle
-      ctx.fillStyle = '#241d33';
+      ctx.fillStyle = palette().pan;
       ctx.beginPath(); ctx.ellipse(cx, cy, 130, 78, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#3a2f52'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = palette().rim; ctx.lineWidth = 2; ctx.stroke();
 
       // the acceptable band, drawn as a soft ring
-      ctx.strokeStyle = 'rgba(201,168,255,.30)';
+      ctx.strokeStyle = alpha(palette().accent, 0.30);
       ctx.lineWidth = Math.max(2, (bandR - bandRLow) * 0.6);
       ctx.beginPath(); ctx.ellipse(cx, cy, targetR, targetR * 0.6, 0, 0, Math.PI * 2); ctx.stroke();
 
@@ -88,9 +141,9 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       const r = radiusFor(beats.volume);
       if (r > 0) {
         const over = beats.volume > recipe.pour.target + recipe.pour.band;
-        ctx.fillStyle = over ? '#c07a3a' : '#d9a05b';
+        ctx.fillStyle = over ? palette().over : palette().cake;
         ctx.beginPath(); ctx.ellipse(cx, cy, r, r * 0.6, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = over ? '#8a4f22' : '#a8712f';
+        ctx.strokeStyle = over ? palette().overEdge : palette().cakeEdge;
         ctx.lineWidth = 2; ctx.stroke();
       }
     };
@@ -168,16 +221,16 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // griddle
-      ctx.fillStyle = '#241d33';
+      ctx.fillStyle = palette().pan;
       ctx.beginPath(); ctx.ellipse(cx, cy, 130, 78, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#3a2f52'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = palette().rim; ctx.lineWidth = 2; ctx.stroke();
 
       // the pancake, darkening as it cooks past the window
       const over = Math.max(0, t - 1.3);
       const shade = Math.max(0, 1 - over * 0.6);
-      ctx.fillStyle = `rgb(${Math.round(217 * shade)}, ${Math.round(160 * shade)}, ${Math.round(91 * shade)})`;
+      ctx.fillStyle = darken(palette().cake, shade);
       ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#a8712f'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = palette().cakeEdge; ctx.lineWidth = 2; ctx.stroke();
 
       // bubbles: rise, peak at t=1, then pop
       for (const b of bubbles) {
@@ -191,10 +244,10 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
         const r = b.r * grow * (1 + phase * 2.2);
         ctx.globalAlpha = popping ? 1 - phase : Math.min(1, life * 2);
         if (popping) {
-          ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 1.5;
+          ctx.strokeStyle = palette().syrupEdge; ctx.lineWidth = 1.5;
           ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.stroke();
         } else {
-          ctx.fillStyle = '#b4762f';
+          ctx.fillStyle = palette().syrup;
           ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
         }
         ctx.globalAlpha = 1;
@@ -365,13 +418,13 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // plate
-      ctx.fillStyle = '#241d33';
+      ctx.fillStyle = palette().pan;
       ctx.beginPath(); ctx.ellipse(cx, BASE_Y + 8, 120, 16, 0, 0, Math.PI * 2); ctx.fill();
 
       // the stack, bottom-up, at its real offsets
       for (const c of cakes) {
-        ctx.fillStyle = '#d9a05b';
-        ctx.strokeStyle = '#a8712f';
+        ctx.fillStyle = palette().cake;
+        ctx.strokeStyle = palette().cakeEdge;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.ellipse(c.x, c.y, CAKE_W / 2, CAKE_H / 2, 0, 0, Math.PI * 2);
@@ -391,7 +444,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
         const x = spanL + (i + 0.5) * colW;
         const pooled = amount > 0.95;
         const a = Math.min(0.95, 0.30 + Math.min(1, amount) * 0.65);   // alpha floor
-        ctx.fillStyle = pooled ? 'rgba(126,72,22,.97)' : `rgba(186,116,42,${a})`;
+        ctx.fillStyle = pooled ? alpha(palette().syrupPool, 0.97) : alpha(palette().syrupWet, a);
 
         // drip down the front of the stack
         const dripH = 10 + Math.min(1, amount) * 34;
@@ -403,7 +456,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
         ctx.fill();
 
         if (pooled) {           // a puddle reads as too much, and it costs
-          ctx.fillStyle = 'rgba(90,50,14,.9)';
+          ctx.fillStyle = alpha(palette().syrupDeep, 0.9);
           ctx.beginPath();
           ctx.ellipse(x, top.y + dripH - 6, colW / 1.2, 7, 0, 0, Math.PI * 2);
           ctx.fill();
@@ -432,7 +485,7 @@ export function mountGriddle(mount, recipeId, onDone, opts = {}) {
     const drawCursor = () => {
       draw();
       const x = spanL + (col + 0.5) * (spanW / COLUMNS);
-      ctx.strokeStyle = 'rgba(201,168,255,.9)';
+      ctx.strokeStyle = alpha(palette().accent, 0.9);
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x, 6); ctx.lineTo(x, canvas.height - 6);

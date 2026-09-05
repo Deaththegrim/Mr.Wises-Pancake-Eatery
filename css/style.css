@@ -18,7 +18,40 @@
   --good: #8fe08f;
   --bad: #ff8b8b;
   --radius: 10px;
+  --radius-sm: 6px;
   --sp: 12px;
+
+  /* THE COOK SURFACE. One home for the colours of the pan and the food.
+
+     These were hardcoded in two places that disagreed: css/shop.css drew a
+     pancake #c98a4b while the canvas in ui/griddle.js drew the same pancake
+     #d9a05b, and the pan background and rim were repeated at three
+     different call sites each. Same food, two browns.
+
+     ui/griddle.js reads these off the root element at mount, so the
+     stylesheet stays the single source and a canvas beat cannot drift away
+     from the DOM beat sitting next to it. */
+  --surface-sunken: #191325;   /* a play area, recessed below --bg */
+  --pan: #241d33;
+  --pan-rim: #3a2f52;
+  --cake: #d9a05b;
+  --cake-edge: #a8712f;
+  --cake-over: #c07a3a;        /* burnt: overcooked on the flip */
+  --cake-over-edge: #8a4f22;
+  --syrup: #b4762f;
+  /* The drizzle beat's syrup was already a slightly different brown from
+     the cap drawn on the stack (#ba742a against #b4762f). Both are kept
+     at their original values: this pass moved colours into tokens without
+     changing any of them, and a render diff proves it pixel for pixel.
+     Whether the shop wants one syrup brown or two is a call for the art
+     pass, not a side effect of a refactor. */
+  --syrup-wet: #ba742a;
+  --syrup-edge: #8a5a2b;
+  /* Wet syrup pooling and sitting deep in a dip. Not scalar shades of
+     --syrup — they were picked redder by hand, so they are kept as their
+     own tokens rather than approximated by a formula. */
+  --syrup-pool: #7e4816;
+  --syrup-deep: #5a320e;
 }
 * { box-sizing: border-box; }
 body {

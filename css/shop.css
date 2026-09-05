@@ -30,8 +30,8 @@
 #beat-area { margin-top: var(--sp); }
 #plate {
   position: relative; height: 130px;
-  border: 1px solid var(--edge); border-radius: 8px;
-  cursor: crosshair; background: #191325;
+  border: 1px solid var(--edge); border-radius: var(--radius-sm);
+  cursor: crosshair; background: var(--surface-sunken);
 }
 #plate .centre-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--muted); opacity: .5; }
 #plate .aim-cursor {
@@ -41,12 +41,12 @@
 #plate .aim-cursor[hidden] { display: none; }
 #plate .cake {
   position: absolute; height: 14px; width: 90px; margin-left: -45px;
-  border-radius: 7px; background: #c98a4b; border: 1px solid #8a5a2b;
+  border-radius: var(--radius-sm); background: var(--cake); border: 1px solid var(--cake-edge);
 }
 #drizzle, #pour-canvas, #flip-canvas {
   display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto var(--sp);
-  background: #191325; border: 1px solid var(--edge);
-  border-radius: 8px; cursor: crosshair; touch-action: none;
+  background: var(--surface-sunken); border: 1px solid var(--edge);
+  border-radius: var(--radius-sm); cursor: crosshair; touch-action: none;
 }
 #pour-read { font-family: 'IBM Plex Mono', monospace; }
 .beat-label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
@@ -55,7 +55,7 @@
 .node { border-left: 2px solid var(--edge); padding-left: var(--sp); margin-bottom: 8px; }
 .node.affordable { border-left-color: var(--accent); }
 .node .why { color: var(--muted); font-size: 13px; }
-#bench-mount .ing { display: inline-block; margin: 0 6px 6px 0; }
+#bench-mount .ing { display: inline-block; margin: 0 calc(var(--sp) / 2) calc(var(--sp) / 2) 0; }
 .hint { color: var(--accent); font-style: italic; }
 
 /* VN
@@ -102,26 +102,26 @@
 #vn-box {
   position: relative;
   margin-top: -28px;              /* overlap the sprite, VN-style */
-  background: var(--panel); border: 1px solid #3a2f52;
+  background: var(--panel); border: 1px solid var(--pan-rim);
   border-radius: var(--radius); padding: var(--sp); min-height: 130px;
   box-shadow: 0 -14px 30px rgba(20, 16, 28, .85);
 }
-#vn-name { color: var(--accent); font-family: Oswald, sans-serif; margin-bottom: 6px; min-height: 1.2em; }
+#vn-name { color: var(--accent); font-family: Oswald, sans-serif; margin-bottom: calc(var(--sp) / 2); min-height: 1.2em; }
 #vn-text { white-space: pre-wrap; }
 #vn-choices { margin-top: var(--sp); }
-#vn-choices button { display: block; width: 100%; margin: 6px 0; text-align: left; }
+#vn-choices button { display: block; width: 100%; margin: calc(var(--sp) / 2) 0; text-align: left; }
 
 /* Market rows: one compact line each. There are 14 ingredients, so a
    three-line row per item turned this screen into a 2000px scroll and
    buried the bench underneath it. */
 .stock-row {
   display: flex; align-items: center; gap: 8px;
-  padding: 3px 0; border-bottom: 1px solid rgba(58,47,82,.4);
+  padding: calc(var(--sp) / 4) 0; border-bottom: 1px solid rgba(58,47,82,.4);
 }
 .stock-row:last-child { border-bottom: 0; }
 .stock-name { flex: 1 1 auto; min-width: 110px; }
-.stock-row .why { flex: 0 0 118px; text-align: right; font-size: 12px; }
-.stock-row button { margin: 0; padding: 4px 10px; font-size: 13px; min-width: 74px; }
+.stock-row .why { flex: 0 0 118px; text-align: right; font-size: 13px; }
+.stock-row button { margin: 0; padding: calc(var(--sp) / 3) calc(var(--sp) - 2px); font-size: 13px; min-width: 74px; }
 #bench-mount .card h3 { margin-top: 0; }
 
 /* THE SYRUP PICKER at the drizzle beat. A radiogroup, so it is one tab
@@ -137,7 +137,7 @@
 }
 .syrup-picker .syrup {
   margin: 0;
-  padding: 6px 12px;
+  padding: calc(var(--sp) / 2) var(--sp);
   font-size: 13px;
   background: transparent;
   border: 1px solid var(--control-edge);
