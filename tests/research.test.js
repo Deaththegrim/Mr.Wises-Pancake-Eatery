@@ -5,6 +5,7 @@ import { RESEARCH } from '../js/data/research.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { INGREDIENTS } from '../js/data/ingredients.js';
 import { TUNING } from '../js/data/economy.js';
+import { newGame } from '../js/engine/state.js';
 
 /* The bench consumes ingredients, so a fixture must be stocked. The
    unstocked ("blocked") path is covered in tests/pantry.test.js. */
@@ -174,4 +175,36 @@ test('rediscovering an already-known syrup is not reported as new', () => {
   const r = experiment(s, ['lemon', 'maple']);
   assert.equal(r.found, false, 'nothing left to find - should fall through to a hint');
   assert.ok(r.hint.length > 0);
+});
+
+test('a malformed ingredient never eats the stock without a result', () => {
+  /* SILENT THEFT GUARD. experiment() used to consume the ingredients and
+     THEN blend them, so any content error in an axes block made the
+     player's stock disappear with no syrup, no hint and no error they
+     could see. The bench is the main money sink, so this reads as the
+     game stealing from you. Either it works, or the stock stays. */
+  const state = newGame(7);
+  const [a, b] = INGREDIENTS.slice(0, 2).map(i => i.id);
+  state.pantry[a] = 3; state.pantry[b] = 3;
+
+  const broken = INGREDIENTS.find(i => i.id === a);
+  const savedAxes = broken.axes;
+  broken.axes = null;                       // simulate a content mistake
+  try {
+    let threw = false;
+    try { experiment(state, [a, b]); } catch { threw = true; }
+    assert.ok(!threw, 'a malformed ingredient must degrade to a hint, not throw');
+  } finally {
+    broken.axes = savedAxes;
+  }
+});
+
+test('a blocked experiment consumes nothing at all', () => {
+  const state = newGame(7);
+  const [a, b] = INGREDIENTS.slice(0, 2).map(i => i.id);
+  state.pantry[a] = 1;                      // b is missing entirely
+  const before = { ...state.pantry };
+  const r = experiment(state, [a, b]);
+  assert.ok(r.blocked, 'must report the block');
+  assert.deepEqual(state.pantry, before, 'a blocked attempt must not spend stock');
 });

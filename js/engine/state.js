@@ -55,6 +55,30 @@ export function deserialize(json) {
   state.flags = obj.flags || {};
   state.pantry = obj.pantry || {};
 
+  /* Coerce the numeric scalars. deserialize() promises above that a stale or
+     hand-edited save "must produce a readable message or a repaired state —
+     never a blank screen or a thrown error", but it only ever pruned ids.
+     quotaForWeek() is strict, so a save with week 0, week 1.5, or a
+     STRINGIFIED week (what any JSON round-trip produces) passed validation
+     here and then threw on the first render — leaving Continue as a
+     permanently dead button. The live state object is exposed on the page
+     for hand-editing, so this is a save a curious player will produce. */
+  const num = (v, fallback, label) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) {
+      console.warn(`[save] ${label} was ${JSON.stringify(v)}; using ${fallback}`);
+      return fallback;
+    }
+    return n;
+  };
+  state.week = Math.max(1, Math.round(num(obj.week, 1, 'week')));
+  state.day = Math.min(7, Math.max(1, Math.round(num(obj.day, 1, 'day'))));
+  state.money = Math.max(0, num(obj.money, 0, 'money'));
+  state.weekEarnings = Math.max(0, num(obj.weekEarnings, 0, 'weekEarnings'));
+  state.reputation = Math.max(0, num(obj.reputation, 0, 'reputation'));
+  state.points = Math.max(0, num(obj.points, 0, 'points'));
+  state.synthia.points = Math.max(0, num((obj.synthia || {}).points, 0, 'affection'));
+
   // Drop ids that no longer exist in the content, with a warning.
   const validRecipes = new Set(RECIPES.map(r => r.id));
   const validSyrups = new Set(SYRUPS.map(s => s.id));

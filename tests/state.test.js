@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, serialize, deserialize } from '../js/engine/state.js';
+import { quotaForWeek } from '../js/engine/economy.js';
 
 test('a new game starts playable', () => {
   const s = newGame(1);
@@ -91,4 +92,48 @@ test('deserialize repairs a partial synthia block without losing progress', () =
   assert.equal(r.state.synthia.points, 40, 'must keep what was there');
   assert.deepEqual(r.state.synthia.mentions, [], 'and fill in what was not');
   assert.ok(Array.isArray(r.state.synthia.log));
+});
+
+/* ROBUSTNESS: deserialize promises never to strand the player.
+
+   These are not hypothetical. The state object is reachable from the page
+   console, saves are plain JSON in localStorage, and JSON round-trips
+   stringify numbers when written by hand. Each of these inputs used to pass
+   deserialize and then throw on the first render — which presents to the
+   player as a Continue button that does nothing, forever, with their save
+   still sitting there. */
+test('a hand-edited save with a stringified week still loads', () => {
+  const { ok, state: s } = deserialize(JSON.stringify({ ...newGame(), week: '3', money: '120.5' }));
+  assert.ok(ok, 'a repairable save must load, not be rejected');
+  assert.equal(s.week, 3);
+  assert.equal(typeof s.week, 'number');
+  assert.equal(s.money, 120.5);
+});
+
+test('a save with week 0 is repaired, not accepted', () => {
+  // quotaForWeek() is strict about its range; week 0 threw on render.
+  const { state: s } = deserialize(JSON.stringify({ ...newGame(), week: 0 }));
+  assert.ok(s.week >= 1, `week must be playable, got ${s.week}`);
+  assert.doesNotThrow(() => quotaForWeek(s.week));
+});
+
+test('a save with a fractional or absurd day is clamped into the week', () => {
+  const { state: s } = deserialize(JSON.stringify({ ...newGame(), day: 99 }));
+  assert.ok(s.day >= 1 && s.day <= 7, `day must be within the week, got ${s.day}`);
+  const { state: f } = deserialize(JSON.stringify({ ...newGame(), day: 2.7 }));
+  assert.equal(f.day, 3);
+});
+
+test('garbage numerics fall back rather than poisoning the state with NaN', () => {
+  const { state: s } = deserialize(JSON.stringify({
+    ...newGame(), money: 'lots', reputation: null, points: undefined, week: 'week two',
+  }));
+  for (const k of ['money', 'reputation', 'points', 'week']) {
+    assert.ok(Number.isFinite(s[k]), `${k} is ${s[k]} — NaN spreads through every later sum`);
+  }
+});
+
+test('negative money cannot be smuggled in through a save', () => {
+  const { state: s } = deserialize(JSON.stringify({ ...newGame(), money: -5000 }));
+  assert.ok(s.money >= 0, 'a negative till breaks every affordability check');
 });

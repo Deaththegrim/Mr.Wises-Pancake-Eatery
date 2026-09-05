@@ -62,6 +62,14 @@ def main():
 
         print("\n-- new game -> morning --")
         page.click("#btn-new")
+        # PIN THE SEED. Without this smoke plays a DIFFERENT game every run:
+        # newGame() defaults to a clock-derived seed, so customer order,
+        # traffic and orders all vary. That produced an intermittent failure
+        # at "service screen visible" that three later runs could not
+        # reproduce — the worst kind of gate, one that cries wolf and is then
+        # ignored. Content variety is covered by the seed sweep in the unit
+        # tests; smoke's job is to prove the wiring, reproducibly.
+        page.evaluate("window.GAME.state.seed = 2026; window.GAME.save();")
         check(page.is_visible("#screen-morning"), "morning screen visible")
         boxes = page.query_selector_all("#menu-picker input[type=checkbox]")
         check(len(boxes) >= 1, f"menu lists {len(boxes)} unlocked recipe(s)")
@@ -86,6 +94,11 @@ def main():
 
         print("\n-- service: cook one dish through all four beats --")
         page.click("#btn-open")
+        # Wait for the transition rather than asserting in the same tick.
+        try:
+            page.wait_for_selector("#screen-service", state="visible", timeout=4000)
+        except Exception:
+            pass
         check(page.is_visible("#screen-service"), "service screen visible")
         check(page.inner_text("#customer-card").strip() != "", "a customer is waiting")
 

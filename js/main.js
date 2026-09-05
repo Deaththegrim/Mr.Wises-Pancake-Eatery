@@ -29,7 +29,16 @@ function saveGame() {
 
 function loadGame() {
   let raw = null;
-  try { raw = localStorage.getItem(META.saveKey); } catch { raw = null; }
+  try {
+    raw = localStorage.getItem(META.saveKey);
+  } catch (e) {
+    /* Private-browsing mode and "block third-party cookies" both make this
+       THROW rather than return null. Reporting that as "No save found."
+       tells a player their progress is gone when it was never written —
+       and hides the fact that playing on will not save either. */
+    showNotice('This browser is blocking local storage, so the game cannot save or load. Try a normal (non-private) window.', 10000);
+    return false;
+  }
   if (!raw) { showNotice('No save found.'); return false; }
   const r = deserialize(raw);
   if (!r.ok) { showNotice(r.reason, 8000); return false; }

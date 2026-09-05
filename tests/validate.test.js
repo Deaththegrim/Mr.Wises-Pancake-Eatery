@@ -101,3 +101,65 @@ test('a syrup with a discover block but no target is reported', () => {
   });
   assert.ok(errors.some(e => /target/i.test(e)));
 });
+
+/* REQUIRED-FIELD CHECKS.
+
+   Each of these was a reproduced crash where the validator reported 0 errors
+   and the (non-tolerant) engine then threw. The validator must be STRICTER
+   than the engine, not more forgiving — a content author cannot debug a
+   TypeError, and several of these produced a permanently dead button with
+   nothing but a console message. */
+
+const RECIPE = {
+  id: 'x', name: 'X', tags: ['basic'], base: 10, ingredients: [], stackCount: 2,
+  pour: { target: 1, band: 1 }, flip: { windowMs: 1 },
+  weights: { pour: 1, flip: 1, stack: 1, drizzle: 1 }, unlockedAtStart: true
+};
+
+test('a recipe missing `ingredients` is an error (New Game was a dead click)', () => {
+  const { errors } = validateContent({ recipes: [{ ...RECIPE, ingredients: undefined }] });
+  assert.ok(errors.some(e => /ingredients/.test(e)));
+});
+
+test('a typo in `weights` is an error (it made money and reputation NaN, and SAVED it)', () => {
+  const { errors } = validateContent({
+    recipes: [{ ...RECIPE, weights: { pour: 1, flip: 1, stack: 1, drizzel: 1 } }]
+  });
+  assert.ok(errors.some(e => /weights/.test(e)), `expected a weights error, got:\n${errors.join('\n')}`);
+});
+
+test('a recipe missing `stackCount` is an error (it trapped the player in the stack beat)', () => {
+  const { errors } = validateContent({ recipes: [{ ...RECIPE, stackCount: undefined }] });
+  assert.ok(errors.some(e => /stackCount/.test(e)));
+});
+
+test('a research node missing `prereqs` is an error (Research became a dead button)', () => {
+  const { errors } = validateContent({ research: [{ id: 'r', name: 'R', cost: 1, unlocks: {} }] });
+  assert.ok(errors.some(e => /prereqs/.test(e)));
+});
+
+test('an ingredient missing `axes` is REPORTED, not thrown', () => {
+  // The validator used to crash here — on exactly the content it exists to
+  // diagnose, handing the author a Node stack trace.
+  let errors;
+  assert.doesNotThrow(() => { ({ errors } = validateContent({
+    ingredients: [{ id: 'flour', name: 'Flour', cost: 6 }]
+  })); });
+  assert.ok(errors.some(e => /axes/.test(e)));
+});
+
+test('a typo in an axis name is an error (it made every syrup undiscoverable)', () => {
+  const { errors } = validateContent({
+    ingredients: [{ id: 'flour', name: 'Flour', cost: 6,
+                    axes: { sweet: 1, sharp: 0, rich: 2, strage: 0 } }]
+  });
+  assert.ok(errors.some(e => /axes/.test(e)));
+});
+
+test('no customer available in week 1 is an error (the shop opens to nobody)', () => {
+  const { errors } = validateContent({
+    customers: [{ id: 'c', name: 'C', unlockAt: { week: 5 }, wants: ['basic'],
+                  lines: { greeting: 'a', happy: 'b', disappointed: 'c' } }]
+  });
+  assert.ok(errors.some(e => /week 1|nobody/i.test(e)));
+});

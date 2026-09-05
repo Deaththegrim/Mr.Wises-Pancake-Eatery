@@ -3,12 +3,34 @@ import { showScreen, showNotice, hideNotice, el, clear } from './screens.js';
 import { expressionFor, poseFor, noteMention, grant } from '../engine/affection.js';
 
 const SPRITE_DIR = 'assets/sprites/synthia_casual/';
-const spriteFor = key => `${SPRITE_DIR}${key.startsWith('c') && key.includes('_') ? key : 'c_' + key}.png`;
+/* Tolerant of a non-string key: a scene written with `expr: 0`, or a tier
+   added to TIER_ORDER without a matching TIER_EXPRESSION, used to throw here
+   and strand the player on a buttonless screen. */
+const spriteFor = key => {
+  const k = typeof key === 'string' && key ? key : 'neutral';
+  return `${SPRITE_DIR}${k.startsWith('c') && k.includes('_') ? k : 'c_' + k}.png`;
+};
 
 export function playScene(startId, state, onEnd) {
   let current = startId;
 
   const finish = () => onEnd();
+
+  /* #screen-vn is the only screen with no permanent button, so ANY throw in
+     here leaves the player on a dead screen with no way out but a reload.
+     Wrapping render means a malformed scene degrades to "continue" rather
+     than trapping them. */
+  const safely = fn => {
+    try { fn(); }
+    catch (e) {
+      console.warn('[vn] scene render failed:', e);
+      showNotice('That scene could not be shown. Continuing.', 6000);
+      const out = clear(document.getElementById('vn-choices'));
+      const btn = el('button', { text: 'Continue' });
+      btn.addEventListener('click', finish, { once: true });
+      out.append(btn);
+    }
+  };
 
   const render = () => {
     const node = SCENES[current];
@@ -57,7 +79,7 @@ export function playScene(startId, state, onEnd) {
         btn.addEventListener('click', () => {
           if (c.affection) grant(state.synthia, c.affection, 'a choice she liked');
           current = c.next;
-          render();
+          safely(render);
         }, { once: true });
         choicesEl.append(btn);
       }
@@ -71,13 +93,13 @@ export function playScene(startId, state, onEnd) {
     }
 
     const btn = el('button', { text: 'Next' });
-    btn.addEventListener('click', () => { current = node.next; render(); }, { once: true });
+    btn.addEventListener('click', () => { current = node.next; safely(render); }, { once: true });
     choicesEl.append(btn);
   };
 
   hideNotice();   // a leftover score readout must not sit over her first line
   showScreen('vn');
-  render();
+  safely(render);
 }
 
 export { poseFor };

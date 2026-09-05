@@ -98,6 +98,34 @@ test('effectsFor ignores unknown upgrade ids', () => {
   assert.equal(e.stackDriftScale, 1);
 });
 
+/* THE CONTRACT BETWEEN griddle.js AND cook.js.
+
+   offsets are DELTAS from the previous pancake, not absolute distances from
+   the plate centre. The UI emitted absolutes for a while, which silently
+   INVERTED the beat: a zig-zag either side of centre scored 87 while a
+   straight off-centre tower scored 60, even though the screen says "aim for
+   the centre line". These pin the meaning. */
+const fromAbsolute = positions => positions.map((v, i) => v - (positions[i - 1] || 0));
+
+test('a centred stack beats an off-centre one', () => {
+  assert.ok(scoreStack(fromAbsolute([0, 0, 0])) > scoreStack(fromAbsolute([10, 10, 10])),
+    'aiming for the centre line must actually be the winning play');
+});
+
+test('zig-zagging is NOT better than a straight off-centre tower', () => {
+  const straight = scoreStack(fromAbsolute([10, 10, 10]));
+  const zigzag = scoreStack(fromAbsolute([10, -10, 10]));
+  assert.ok(zigzag <= straight,
+    `zig-zag ${zigzag} must not beat a straight tower ${straight} — that would reward ` +
+    `ignoring the instruction, and means offsets are being read as absolutes again`);
+});
+
+test('a wobbly first pancake can be nursed back', () => {
+  const nursed = scoreStack(fromAbsolute([10, 0, 0]));
+  const uncorrected = scoreStack(fromAbsolute([10, 10, 10]));
+  assert.ok(nursed > uncorrected, 'recovering from a bad start must be rewarded');
+});
+
 test('stack forgiveness upgrade reduces the cost of drift', () => {
   const offsets = [8, 4, 2];
   assert.ok(scoreStack(offsets, 0.7) > scoreStack(offsets, 1));

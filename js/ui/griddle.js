@@ -9,6 +9,18 @@ import { el, clear } from './screens.js';
 
 export function mountGriddle(mount, recipeId, onDone) {
   const recipe = RECIPES.find(r => r.id === recipeId);
+
+  /* Tear down anything the PREVIOUS dish left running. "Close for the day"
+     is visible for the whole of service, so abandoning mid-flip used to
+     leave a 60fps requestAnimationFrame loop drawing to a detached canvas
+     for the rest of the session — one more each time — and abandoning at
+     the drizzle stage left a window mouseup listener attached forever. */
+  if (mountGriddle._teardown) mountGriddle._teardown();
+  const teardown = [];
+  mountGriddle._teardown = () => {
+    while (teardown.length) teardown.pop()();
+  };
+
   clear(mount);
   if (!recipe) {
     mount.append(el('div', { className: 'card', text: `Unknown recipe: ${recipeId}` }));
@@ -184,6 +196,7 @@ export function mountGriddle(mount, recipeId, onDone) {
       raf = requestAnimationFrame(draw);
     };
     draw();
+    teardown.push(() => cancelAnimationFrame(raf));
 
     btn.addEventListener('click', () => {
       cancelAnimationFrame(raf);
@@ -214,12 +227,21 @@ export function mountGriddle(mount, recipeId, onDone) {
       cursor.style.left = `${50 + aim * 50}%`;
     };
 
-    const place = offset => {
+    /* engine/cook.js consumes offsets as DELTAS and accumulates them into a
+       running centre (`drift += o`). This must emit deltas to match, or the
+       scoring inverts the on-screen instruction: emitting absolute distances
+       made a zig-zag either side of centre score 87 while a straight
+       off-centre tower scored 60, despite the beat saying "aim for the
+       centre line". The rendered cake sits at the ACCUMULATED position, which
+       is also what doDrizzle draws, so both beats show the same stack. */
+    let placedAt = 0;
+    const place = absolute => {
       if (beats.offsets.length >= recipe.stackCount) return;
-      beats.offsets.push(offset);
+      beats.offsets.push(absolute - placedAt);
+      placedAt = absolute;
 
       const cake = el('div', { className: 'cake' });
-      cake.style.left = `${50 + (offset / 25) * 50}%`;
+      cake.style.left = `${50 + (absolute / 25) * 50}%`;
       cake.style.bottom = `${8 + (beats.offsets.length - 1) * 15}px`;
       plate.append(cake);
 
@@ -384,6 +406,7 @@ export function mountGriddle(mount, recipeId, onDone) {
     });
     const release = () => { down = false; };
     window.addEventListener('mouseup', release);
+    teardown.push(() => window.removeEventListener('mouseup', release));
 
     done.addEventListener('click', () => {
       window.removeEventListener('mouseup', release);

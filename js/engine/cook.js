@@ -19,9 +19,13 @@ export function scoreFlip(msOffset, windowMs) {
   return clamp100(100 * (1 - (dev - windowMs) / falloff));
 }
 
-/* Stack error COMPOUNDS. Each pancake's offset shifts the running centre,
-   and every later pancake is measured against that drifted centre. An
-   off-centre first pancake leans the whole tower and cannot be fixed. */
+/* Stack error COMPOUNDS. `offsets` are DELTAS from the previous pancake, so
+   they accumulate into a running position and the score is the average
+   distance from centre across the whole stack. An off-centre first pancake
+   therefore costs for every pancake above it — but a steady hand CAN nurse
+   the tower back, and that recovery is deliberate: [+8, -8] scores better
+   than [+8, 0]. Callers must emit deltas, not absolute positions; emitting
+   absolutes silently inverts the beat (a zig-zag outscores a straight tower). */
 export function scoreStack(offsets, driftScale = 1) {
   if (!offsets || offsets.length === 0) return 100;
   let drift = 0, penalty = 0;

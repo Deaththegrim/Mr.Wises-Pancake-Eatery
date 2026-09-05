@@ -48,7 +48,8 @@ export function blendAxes(ingredientIds) {
   const found = (ingredientIds || []).map(id => byId(INGREDIENTS, id)).filter(Boolean);
   const out = { sweet: 0, sharp: 0, rich: 0, strange: 0 };
   if (found.length === 0) return out;
-  for (const ing of found) for (const ax of AXES) out[ax] += ing.axes[ax];
+  // Tolerant of a malformed row so the bench degrades to a hint, not a throw.
+  for (const ing of found) for (const ax of AXES) out[ax] += Number(ing.axes?.[ax]) || 0;
   for (const ax of AXES) out[ax] /= found.length;
   return out;
 }
@@ -103,9 +104,11 @@ export function experiment(state, ingredientIds) {
         : 'Pick something to combine first.'
     };
   }
-  consumeIngredients(state, ingredientIds);
-
+  /* Compute BEFORE consuming. This used to consume the ingredients and then
+     throw on a malformed axes block, so the player's stock vanished with no
+     hint, no notice and no result — silent theft. */
   const blend = blendAxes(ingredientIds);
+  consumeIngredients(state, ingredientIds);
   const candidates = SYRUPS.filter(s => s.discover && !state.unlockedSyrups.includes(s.id));
 
   let best = null, bestDist = Infinity;
