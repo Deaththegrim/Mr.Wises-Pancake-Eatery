@@ -345,6 +345,11 @@ def main():
         check(len(rows) >= 5, f"the shop offers {len(rows)} things for the room")
         buyable = [b for b in page.query_selector_all(".decor-row button") if b.is_enabled()]
         check(len(buyable) > 0, "and some are affordable on 6000")
+        # The visible text on these is just a price, so without a label a
+        # screen reader announces "400" with no idea what it buys.
+        names = [b.get_attribute("aria-label") for b in buyable]
+        check(all(n and "Buy" in n for n in names),
+              f"each price button says what it buys: {names[0]}")
 
         rep_before = page.evaluate("window.GAME.state.reputation")
         pts_before = page.evaluate("window.GAME.state.points")
