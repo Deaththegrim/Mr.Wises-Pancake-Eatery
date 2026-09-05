@@ -632,8 +632,18 @@ def main():
                 time.sleep(0.2)
         check(asked, "she asks for a dish that is not unlocked yet")
         if asked:
+            # Read the names out of the data rather than spelling them here.
+            # A literal made this a test of the copy: renaming the dish in
+            # js/data/ failed a check about whether the ask is WIRED UP,
+            # which is the one thing this is meant to be watching.
+            dish_name = page.evaluate(
+                "import('./js/data/recipes.js')"
+                ".then(m => m.RECIPES.find(r => r.id === 'souffle').name)")
+            node_name = page.evaluate(
+                "import('./js/data/research.js')"
+                ".then(m => m.RESEARCH.find(n => n.id === 'r_souffle').name)")
             mount_text = page.inner_text("#griddle-mount")
-            check("Souffle" in mount_text, f"the ask names the dish: {mount_text.splitlines()[0][:40]}")
+            check(dish_name in mount_text, f"the ask names the dish: {mount_text.splitlines()[0][:40]}")
             check("Order:" not in page.inner_text("#customer-card"),
                   "and the card does not spoil the order she has not placed yet")
             page.query_selector("#griddle-mount button").click()
@@ -662,7 +672,7 @@ def main():
                 if asked:
                     txt = asked[0].inner_text()
                     check("She asked for this" in txt, f"and says so in words: {txt.splitlines()[0]}")
-                    check("Souffle" in txt, "on the node that unlocks the dish she named")
+                    check(node_name in txt, "on the node that unlocks the dish she named")
 
 
         browser.close()

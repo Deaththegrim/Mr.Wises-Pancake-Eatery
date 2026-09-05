@@ -31,7 +31,7 @@ export const DECOR = [
     note: 'The letters had gone grey. They have not, now.' },
 
   { id: 'corner_lamp', name: 'Corner Lamp', cost: 2600, art: 'decor_lamp',
-    note: 'Warm, and low, and on all day.' },
+    note: 'Low, and warm, and on all day. Even when the sun is out.' },
 
   { id: 'shelf_of_jars', name: 'A Shelf of Jars', cost: 3400, art: 'decor_jars',
     note: 'Every syrup you have ever found, in a row, in the light.' },

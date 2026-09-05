@@ -26,7 +26,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'souffle', name: 'Souffle Pancake', tags: ['delicate'], craft: 32,
+    id: 'souffle', name: 'Soufflé Stack', tags: ['delicate'], craft: 32,
     ingredients: ['flour', 'buttermilk', 'butter'],
     pour: { target: 40, band: 5 },
     flip: { windowMs: 250 },

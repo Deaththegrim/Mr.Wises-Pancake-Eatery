@@ -28,7 +28,7 @@ export const RESEARCH = [
   { id: 'r_alarm', name: 'Griddle Alarm', cost: 34, prereqs: ['r_buttermilk'],
     gate: null, unlocks: { upgrade: 'flip_window_bonus' } },
 
-  { id: 'r_souffle', name: 'Souffle Method', cost: 70, prereqs: ['r_buttermilk'],
+  { id: 'r_souffle', name: 'Soufflé Method', cost: 70, prereqs: ['r_buttermilk'],
     gate: { cooked: { buttermilk_stack: 8 } }, unlocks: { recipe: 'souffle' } },
 
   { id: 'r_guide', name: 'Stack Guide', cost: 42, prereqs: ['r_ladle'],

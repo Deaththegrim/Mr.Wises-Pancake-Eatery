@@ -91,7 +91,16 @@ if (wants('customers')) {
   console.log('Three lines each: what they ask for, and what they say about what');
   console.log('they got. The reaction is printed on their receipt, so write them as');
   console.log('things a person says rather than as labels.\n');
-  for (const c of CUSTOMERS) {
+  /* In the order the player meets them, not the order the file happens
+     to list them in — the roster loosens up and then goes formal again as
+     it climbs, and that is only legible read in sequence. Week-gated
+     faces come before reputation-gated ones because week 1 arrives before
+     any reputation does. */
+  const meetsAt = c => (c.unlockAt || {}).reputation ?? -1;
+  const roster = [...CUSTOMERS].sort((a, b) =>
+    meetsAt(a) - meetsAt(b) || ((a.unlockAt || {}).week || 1) - ((b.unlockAt || {}).week || 1));
+
+  for (const c of roster) {
     const u = c.unlockAt || {};
     const when = u.reputation ? `at ${u.reputation} reputation` : `from week ${u.week || 1}`;
     console.log(`  ${c.name}  (${when}, wants ${(c.wants || []).join('/')})`);

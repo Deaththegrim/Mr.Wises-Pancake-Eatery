@@ -60,7 +60,7 @@ export const SYRUPS = [
     // quiet milk + cream
     discover: { target: { sweet: 4.0, sharp: 0.5, rich: 9.0, strange: 4.0 }, tolerance: 1.3, tier: 3 } },
 
-  { id: 'void_syrup', name: 'Void Syrup', cost: 30, unlockedAtStart: false,
+  { id: 'void_syrup', name: 'Starless', cost: 30, unlockedAtStart: false,
     axes: { sweet: 6, sharp: 3, rich: 4, strange: 9 },
     // starlight + starlight + ash sugar
     discover: { target: { sweet: 5.0, sharp: 2.0, rich: 3.7, strange: 8.0 }, tolerance: 1.3, tier: 3 } },

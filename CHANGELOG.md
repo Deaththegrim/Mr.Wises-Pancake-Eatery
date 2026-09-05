@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-09-06 — the background cast gets a voice
+
+### Changed
+
+- **The eleven customers now sound like eleven people.** They were all
+  written in one register — flat, clipped, no contractions — which is
+  Synthia's. A background cast speaking the protagonist's voice makes it
+  nobody's. The early roster now talks loosely: *"Still warm. You're a
+  saint."*, *"I'll be hungry again by the bridge."*, *"They must've meant
+  somewhere else."* The last three — the Stranger, the Pilgrim, the Devout
+  — keep the formal register, so it now reads as **the mark of someone
+  touched by something** rather than as house style, and Synthia's voice
+  stays hers.
+
+  Night Shift's disappointed line was literally `"Hm."` — hers, from
+  `visit_first_end`. Replaced, and the reason is noted in the file so it
+  does not come back.
+
+  **Not touched: a single line of Synthia's.** Those remain the
+  collaborator's, as agreed.
+
+- **Two names.** `Souffle Pancake` → **Soufflé Stack** (accent restored;
+  it now joins the Stack family it belongs to), and `Void Syrup` →
+  **Starless** — the one abstract name in a list of concrete ones
+  (Plum Lacquer, Ash Glaze, Ember Reduction, Nightmilk), and it is brewed
+  from starlight. The research node followed the dish: **Soufflé Method**.
+
+- **One decoration note.** The corner lamp's *"Warm, and low, and on all
+  day."* read as a list; it is now *"Low, and warm, and on all day. Even
+  when the sun is out."* — which is the small extravagance that is the
+  actual reason to want it. The other six were already doing their job and
+  were left alone.
+
+### Fixed
+
+- **The smoke test was asserting the copy, not the wiring.** It checked
+  for the literal `"Souffle"` in the page, so renaming a dish in
+  `js/data/` failed a check about whether *her ask is wired to the
+  research board* — the one thing it exists to watch. It now reads both
+  names out of `RECIPES` and `RESEARCH` at run time, which is a stronger
+  assertion than the literal was: the ask must name **whatever the data
+  says the dish is called**.
+
+- **The writing checklist listed the roster in file order**, so The Critic
+  (40 reputation) printed after The Stranger (180). It now prints in the
+  order the player meets them — which is the order the escalation is
+  written in, and unreadable in any other.
+
 ## 2026-09-06 — the shop, and somewhere to put the art
 
 ### Added
