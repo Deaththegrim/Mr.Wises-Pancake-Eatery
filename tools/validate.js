@@ -89,7 +89,14 @@ export function validateContent(override = {}) {
   for (const r of recipes) {
     need(r, 'id', 'string', 'recipes.js', r.id || '(no id)');
     need(r, 'name', 'string', 'recipes.js', r.id);
-    need(r, 'base', 'number', 'recipes.js', r.id);
+    need(r, 'craft', 'number', 'recipes.js', r.id);
+    /* `craft` is the skill premium ON TOP of the parts, so a negative one
+       means the dish bills less than what went into it — the bill would
+       read as if the shop were paying the customer for the difficulty. */
+    if (typeof r.craft === 'number' && r.craft < 0) {
+      errors.push(`recipes.js — "${r.id}" has a negative craft (${r.craft}). ` +
+                  `craft is the skill premium added to the parts, so it cannot be below zero.`);
+    }
     need(r, 'tags', 'array', 'recipes.js', r.id);
     need(r, 'ingredients', 'array', 'recipes.js', r.id);
     need(r, 'stackCount', 'number', 'recipes.js', r.id);
@@ -113,6 +120,14 @@ export function validateContent(override = {}) {
     need(ing, 'id', 'string', 'ingredients.js', ing.id || '(no id)');
     need(ing, 'name', 'string', 'ingredients.js', ing.id);
     need(ing, 'cost', 'number', 'ingredients.js', ing.id);
+    need(ing, 'sell', 'number', 'ingredients.js', ing.id);
+    /* Buying a thing for more than the dish it goes into earns is how a
+       shop quietly bleeds money on its best-looking recipe. */
+    if (typeof ing.cost === 'number' && typeof ing.sell === 'number' &&
+        ing.sell <= ing.cost / 10) {
+      warnings.push(`ingredients.js — "${ing.id}" sells for ${ing.sell} a serving but ` +
+                    `costs ${(ing.cost / 10).toFixed(1)} a serving; there is no margin in it.`);
+    }
     if (need(ing, 'axes', 'object', 'ingredients.js', ing.id)) {
       for (const ax of AXES) need(ing, `axes.${ax}`, 'number', 'ingredients.js', ing.id);
       for (const k of Object.keys(ing.axes)) {

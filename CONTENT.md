@@ -36,7 +36,7 @@ anywhere hardcodes a name, so this one line is the whole job.
       id: 'lemon_stack',            // unique, no spaces, never changes
       name: 'Lemon Stack',          // what the player sees
       tags: ['basic'],              // customers order by tag - see below
-      base: 25,                     // base price
+      craft: 8,                     // the skill premium - see below
       ingredients: ['flour', 'lemon'],
       pour: { target: 55, band: 9 },  // ml of batter, and how close counts
       flip: { windowMs: 450 },        // bigger number = more forgiving
@@ -44,6 +44,35 @@ anywhere hardcodes a name, so this one line is the whole job.
       weights: { pour: 1, flip: 2, stack: 1, drizzle: 1 },
       unlockedAtStart: false
     }
+
+### You do not set a price — the bill does
+
+A dish is priced from its parts, the way a shop actually bills. Serve the
+Lemon Stack above and the customer's receipt reads:
+
+    3 pancakes @ 3      9      <- stackCount x pricePerPancake
+    Lemon               6      <- the ingredient's own `sell` value
+    skill               8      <- the recipe's `craft`
+    made 84%           +5
+    Maple Syrup        +3
+    tip                +4
+    ------------------------
+    total              35
+    stock              -3
+    kept               32
+
+So a dish earns more because it has more, and dearer, parts — which is what
+makes the research tree pay. You never type a price; you choose what goes in.
+
+**`craft` is the one number you do pick.** It is the premium for the skill
+the dish takes, on top of its parts, and it exists because a bill of
+materials cannot express difficulty: the Souffle is two pancakes and cheap
+ingredients, and it sells for 45 because it is *hard*. Priced purely by
+parts it would be one of the cheapest things in the game. Set `craft` to 0
+for something anyone could make and let the parts speak.
+
+`pricePerPancake` lives in `js/data/economy.js`. Raise it and tall stacks
+gain on rare-ingredient dishes; lower it and the reverse.
 
 ### `weights` is the interesting one
 
@@ -99,9 +128,9 @@ and `divine` are strange — or the tag they order by and the syrup that
 pleases them drift apart. `validate.js` warns if you write a syrup that no
 customer would ever be pleased by.
 
-**`happy` and `disappointed` are shown**, in the result line after you
-serve them. They went unrendered for most of the build, so write them as
-things a person actually says, not as labels.
+**`happy` and `disappointed` are printed at the top of their receipt**,
+under the dish name. They went unrendered for most of the build, so write
+them as things a person actually says, not as labels.
 
 **There is no `patience` field.** The game has no clock, so it would be a
 number nothing could ever count down. Customers wait forever and never
@@ -111,8 +140,18 @@ complain. That's deliberate.
 
 ## Ingredients cost money — `js/data/ingredients.js`
 
-    { id: 'cream', name: 'Cream', cost: 22,
+    { id: 'cream', name: 'Cream', cost: 22, sell: 7,
       axes: { sweet: 3, sharp: 1, rich: 9, strange: 0 } }
+
+**Two prices, and they are not the same thing.** `cost` is what YOU pay for
+a unit of stock. `sell` is what that ingredient adds to the CUSTOMER's bill
+per serving, as its own line on the receipt. The margin between them is the
+shop's living, so `sell` wants to be comfortably above `cost / 10` — one
+unit is ten servings. `validate.js` warns when it isn't.
+
+Put a dear ingredient in a dish and the dish bills for more, automatically.
+That is the whole pricing model: you never set a price, you choose what
+goes in.
 
 Stock is bought in **units** and held in **servings**. One unit is a bulk
 quantity — a sack of flour — that makes ten pancakes. Cooking spends one
@@ -298,8 +337,8 @@ quietly gone back to being a function of cooking accuracy and the listening
 beat has stopped mattering — which is precisely the bug it was written to
 catch, and `tests/balance.test.js` fails when it happens.
 
-The late-game lever is the **research tree**: higher-base recipes are what
-close the gap. (Narrowing the menu helps early, but once you have several
+The late-game lever is the **research tree**: dishes with more and dearer
+parts on their bill are what close the gap. (Narrowing the menu helps early, but once you have several
 recipes the game already steers customers toward your expensive dishes on
 its own, so restricting it just turns people away.)
 

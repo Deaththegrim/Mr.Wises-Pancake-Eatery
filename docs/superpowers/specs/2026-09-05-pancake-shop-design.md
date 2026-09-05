@@ -125,7 +125,7 @@ failed its primary requirement.
 No clock. No action budget. You work until you choose to close.
 
 ```
-MORNING   Set the menu (which recipes are available today) and prices.
+MORNING   Set the menu (which recipes are available today).
           The quota board shows the week's target and progress.
 
 SERVICE   Customers arrive one at a time, at their own pace. Each places an
@@ -135,6 +135,26 @@ SERVICE   Customers arrive one at a time, at their own pace. Each places an
 EVENING   Spend: research nodes, ingredient stock, shop decoration.
           The ledger shows the day's takings and quota progress.
 ```
+
+**Prices are not set by the player** (resolved 2026-09-05). This section originally
+said the morning screen set "the menu and prices", with no design anywhere behind
+the second half — built naively it is a slider you set to maximum and forget.
+
+A dish is instead priced from its parts, itemised like a till receipt: so many
+pancakes at `pricePerPancake`, a line for each ingredient at its own `sell` value,
+a line for the syrup with its verdict, a line for the recipe's `craft`, then
+adjustments for quality and for repeating a dish within the day. `billFor()` in
+`engine/economy.js` returns the line items and the total together, so the receipt
+the player reads and the money the till takes cannot drift apart.
+
+The player prices a dish by choosing what goes into it, which is what makes the
+research tree pay in something visible: an unlocked dish has more, and dearer,
+parts on its bill. `craft` carries what a bill of materials cannot — a Souffle is
+two pancakes and cheap ingredients and sells for 45 because it is hard, and priced
+purely by parts it would be one of the cheapest things in the game.
+
+Every dish prices exactly as its old hardcoded `base` did, so this changed the
+model and the presentation without touching the balance.
 
 **The known risk**, recorded honestly: with no clock, grinding one cheap recipe
 forever is theoretically optimal. Three things prevent it, and they must all hold.

@@ -38,6 +38,10 @@
       <h2 tabindex="-1">Service</h2>
       <div id="customer-card"></div>
       <div id="griddle-mount"></div>
+      <!-- The till. Shows the last dish's itemised bill and stays up until
+           the next one is served, so the player can actually read what
+           they earned instead of watching it flash past in a notice. -->
+      <div id="receipt" role="status" aria-live="polite"></div>
       <button id="btn-close">Close for the day</button>
     </section>
 

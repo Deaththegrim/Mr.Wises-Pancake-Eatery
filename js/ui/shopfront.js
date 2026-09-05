@@ -1,8 +1,9 @@
 import { renderQuotaBoard } from './ledger.js';
-import { stockOf, priceOf, buyIngredient } from '../engine/pantry.js';
+import { stockOf, priceOf as unitPrice, buyIngredient } from '../engine/pantry.js';
 import { customersToday } from '../engine/day.js';
 import { el, clear, showNotice } from './screens.js';
 import { recipeById, ingredientById, nameOf } from '../engine/lookup.js';
+import { priceOf as dishPrice } from '../engine/economy.js';
 
 export function renderMorning(state, onChange) {
   const mount = clear(document.getElementById('menu-picker'));
@@ -26,7 +27,7 @@ export function renderMorning(state, onChange) {
     // r.name is author-written: textContent, not markup.
     const label = el('label', {}, box,
       el('span', { text: r.name }),
-      el('span', { className: 'price', text: `${r.base} · ${(r.tags || []).join(', ')}` }));
+      el('span', { className: 'price', text: `${dishPrice(r)} · ${(r.tags || []).join(', ')}` }));
     mount.append(label);
   }
 
@@ -66,7 +67,7 @@ function renderStockWarning(state, onChange) {
   }
 
   const names = short.map(id => nameOf(ingredientById, id));
-  const restock = short.reduce((a, id) => a + priceOf(id), 0);
+  const restock = short.reduce((a, id) => a + unitPrice(id), 0);
 
   mount.append(el('p', { className: 'hint',
     text: `Low on ${names.join(', ')} for ~${expected} customers. ` +

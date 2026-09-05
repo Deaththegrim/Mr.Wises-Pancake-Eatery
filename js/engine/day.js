@@ -1,6 +1,6 @@
 import { makeRng, pick } from './rng.js';
 import { scoreDish } from './cook.js';
-import { payoutFor, tipFor, reputationGain, rollWeek } from './economy.js';
+import { payoutFor, tipFor, reputationGain, rollWeek, priceOf, billFor } from './economy.js';
 import { grantWeekly, grantForServing, checkListening } from './affection.js';
 import { CUSTOMERS } from '../data/customers.js';
 import { TUNING } from '../data/economy.js';
@@ -91,7 +91,7 @@ export function nextCustomer(state) {
       if (impossibleAsk) wanted.push(impossibleAsk);
 
       // Otherwise: the most interesting thing on offer.
-      const best = [...menu].sort((a, b) => b.base - a.base);
+      const best = [...menu].sort((a, b) => priceOf(b) - priceOf(a));
       const pick = remembered || best[Math.floor(rng() * Math.min(2, best.length))];
       state.orderIndex = (state.orderIndex || 0) + 1;
       return {
@@ -117,7 +117,7 @@ export function nextCustomer(state) {
   /* Demand shift: sort what they'd accept by value, then bias the pick
      toward the expensive end as reputation rises. At shift 0 it is a flat
      random choice; at shift 1 they always take the best thing on offer. */
-  const byValue = [...choices].sort((a, b) => a.base - b.base);
+  const byValue = [...choices].sort((a, b) => priceOf(a) - priceOf(b));
   const shift = demandShift(state.reputation);
   const roll = rng();
   const biased = Math.pow(roll, 1 - shift * 0.85);   // pushes the roll upward
@@ -145,15 +145,18 @@ export function serve(state, recipeId, beats, opts = {}) {
 
   const repeatCount = state.todayServed[recipeId] || 0;
   const { quality, breakdown } = scoreDish(recipe, beats, state.upgrades);
-  const basePayout = payoutFor(recipe, quality, repeatCount);
 
   /* THE SYRUP PAIRING. A syrup suited to this customer pays more and
-     builds reputation faster; anything else is simply ordinary. Applied
+     builds reputation faster; anything else is simply ordinary. Computed
      here rather than in the UI so the simulator cannot drift from the
      shipped game — which is exactly how research points came to be
      awarded by tools/simulate.js and by nothing the player ever ran. */
-  const syrupScore = opts.syrupId ? matchScore(syrupById(opts.syrupId), opts.taste) : 0;
-  const payout = Math.round(basePayout * (1 + syrupScore * TUNING.syrupMatchBonus));
+  const syrup = opts.syrupId ? syrupById(opts.syrupId) : null;
+  const syrupScore = syrup ? matchScore(syrup, opts.taste) : 0;
+
+  // The itemised bill. Same call produces the receipt and the takings.
+  const bill = billFor(recipe, { quality, repeatCount, syrup, syrupScore });
+  const payout = bill.total;
   const tip = tipFor(payout, quality);
 
   state.todayServed[recipeId] = repeatCount + 1;
@@ -186,7 +189,7 @@ export function serve(state, recipeId, beats, opts = {}) {
   }
 
   return { quality, breakdown, payout, tip, noticed, ingredientCost, emergencyCost, pointsEarned,
-           syrupId: opts.syrupId || null, syrupScore };
+           syrupId: opts.syrupId || null, syrupScore, bill };
 }
 
 /* The story runs as long as the quota curve is authored. Past that the

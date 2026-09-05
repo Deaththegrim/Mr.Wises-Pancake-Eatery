@@ -8,7 +8,7 @@
 
 export const RECIPES = [
   {
-    id: 'plain', name: 'Plain Stack', tags: ['basic'], base: 12,
+    id: 'plain', name: 'Plain Stack', tags: ['basic'], craft: 0,
     ingredients: ['flour', 'buttermilk'],
     pour: { target: 50, band: 10 },
     flip: { windowMs: 500 },
@@ -17,7 +17,7 @@ export const RECIPES = [
     unlockedAtStart: true
   },
   {
-    id: 'buttermilk_stack', name: 'Buttermilk Stack', tags: ['basic', 'rich'], base: 20,
+    id: 'buttermilk_stack', name: 'Buttermilk Stack', tags: ['basic', 'rich'], craft: 1,
     ingredients: ['flour', 'buttermilk', 'butter'],
     pour: { target: 60, band: 8 },
     flip: { windowMs: 420 },
@@ -26,7 +26,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'souffle', name: 'Souffle Pancake', tags: ['delicate'], base: 45,
+    id: 'souffle', name: 'Souffle Pancake', tags: ['delicate'], craft: 32,
     ingredients: ['flour', 'buttermilk', 'butter'],
     pour: { target: 40, band: 5 },
     flip: { windowMs: 250 },
@@ -35,7 +35,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'lemon_stack', name: 'Lemon Stack', tags: ['basic', 'bright'], base: 26,
+    id: 'lemon_stack', name: 'Lemon Stack', tags: ['basic', 'bright'], craft: 8,
     ingredients: ['flour', 'buttermilk', 'lemon'],
     pour: { target: 52, band: 9 },
     flip: { windowMs: 460 },
@@ -45,7 +45,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'blueberry_pile', name: 'Blueberry Pile', tags: ['basic', 'bright'], base: 34,
+    id: 'blueberry_pile', name: 'Blueberry Pile', tags: ['basic', 'bright'], craft: 8,
     ingredients: ['flour', 'buttermilk', 'blueberry'],
     pour: { target: 66, band: 11 },
     flip: { windowMs: 520 },
@@ -55,7 +55,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'ash_dark', name: 'Ash-Dark Stack', tags: ['rich', 'strange'], base: 72,
+    id: 'ash_dark', name: 'Ash-Dark Stack', tags: ['rich', 'strange'], craft: 13,
     ingredients: ['flour', 'cream', 'ashsugar'],
     pour: { target: 58, band: 7 },
     flip: { windowMs: 340 },
@@ -64,7 +64,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'ember_crisp', name: 'Ember Crisp', tags: ['delicate', 'strange'], base: 95,
+    id: 'ember_crisp', name: 'Ember Crisp', tags: ['delicate', 'strange'], craft: 20,
     ingredients: ['flour', 'butter', 'emberpeel'],
     pour: { target: 36, band: 4 },
     flip: { windowMs: 200 },
@@ -74,7 +74,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'quiet_stack', name: 'Quiet Stack', tags: ['delicate', 'divine'], base: 140,
+    id: 'quiet_stack', name: 'Quiet Stack', tags: ['delicate', 'divine'], craft: 24,
     ingredients: ['flour', 'quietmilk', 'cream'],
     pour: { target: 48, band: 5 },
     flip: { windowMs: 280 },
@@ -83,7 +83,7 @@ export const RECIPES = [
     unlockedAtStart: false
   },
   {
-    id: 'impossible', name: 'Impossible Stack', tags: ['divine'], base: 120,
+    id: 'impossible', name: 'Impossible Stack', tags: ['divine'], craft: 7,
     ingredients: ['flour', 'buttermilk', 'butter', 'starlight'],
     pour: { target: 55, band: 6 },
     flip: { windowMs: 300 },

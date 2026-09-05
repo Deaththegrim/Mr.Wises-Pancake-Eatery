@@ -11,7 +11,7 @@ test('the shipped content validates clean', () => {
 
 test('a recipe citing a missing ingredient is reported by file and row', () => {
   const { errors } = validateContent({
-    recipes: [{ id: 'broken', name: 'Broken', tags: ['basic'], base: 1, ingredients: ['nope'],
+    recipes: [{ id: 'broken', name: 'Broken', tags: ['basic'], craft: 1, ingredients: ['nope'],
                 pour: { target: 1, band: 1 }, flip: { windowMs: 1 }, stackCount: 1,
                 weights: { pour: 1, flip: 1, stack: 1, drizzle: 1 }, unlockedAtStart: true }]
   });
@@ -53,7 +53,7 @@ test('an unreachable research node is warned about, not errored', () => {
 
 test('no starting recipe is an error - the game would be unplayable', () => {
   const { errors } = validateContent({
-    recipes: [{ id: 'x', name: 'X', tags: ['basic'], base: 1, ingredients: [],
+    recipes: [{ id: 'x', name: 'X', tags: ['basic'], craft: 1, ingredients: [],
                 pour: { target: 1, band: 1 }, flip: { windowMs: 1 }, stackCount: 1,
                 weights: { pour: 1, flip: 1, stack: 1, drizzle: 1 }, unlockedAtStart: false }]
   });
@@ -75,7 +75,7 @@ test('a recipe whose tag no customer wants is an ERROR - unreachable revenue', (
   // was tagged `divine` and nobody wanted `divine`, so it could never be
   // ordered no matter how much research went into it.
   const { errors } = validateContent({
-    recipes: [{ id: 'orphan', name: 'Orphan', tags: ['nobody_wants_this'], base: 99, ingredients: [],
+    recipes: [{ id: 'orphan', name: 'Orphan', tags: ['nobody_wants_this'], craft: 99, ingredients: [],
                 pour: { target: 1, band: 1 }, flip: { windowMs: 1 }, stackCount: 1,
                 weights: { pour: 1, flip: 1, stack: 1, drizzle: 1 }, unlockedAtStart: true }]
   });
@@ -113,7 +113,7 @@ test('a syrup with a discover block but no target is reported', () => {
    nothing but a console message. */
 
 const RECIPE = {
-  id: 'x', name: 'X', tags: ['basic'], base: 10, ingredients: [], stackCount: 2,
+  id: 'x', name: 'X', tags: ['basic'], craft: 10, ingredients: [], stackCount: 2,
   pour: { target: 1, band: 1 }, flip: { windowMs: 1 },
   weights: { pour: 1, flip: 1, stack: 1, drizzle: 1 }, unlockedAtStart: true
 };

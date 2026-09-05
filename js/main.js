@@ -3,7 +3,7 @@ import { openDay, closeDay, nextCustomer, serve, customersToday } from './engine
 import { META } from './data/meta.js';
 import { showScreen, showNotice, el, clear } from './ui/screens.js';
 import { renderMorning, renderCustomer } from './ui/shopfront.js';
-import { renderLedger, renderQuotaBoard } from './ui/ledger.js';
+import { renderLedger, renderQuotaBoard, renderReceipt, clearReceipt } from './ui/ledger.js';
 import { renderTree, renderBench } from './ui/tree.js';
 import { mountGriddle } from './ui/griddle.js';
 import { playScene } from './ui/vn.js';
@@ -59,6 +59,7 @@ function toMorning() {
 
 function toService() {
   openDay(state);
+  clearReceipt();
   servedToday = 0;
   showScreen('service');
   nextOrder();
@@ -146,37 +147,21 @@ function cookFor(current) {
       taste: current.customer && current.customer.taste
     });
     servedToday += 1;
-    const b = result.breakdown;
-    // Show the margin, not just the takings — the cost of goods is a real
-    // decision and the player cannot make it if they cannot see it.
-    const cost = result.ingredientCost + result.emergencyCost;
-    const emergency = result.emergencyCost
-      ? ` (${result.emergencyCost} emergency stock!)` : '';
-    /* The syrup's verdict is reported HERE, after serving — the spec's
-       "its full effect is revealed by serving it to a customer". It is how
-       the player learns a customer's taste, so it has to be legible. */
-    const syrup = syrupById(result.syrupId);
-    const syrupNote = syrup ? `  ·  ${syrup.name}: ${matchLabel(result.syrupScore)}` : '';
 
-    /* WHAT THEY SAY ABOUT IT. Every customer has carried `happy` and
-       `disappointed` lines since the roster was written — the validator
-       insists on them — and the game rendered neither, so the shop never
-       reacted to how well the player cooked. The readout said 71% and
-       nobody in the room said anything.
+    /* The receipt carries every number now — the parts, the adjustments,
+       the tip, what the stock cost and what was kept. Repeating them in
+       the notice floated a second copy over the top of the first and hid
+       the bottom of the bill.
 
-       It goes in the result line rather than the customer card because
-       the card has already moved on to whoever is next, and a reaction
-       worth a whole extra click per dish would not be worth it at
-       eighteen customers a day. */
+       So the notice carries only what a receipt cannot: the customer
+       saying something, and the verdict on the syrup — which is how the
+       player learns a taste they are never shown. */
     const lines = current.customer && current.customer.lines;
     const said = lines
-      ? `${current.customer.name}: “${result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed}”  ·  `
+      ? (result.quality >= TUNING.happyAt ? lines.happy : lines.disappointed)
       : '';
+    renderReceipt(recipeById(current.recipeId), result, current.customer.name, said);
 
-    showNotice(
-      `${said}${result.quality}%  ·  pour ${b.pour} flip ${b.flip} stack ${b.stack} drizzle ${b.drizzle}` +
-      `  ·  +${result.payout}${result.tip ? ` +${result.tip} tip` : ''}` +
-      `${cost ? ` −${cost} stock${emergency}` : ''}${syrupNote}`, 5000);
     saveGame();
 
     // She remembered that she mentioned it. This is the payoff.

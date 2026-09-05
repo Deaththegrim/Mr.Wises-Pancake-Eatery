@@ -26,7 +26,7 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 227 unit tests (incl. balance regressions)
+    node --test tests/         # 238 unit tests (incl. balance regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
     python3 tools/smoke.py     # plays the game in a headless browser
@@ -73,7 +73,12 @@ who doesn't write JavaScript.
 The loop is four beats — **pour, flip, stack, drizzle** — each scored, with
 per-recipe weights so a souffle lives on the flip and a tall stack lives on
 alignment. At the drizzle you choose which syrup to pour, and a syrup that
-suits the customer pays more; a mismatch is only ordinary, never a penalty. Stack error compounds, so an off-centre first pancake leans the
+suits the customer pays more; a mismatch is only ordinary, never a penalty.
+
+Dishes are priced from their parts and billed like a till receipt — so many
+pancakes at the going rate, a line per ingredient, a line for the skill the
+dish takes, then quality, syrup and tip. You never set a price; you choose
+what goes in, which is what makes an unlocked recipe visibly worth more. Stack error compounds, so an off-centre first pancake leans the
 whole tower (though a steady hand can nurse it back).
 
 The weekly quota isn't a survival threshold, it's the **story metronome**.

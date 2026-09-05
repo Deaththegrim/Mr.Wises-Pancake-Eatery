@@ -173,14 +173,31 @@ def main():
         print(f"       money={money} cooked={cooked} rep={rep:.2f}")
         check(money > 0, "serving the dish paid out")
 
-        # The customer must actually SAY something. Their happy and
-        # disappointed lines existed in the data from the start and the
-        # game rendered neither, so the shop never reacted to the cooking.
-        notice = page.inner_text("#notice")
-        check("\u201c" in notice and "\u201d" in notice,
-              f"the customer reacts in their own words: {notice[:70]}")
-        check("Maple Syrup" in notice or "Glaze" in notice or "Ash" in notice,
-              "and the result names the syrup that was poured")
+        # THE BILL. A dish is priced from its parts, and the receipt is
+        # where the player reads it. Their happy/disappointed lines and the
+        # syrup verdict live on it too — both existed in the data from the
+        # start and neither was rendered anywhere for most of the build.
+        receipt = page.inner_text("#receipt")
+        check("\u201c" in receipt and "\u201d" in receipt,
+              f"the customer reacts in their own words on the bill: {receipt.splitlines()[1][:50]}")
+        check("pancakes @" in receipt or "pancake @" in receipt,
+              "the bill charges for the pancakes themselves")
+        check("total" in receipt, "the bill totals up")
+        check("Maple Syrup" in receipt or "Glaze" in receipt or "Ash" in receipt,
+              "and names the syrup that was poured, with its verdict")
+        # THE CHECK THAT MATTERS: the number on the bill is the number the
+        # till took. The receipt and the takings come from one billFor()
+        # call precisely so they cannot drift, and this proves it end to
+        # end. This is the first dish of the day, so dayEarnings is it.
+        rows = [r for r in receipt.splitlines() if r.strip()]
+        total_on_bill = None
+        for i, r in enumerate(rows):
+            if r.strip() == "total" and i + 1 < len(rows):
+                total_on_bill = int(rows[i + 1].strip())
+                break
+        earned = page.evaluate("window.GAME.state.dayEarnings")
+        check(total_on_bill is not None and total_on_bill == earned,
+              f"the bill's total is what the till took: bill {total_on_bill}, till {earned}")
         check(rep > 0, "serving the dish raised reputation")
         check(page.inner_text("#customer-card").strip() != "", "the next customer appeared")
 

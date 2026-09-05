@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buyIngredient, stockOf, priceOf, servingsFor, unitsFor, consumeForCooking } from '../js/engine/pantry.js';
+import { priceOf as dishPrice } from '../js/engine/economy.js';
 import { serve, openDay } from '../js/engine/day.js';
 import { newGame } from '../js/engine/state.js';
 import { RECIPES } from '../js/data/recipes.js';
@@ -46,7 +47,7 @@ test('cooking is PROFITABLE at normal stock prices', () => {
   // upside down. Check every recipe at perfect quality.
   for (const r of RECIPES) {
     const cogs = r.ingredients.reduce((sum, id) => sum + priceOf(id) / TUNING.servingsPerUnit, 0);
-    const revenue = r.base * TUNING.payoutMaxMultiplier;
+    const revenue = dishPrice(r) * TUNING.payoutMaxMultiplier;
     assert.ok(revenue > cogs * 2,
       `${r.id}: sells for ${revenue.toFixed(1)} but costs ${cogs.toFixed(1)} to make — margin too thin`);
   }

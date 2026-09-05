@@ -7,6 +7,7 @@ import { newGame } from '../js/engine/state.js';
 import { quotaForWeek } from '../js/engine/economy.js';
 import { noteMention } from '../js/engine/affection.js';
 import { RECIPES } from '../js/data/recipes.js';
+import { priceOf } from '../js/engine/economy.js';
 
 // A flawless execution of any recipe, derived from that recipe's own targets.
 const perfect = recipeId => {
@@ -229,7 +230,7 @@ test('a well-known shop sells more expensive dishes than an unknown one', () => 
     let total = 0;
     for (let i = 0; i < 40; i++) {
       const o = nextCustomer(s);
-      if (o) total += RECIPES.find(r => r.id === o.recipeId).base;
+      if (o) total += priceOf(RECIPES.find(r => r.id === o.recipeId));
     }
     return total;
   };

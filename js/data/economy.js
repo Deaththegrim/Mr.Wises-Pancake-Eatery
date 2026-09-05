@@ -42,6 +42,13 @@ export const TUNING = {
   repeatPenaltyFloor: 0.45,
 
   // Quality 0-100 maps onto this payout multiplier range.
+  /* A dish is billed from its parts. This is the going rate for one
+     pancake in the stack; everything else on the bill is the ingredients'
+     own `sell` values plus the recipe's `craft`. Raising this makes tall
+     stacks worth more relative to rare ingredients. */
+  pricePerPancake: 3,
+  baseIngredient: 'flour',      // the pancake itself; billed by the stack, not again as an item
+
   payoutMinMultiplier: 0.5,
 
   /* SYRUP PAIRING. A syrup matching the customer's taste multiplies the
