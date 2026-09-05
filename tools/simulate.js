@@ -1,4 +1,4 @@
-/* Balance simulator. Run: node tools/simulate.js [quality]
+/* Balance simulator. Run: node tools/simulate.js
    Plays a full 8-week game headlessly with a competent player and prints
    the week-by-week outcome.
 
@@ -9,11 +9,27 @@
    gets for a normal player.
 
    Read the "met" column. Early weeks should be YES comfortably, the middle
-   should be tight, and the end should demand a fully unlocked shop. */
+   should be tight, and the end should demand a fully unlocked shop.
+
+   IMPORTANT — THIS MUST MIRROR WHAT main.js ACTUALLY DOES.
+
+   An earlier version of this file called serve() without ever passing
+   `forSynthia`, exactly like the (broken) UI did at the time. It therefore
+   REPRODUCED the bug instead of revealing it: Synthia never counted as a
+   customer, the listening beat never fired, and this simulation faithfully
+   reported her stuck at REGULAR — a symptom that was easy to read past.
+
+   A simulator that shares the UI's blind spots is worse than none, because
+   it manufactures confidence. If you change how main.js drives a turn,
+   change it here in the same commit. `tools/playthrough.py` is the check on
+   THIS file: it plays the real page and should agree. */
 
 import { newGame } from '../js/engine/state.js';
 import { makeRng } from '../js/engine/rng.js';
 import { openDay, closeDay, serve, nextCustomer, customersToday } from '../js/engine/day.js';
+import { mentionSceneFor } from '../js/engine/story.js';
+import { noteMention } from '../js/engine/affection.js';
+import { SCENES } from '../js/data/scenes.js';
 import { availableNodes, purchase, experiment } from '../js/engine/research.js';
 import { buyIngredient, priceOf } from '../js/engine/pantry.js';
 import { INGREDIENTS } from '../js/data/ingredients.js';
@@ -107,8 +123,20 @@ export function simulate(seed = 2026, profile = 'careful') {
       for (let i = 0; i < todays; i++) {
         const order = nextCustomer(s);
         if (!order) break;
+
+        // Mirror main.js nextOrder(): when SHE is the customer, a mention
+        // fires first, and the serve is flagged so affection accrues.
+        if (order.isSynthia && !s.flags[`mentioned_w${s.week}`]) {
+          const mention = mentionSceneFor(s);
+          if (mention) {
+            s.flags[`mentioned_w${s.week}`] = true;
+            noteMention(s.synthia, SCENES[mention].mentions);
+          }
+        }
+
         const first = !s.cooked[order.recipeId];
-        const res = serve(s, order.recipeId, execution(order.recipeId, profile));
+        const res = serve(s, order.recipeId, execution(order.recipeId, profile),
+                          { forSynthia: !!order.isSynthia });
         if (res.quality >= TUNING.highQualityAt) s.points += TUNING.pointsPerHighQuality;
         if (first) s.points += TUNING.pointsPerNewRecipeServed;
       }
@@ -123,6 +151,7 @@ export function simulate(seed = 2026, profile = 'careful') {
           week: w, quota, earned, met: r.weekResult.met, money: s.money,
           points: s.points, recipes: s.unlockedRecipes.length,
           purchased: [...s.purchased], tier: tierFor(s.synthia.points),
+          affection: s.synthia.points,
           benchSpend: weekBenchSpend, syrups: s.unlockedSyrups.length
         });
       }
