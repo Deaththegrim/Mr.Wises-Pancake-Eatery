@@ -55,7 +55,7 @@ Then open http://localhost:8000
     node --test tests/         # 310 unit tests (incl. balance + motion regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
-    python3 tools/smoke.py     # plays the game in a headless browser
+    python3 tools/smoke.py     # plays the game in a headless browser (115 checks)
     python3 tools/playthrough.py 1   # plays the REAL page for N weeks (slow)
     node tools/art.js          # what art is needed, and what is already in
     node tools/audio.js        # every sound the game makes

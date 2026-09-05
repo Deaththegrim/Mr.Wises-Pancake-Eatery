@@ -106,6 +106,19 @@ Verified against the bug itself: removing the `touchcancel` handler leaves
 the stage stuck on `pour` with the readout still ticking, and both checks
 fail.
 
+**And it immediately exposed a flake in the section above it.** Counting
+the checks across runs gave 115, 104, 115 — the reduced-motion and touch
+sections were being skipped entirely about one run in five, on a Playwright
+timeout against a hidden `#customer-card`. Cause: her visit rolls forward
+if she was not served, so a scene can be waiting after almost any "Open the
+shop" — the exact trap this file documents and keeps a `clear_scenes()`
+helper for. The touch section used it; the reduced-motion section, written
+minutes earlier, did not. Six consecutive runs at 115 now.
+
+A flaky gate is worse than a missing one: it cries wolf and then gets
+ignored, which this project already learned once when an unpinned seed made
+smoke play a different game every run.
+
 ### Fixed — comments that were wrong
 
 This is its own category on purpose. A wrong comment in this codebase is

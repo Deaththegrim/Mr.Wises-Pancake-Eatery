@@ -803,6 +803,14 @@ def main():
         rm.click("#btn-new")
         rm.wait_for_selector("#screen-morning", state="visible", timeout=4000)
         rm.click("#btn-open")
+        # Her visit rolls forward if she was not served, so a scene can be
+        # waiting after almost any "Open the shop" — which is why this file
+        # has a helper for it. Leaving it out made this section fail about
+        # one run in five, on a hidden #customer-card, with a Playwright
+        # timeout rather than a named check. The touch section below got it
+        # right and this one did not.
+        clear_scenes(rm)
+        dismiss_ask(rm)
         rm.wait_for_selector("#customer-card", state="visible", timeout=4000)
         time.sleep(0.3)
 
