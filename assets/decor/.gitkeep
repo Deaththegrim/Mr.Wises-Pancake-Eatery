@@ -1,0 +1,7 @@
+Keeps this folder in the repository so it exists in a fresh clone.
+
+Git does not track empty directories, so without this the folder was
+missing for whoever cloned the project — and the first command the README
+tells them to run failed, saying art placed here would be invisible.
+
+Delete it once there are real files here, or leave it. It does nothing.
