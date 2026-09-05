@@ -103,10 +103,18 @@ every other shop sim treats as a chore is here the relationship itself.
 
 ## Where it's up to
 
-Phase 1 is done: the whole game loop works end to end with placeholder art
-and thin content.
+Phase 1 is done, and then some: every system the design doc describes is
+built and tested. The four beats on canvas, the economy and its itemised
+bill, the research tree and the experiment bench, the syrup a dish is
+finished with, Synthia's weekly visits and the dishes she asks for that you
+cannot make yet, five endings chosen by how well you listened, save/load,
+and the shop you spend the money on once the tree runs out.
 
-Phase 2 is art, the real writing, shop decoration, audio, and polish.
+**What's left is writing and art.** Every line in `js/data/scenes.js` is a
+placeholder — the systems for the arc exist, the voice does not, and that
+is the collaborator's. The food, the room and the seven things you can buy
+for it all draw as shapes and labelled outlines until real art exists. No
+part of that needs an engine change.
 
 Design docs live in `docs/superpowers/`, and the genre research they argue
 from is in `research/genre-loops.md`.

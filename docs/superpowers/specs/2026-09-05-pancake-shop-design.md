@@ -666,14 +666,24 @@ thin content, and the collaborator can start writing.
 
 **Phase 2 — after handoff. Priority order, informed by playing Phase 1:**
 
-1. **Drizzle and pour onto `<canvas>`, drawn over the real stack** (§5). These
-   are the two beats that currently communicate nothing about what the player
-   is doing. Highest impact on how the game *feels*; no engine change needed.
+1. ~~Drizzle and pour onto `<canvas>`~~ — **DONE.** Pour, flip and drizzle all
+   draw on canvas over the real stack at its real offsets; the stack beat stays
+   DOM, as §5 settled by prototype.
 2. **The collaborator's writing.** Everything in `data/scenes.js` is
-   placeholder. The systems for the arc exist; the voice does not.
+   placeholder, including her impossible-order lines. The systems for the arc
+   all exist — mentions, the listening payoff, five endings chosen by tier —
+   and the voice does not. **This is now the top of the list.**
 3. Character art beyond the reused sprites — in particular, food. Layered 2D
-   composited at runtime (see the art-pipeline note below).
-4. Shop decoration, audio, juice.
+   composited at runtime (see the art-pipeline note below), plus the seven
+   `art` names in `data/decor.js`, each of which currently draws as a labelled
+   outline.
+4. ~~Shop decoration~~ — **DONE**, brought forward; see §14.5. Audio and juice
+   remain.
+
+**What is left is writing and art.** Every system the spec describes is built
+and tested: the four beats, the economy and its itemised bill, the research tree
+and bench, the syrup pairing, her visits and impossible orders, the five endings,
+save/load, and the money sink. Nothing in Phase 2 needs an engine change.
 
 Original Phase 2 scope: Art, the full content pass, shop decoration, audio,
 juice and polish. Explicitly deferred per the brief: back bone entirely first, art
