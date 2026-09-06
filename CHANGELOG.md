@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-06 — verified from a fresh clone
+
+The handoff proved the only way it can be: `git clone` into an empty
+directory and run, verbatim, what `START-HERE.md` tells a newcomer to run.
+All three worklists print, the validator is clean, the suite passes, the
+page and `preview.html` both serve, and the browser test plays a week with
+no console errors or warnings. Nothing depends on anything left behind in
+the working copy.
+
+`preview.html` enumerates `SCENES` with no filter, so its promise that
+every scene is playable on its own holds for visit scenes too, without a
+change — checked rather than assumed.
+
+The README's "check everything works" block named **314 unit tests** and
+**115 smoke checks**. Both were wrong within a day of being written, and
+every command in that list prints its own count. It now says what each one
+proves, which removes the drift instead of resetting it. (`START-HERE.md`
+already labels its content counts as a snapshot and points at the
+worklists for the current truth, so those stay.)
+
+And the voice guide: both the README and `START-HERE.md` gave it as
+`god-synthia/research/voice-style-guide.md` without saying `god-synthia` is
+a **sibling** project. Followed from this directory, that path finds
+nothing — the one instruction in the handoff aimed squarely at the person
+doing the writing.
+
 ## 2026-09-06 — doing what the docs tell someone to do
 
 The handoff pages were written and checked for *accuracy*, but never
