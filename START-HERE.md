@@ -189,10 +189,11 @@ a programmer's problem, not yours.
 
 ## A note on the writing
 
-There's a voice guide at `god-synthia/research/voice-style-guide.md`, and
-every placeholder line here was held to it — second person, present tense,
-short hard-broken lines, deadpan. But she's yours, and if the guide and
-your instinct disagree, your instinct wins.
+There's a voice guide at `research/voice-style-guide.md` inside the
+`god-synthia` project, which sits alongside this folder rather than inside
+it. Every placeholder line here was held to it: second person, present
+tense, short hard-broken lines, deadpan. But she's yours, and if the guide
+and your instinct disagree, your instinct wins.
 
 One small thing worth keeping: **"Hm." is hers.** It's the only verbal tic
 in the game that belongs to a single character, and the eleven customers

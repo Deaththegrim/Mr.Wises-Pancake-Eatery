@@ -276,7 +276,13 @@ test('the simulator plays visit scenes too, so its numbers match the game', () =
      the mirror exists to prevent: this simulator once imitated main.js
      wrongly and reproduced a bug instead of finding it.
 
-     With a visit scene authored, a full run must actually play some. */
+     With a visit scene authored, a full run must actually play some.
+
+     The check is "everything recorded is a visit scene", NOT "everything
+     recorded is one of MINE". These fixtures go into the shared registry
+     beside whatever the collaborator has written, so asserting membership
+     of its own two would fail on the first real visit scene — on the
+     person who wrote it, which is the worst possible audience. */
   const fake = {
     sim_visit_a: { speaker: 'God Synthia', visit: true, end: true, text: 'a' },
     sim_visit_b: { speaker: 'God Synthia', visit: true, end: true, text: 'b' }
@@ -289,7 +295,8 @@ test('the simulator plays visit scenes too, so its numbers match the game', () =
       'a full run authored with visit scenes must play at least one; if this is empty ' +
       'the simulator is no longer mirroring how main.js drives her visits');
     for (const id of seen) {
-      assert.ok(id in fake, `the simulator recorded "${id}", which is not a visit scene`);
+      assert.ok(SCENES[id] && SCENES[id].visit && !SCENES[id].mentions,
+        `the simulator recorded "${id}" as a visit, but that is not a visit scene`);
     }
   } finally {
     for (const id of Object.keys(fake)) delete SCENES[id];

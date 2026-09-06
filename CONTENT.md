@@ -652,7 +652,7 @@ simulator that shares the UI's blind spots is worse than none, because it
 manufactures confidence.
 
 **A note on the colours.** Every colour, including the ones painted on the
-canvas, is a token in `css/style.css`. `ui/griddle.js` reads them at mount.
+canvas, is a token in `css/style.css`. `js/ui/griddle.js` reads them at mount.
 Change `--cake` and the pancake changes everywhere; do not hardcode a hex
 in the canvas, which is how the DOM and the canvas ended up drawing the
 same pancake in two different browns.
