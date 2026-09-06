@@ -54,7 +54,28 @@ explains why a mention cannot fill them, and points at the visit slot. The
 numbers are derived — mentions counted from the data, weeks from the quota
 curve — so the section disappears on its own once the gap is filled.
 
-**Then the slot was tested by actually using it**, which found three things
+**The same treatment was then given to the art and sound slots**, which had
+been built earlier in the session and never once filled. Both hold up: a
+real 200×120 PNG dropped at `assets/food/pancake.png` is picked up by the
+checklist, listed in the manifest, and `sprite('pancake')` returns it at
+its true dimensions in the browser — the art is genuinely in the game, not
+merely failing to break it. A real WAV at a sound slot's path decodes and
+the audio layer reports itself audible with a clean console.
+
+The failure half was exercised too, because a diagnostic that has never
+fired is a diagnostic nobody has tested. Corrupt both files and each tool
+names the file and the reason and exits 1. Leave a **stale manifest**
+pointing at an undecodable file — the case that used to be swallowed
+entirely — and the game now says so: *"[audio] assets/audio/bell.mp3 could
+not be used (Unable to decode audio data); playing the built-in recipe
+instead"*, and keeps playing. That warning would fail the smoke run, which
+is the point.
+
+Everything was removed afterwards and the manifests regenerated, so the
+repository is exactly as it was. The slots are simply now known to work
+rather than assumed to.
+
+**Then the scene slot was tested by actually using it**, which found three things
 wrong with my own work: the documented example omitted `end: true` (so it
 warned in the validator and would have shown "This scene has no ending"),
 the checklist test reported an authored visit scene as orphaned, and — the
