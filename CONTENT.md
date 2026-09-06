@@ -435,7 +435,8 @@ It's the best thing in here. Two notes on using it:
     a_quiet_week: {
       speaker: 'God Synthia',
       visit: true,          // she talks; no goal is planted
-      text: '...'
+      text: '...',
+      end: true             // or `next:` / `choices:` — see below
     }
 
 There are five mentions and she says one a week, so **weeks 6, 7 and 8
@@ -445,6 +446,11 @@ finally becomes affordable, and her closest tier is crossed.
 
 A `visit` scene fills exactly that. It fires only once every mention is
 spent, so it can never take a mention's turn, and each one is used once.
+
+Like any scene it needs somewhere to go when it finishes — `end: true`, or
+a `next`, or `choices`. Without one the player sees "This scene has no
+ending" and `node tools/validate.js` warns, which is the check catching a
+real mistake rather than being fussy.
 None are written — that is yours. **If you add scenes anywhere, add them
 here first;** it is the one gap a full measurement of the game's length
 actually turned up. The working is in `research/run-length.md`.

@@ -25,6 +25,7 @@ import { DECOR } from '../js/data/decor.js';
 import { RECIPES } from '../js/data/recipes.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { TIER_ORDER, TIER_THRESHOLDS } from '../js/data/affection.js';
+import { QUOTA_CURVE } from '../js/data/economy.js';
 import { MISS_SCENES } from '../js/engine/story.js';
 
 const only = (process.argv[2] || '').toLowerCase();
@@ -83,6 +84,39 @@ if (wants('synthia')) {
     console.log(`    ${words(node.text)} words\n`);
     total += words(node.text);
   }
+
+  /* THE GAP, REPORTED. Every other empty slot in this project announces
+     itself — tools/art.js prints what is still a placeholder, tools/audio.js
+     prints what is still a recipe. A scene that has not been written cannot
+     be listed above, because it is not there, so without this the one place
+     the writing is most needed is the one place the worklist is silent.
+
+     The numbers are derived, not typed: mentions counted from the data,
+     weeks from the quota curve. */
+  rule('THE WEEKS WITH NOTHING IN THEM — js/data/scenes.js');
+  const mentions = Object.values(SCENES).filter(n => n.mentions).length;
+  const visits = Object.values(SCENES).filter(n => n.visit && !n.mentions).length;
+  const weeks = QUOTA_CURVE.length;
+  const quiet = Math.max(0, weeks - mentions - visits);
+
+  console.log(`She visits once a week for ${weeks} weeks. ${mentions} of those visits`);
+  console.log(`have something for her to say (a mention), and ${visits} are visit scenes.`);
+  if (quiet > 0) {
+    console.log(`\n  ${quiet} WEEK(S) HAVE NOTHING. She walks in and says nothing at all.\n`);
+    console.log('  They are the LAST weeks, and they are the ones the player is most');
+    console.log('  invested in: the research tree finishes, the shop finally becomes');
+    console.log('  affordable, and her closest tier is crossed — while she has gone quiet.');
+    console.log('');
+    console.log('  A mention cannot fill them: it has to name a dish the player has not');
+    console.log('  researched yet, and by then there are none left. Use a visit scene —');
+    console.log('  `visit: true`, no `mentions` — which is her talking without setting a');
+    console.log('  goal. See CONTENT.md, and research/run-length.md for the measurement.');
+    console.log('');
+    console.log('  THIS IS THE MOST USEFUL WRITING LEFT TO DO.');
+  } else {
+    console.log('\n  Every week she visits has something for her to say.');
+  }
+  console.log('');
 
   rule('WHEN SHE ASKS FOR SOMETHING YOU CANNOT MAKE — js/data/scenes.js');
   console.log('One is picked at random. She is unbothered; the dish is named separately.\n');

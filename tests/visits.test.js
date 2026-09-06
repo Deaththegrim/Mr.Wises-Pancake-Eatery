@@ -182,25 +182,40 @@ test('a mention naming a dish that no longer exists is ignored, not asked for', 
    mechanism that exists and has never once run. That is this project's
    most repeated bug. */
 
-test('a visit scene fires only once every mention is spent', () => {
-  const state = newGame(7);
-  const before = visitSceneFor(state);
+test('a visit scene never takes a mention\'s turn', () => {
+  /* The ordering contract, asserted with a scene PRESENT — the first cut
+     of this test asserted `visitSceneFor() === null` on the grounds that
+     none were authored yet, which is not a property of the code at all:
+     it would have failed the moment the collaborator wrote one, and a test
+     that breaks when a feature is finally used is worse than no test. */
+  const fake = { spare_week: { speaker: 'God Synthia', visit: true, end: true, text: 'x' } };
+  Object.assign(SCENES, fake);
+  try {
+    const state = newGame(7);
+    assert.ok(mentionSceneFor(state), 'the fixture should still have mentions left');
 
-  /* With mentions still available the fallback must stay out of the way —
-     it can never take a mention's turn, or it would eat the beat it exists
-     to sit behind. mentionSceneFor is what runs first in both main.js and
-     simulate.js; this asserts the ordering those rely on. */
-  assert.ok(mentionSceneFor(state), 'the fixture should still have mentions left');
-  assert.equal(before, null,
-    'no visit scene is authored yet, so this must be null rather than firing early');
+    /* main.js and simulate.js both try the mention FIRST and only fall
+       through on null, so what has to hold is that a mention is available
+       while one exists. The visit scene waiting behind it is fine — it is
+       reached only through that fall-through. */
+    state.synthia.mentions = Object.values(SCENES).filter(n => n.mentions).map(n => n.mentions);
+    assert.equal(mentionSceneFor(state), null, 'mentions are spent');
+    assert.equal(visitSceneFor(state), 'spare_week', 'and only now does the visit scene fire');
+  } finally {
+    delete SCENES.spare_week;
+  }
 });
 
 test('the visit slot picks up a scene the moment one exists', () => {
   /* The mechanism, exercised. If someone adds `visit: true` to a scene and
      it never plays, that is indistinguishable from having not written it. */
+  /* `end: true` on both, because that is what a real one needs — a scene
+     with no `next`, no `choices` and no `end` warns in the validator and
+     shows "This scene has no ending" to the player. The fixtures model
+     what CONTENT.md tells someone to write. */
   const fake = {
-    a_quiet_week: { speaker: 'God Synthia', visit: true, text: 'x' },
-    another_one:  { speaker: 'God Synthia', visit: true, text: 'y' }
+    a_quiet_week: { speaker: 'God Synthia', visit: true, end: true, text: 'x' },
+    another_one:  { speaker: 'God Synthia', visit: true, end: true, text: 'y' }
   };
   Object.assign(SCENES, fake);
   try {
@@ -209,16 +224,26 @@ test('the visit slot picks up a scene the moment one exists', () => {
       .filter(n => n.mentions).map(n => n.mentions);      // all spent
 
     assert.equal(mentionSceneFor(state), null, 'every mention is spent');
+
+    /* Assert the BEHAVIOUR, not that the picks come from this test's own
+       fixtures. The first cut checked `first in fake`, which quietly
+       assumed no real visit scene existed — so it passed only while the
+       feature was unused and failed the moment the collaborator authored
+       one. That is the same mistake as asserting the slot was empty. */
+    const isVisit = id => id && SCENES[id] && SCENES[id].visit && !SCENES[id].mentions;
+
     const first = visitSceneFor(state);
-    assert.ok(first in fake, `expected one of the visit scenes, got ${first}`);
+    assert.ok(isVisit(first), `expected a visit scene, got ${first}`);
 
     // Used once each, so she does not repeat herself.
     state.synthia.visited = [first];
     const second = visitSceneFor(state);
-    assert.ok(second in fake && second !== first,
-      `the second visit must be a different scene, got ${second}`);
+    assert.ok(isVisit(second) && second !== first,
+      `the second visit must be a different visit scene, got ${second}`);
 
-    state.synthia.visited = Object.keys(fake);
+    // Every visit scene there is, spent.
+    state.synthia.visited = Object.entries(SCENES)
+      .filter(([, n]) => n.visit && !n.mentions).map(([id]) => id);
     assert.equal(visitSceneFor(state), null,
       'once they are all used she goes quiet again rather than looping');
   } finally {
@@ -230,7 +255,7 @@ test('a visit scene is never also a mention', () => {
   /* Tagging both would make a scene that plants a goal fire through the
      path that exists for scenes that do not, and the goal would be
      recorded twice or not at all depending on which ran. */
-  const fake = { both: { speaker: 'God Synthia', visit: true, mentions: 'souffle', text: 'x' } };
+  const fake = { both: { speaker: 'God Synthia', visit: true, mentions: 'souffle', end: true, text: 'x' } };
   Object.assign(SCENES, fake);
   try {
     const state = newGame(7);

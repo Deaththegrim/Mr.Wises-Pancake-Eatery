@@ -44,6 +44,27 @@ run, and covered by a validator rule that rejects a scene tagged as both.
 **No such scene is authored — she is the collaborator's to write.** It is
 an empty slot, exactly like the art and sound slots.
 
+**And the writing worklist now says so.** Every other empty slot here
+announces itself — `tools/art.js` prints what is still a placeholder,
+`tools/audio.js` prints what is still a recipe — but a scene that has not
+been written cannot appear in a list of scenes, so the one place the
+writing is most needed was the one place the worklist was silent.
+`node tools/writing.js synthia` now reports "3 WEEK(S) HAVE NOTHING",
+explains why a mention cannot fill them, and points at the visit slot. The
+numbers are derived — mentions counted from the data, weeks from the quota
+curve — so the section disappears on its own once the gap is filled.
+
+**Then the slot was tested by actually using it**, which found three things
+wrong with my own work: the documented example omitted `end: true` (so it
+warned in the validator and would have shown "This scene has no ending"),
+the checklist test reported an authored visit scene as orphaned, and — the
+worst of them — my own test asserted that *no visit scene was authored
+yet*. That is not a property of the code: it would have failed the moment
+the collaborator used the feature. A test that breaks when a slot is
+finally filled is worse than no test. The suite is now green both with the
+slot empty and with it filled exactly as `CONTENT.md` instructs, which is
+the only version of "this works" that means anything for a handoff.
+
 `tools/simulate.js` now takes `{ weeks }` so the question stays answerable.
 Nothing that runs by default changed: every existing caller still gets 8.
 

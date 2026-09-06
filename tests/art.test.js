@@ -97,7 +97,11 @@ test('the writing checklist accounts for every scene', () => {
     'visit_first', 'quota_met', 'noticed',
     ...MISS_SCENES,
     ...TIER_ORDER.map(t => `ending_${t.toLowerCase()}`),
-    ...Object.entries(SCENES).filter(([, n]) => n.mentions).map(([id]) => id)
+    ...Object.entries(SCENES).filter(([, n]) => n.mentions).map(([id]) => id),
+    // Visit scenes are entered the same way a mention is — by her turning
+    // up with nothing left to plant. They must be listed here for the same
+    // reason mentions are, or authoring one reports it as orphaned.
+    ...Object.entries(SCENES).filter(([, n]) => n.visit && !n.mentions).map(([id]) => id)
   ]);
   const reachable = new Set(entry);
   for (const [, node] of Object.entries(SCENES)) {
