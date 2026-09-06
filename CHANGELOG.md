@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-09-06 — a front door
+
+Six thousand lines of documentation across seven files, and no way in. The
+reference (`CONTENT.md`) opened straight into recipe field definitions, and
+the one section that matters most to whoever is writing her — her scenes —
+sat at line 375 behind seven others. That is a wall, not a handoff.
+
+**`START-HERE.md`** is now the front door: one page, written for whoever is
+doing the words and the pictures rather than the code. What the game
+already does, what is theirs, how to run it in thirty seconds, what the
+three worklists tell them, a map of every file, and — plainly — which
+documents they can ignore completely, because `CHANGELOG.md` and
+`docs/superpowers/` are a record for a maintainer and contain no decision
+they need to make.
+
+It leads with **the one thing worth doing first**: the three weeks that
+currently have nothing in them. That is the measured answer from
+`research/run-length.md`, and it is roughly ten minutes of writing for the
+largest single improvement available.
+
+`CONTENT.md` now says it is the reference rather than the introduction, and
+opens with a short "what you probably want" index that puts her scenes and
+the art first. `README.md` points at the new page before its own
+programmer-facing walkthrough.
+
+Every claim in the new page was checked rather than written from memory:
+all 26 file paths referenced exist, the voice guide in the sibling project
+exists, all eight index links resolve to real headings, and the commands
+produce the output the page says they will — including the section heading
+it tells the reader to go and look at.
+
 ## 2026-09-06 — is eight weeks right? (measured)
 
 The design doc left the run length open and never measured it. Measuring it

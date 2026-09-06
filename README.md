@@ -18,6 +18,11 @@ renaming the game is one line.
 
 ## If you've just been handed this
 
+**Read [START-HERE.md](START-HERE.md) first.** It's one page, written for
+whoever is doing the words and the pictures rather than the code: what the
+game already does, what's left for you, and the one thing worth doing
+first. Everything below is the same ground aimed at a programmer.
+
 Five commands, in this order. None of them need anything installed beyond
 Node and Python, and none of them can break the game.
 

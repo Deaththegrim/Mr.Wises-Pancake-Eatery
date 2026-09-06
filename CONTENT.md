@@ -1,5 +1,24 @@
 # Adding content
 
+**This is the reference, not the introduction.** If you haven't read
+[START-HERE.md](START-HERE.md) yet, start there — it's one page and it says
+what the game is and what's left to do. Come back here to look things up.
+
+## What you probably want
+
+- [Writing Synthia](#writing-synthia--jsdatascenesjs) — her scenes, and the
+  weeks that currently have nothing in them
+- [Adding artwork](#adding-artwork--drop-a-file-in) — drop a file in, no
+  code change
+- [Adding a customer](#adding-a-customer--jsdatacustomersjs) — the easiest
+  thing to add and see in the game straight away
+- [Adding a pancake](#adding-a-pancake--jsdatarecipesjs) · [a syrup](#adding-a-syrup--jsdatasyrupsjs) · [a research step](#adding-research--jsdataresearchjs)
+- [Changing the difficulty](#changing-the-difficulty--jsdataeconomyjs) — the
+  weekly targets
+- [If something breaks](#if-something-breaks)
+
+---
+
 Everything you can change lives in `js/data/`. You never need to open
 anything in `js/engine/` or `js/ui/`.
 
