@@ -9,7 +9,8 @@ never from a clock.
 
 **Synthia is not ours.** She's the collaborator's character, and this is a
 spin-off of `god-synthia`. All writing follows the voice guide at
-`god-synthia/research/voice-style-guide.md`; the sprites come from that
+`research/voice-style-guide.md` inside the `god-synthia` project, which sits
+alongside this folder rather than inside it; the sprites come from that
 project. Everything currently in `js/data/scenes.js` is placeholder written
 to be replaced — the voice belongs to her author, not to us.
 
@@ -57,10 +58,10 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 314 unit tests (incl. balance + motion regressions)
+    node --test tests/         # the whole suite (incl. balance + motion regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
-    python3 tools/smoke.py     # plays the game in a headless browser (115 checks)
+    python3 tools/smoke.py     # plays the game in a headless browser
     python3 tools/playthrough.py 1   # plays the REAL page for N weeks (slow)
     node tools/art.js          # what art is needed, and what is already in
     node tools/audio.js        # every sound the game makes
