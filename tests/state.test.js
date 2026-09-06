@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, serialize, deserialize } from '../js/engine/state.js';
+import { SCENES } from '../js/data/scenes.js';
 import { quotaForWeek } from '../js/engine/economy.js';
 
 test('a new game starts playable', () => {
@@ -162,6 +163,45 @@ test('and a save with none of those lists still loads', () => {
   assert.ok(ok);
   assert.deepEqual(state.synthia.wanted, []);
   assert.deepEqual(state.synthia.mentions, []);
+});
+
+test('a save written before `visited` existed still loads', () => {
+  /* `synthia.visited` was added late, for the visit scenes. Every save
+     anyone already has predates it, so the field arriving `undefined` is
+     the NORMAL case rather than an edge one — and this is the list that
+     decides whether she repeats herself, so a throw here would kill
+     Continue outright rather than degrade.
+
+     The four junk shapes are the same set the other id lists carry,
+     because `state` is exposed on the page for manual testing and a
+     hand-edited save is a real thing that happens. */
+  const g = newGame(1);
+  delete g.synthia.visited;
+  const { ok, state } = deserialize(JSON.stringify(g));
+  assert.ok(ok, 'a save from before the field existed must still load');
+  assert.deepEqual(state.synthia.visited, [], 'and arrive as an empty list');
+
+  for (const junk of [null, 'a string', 42, { a: 1 }]) {
+    const bad = newGame(1);
+    bad.synthia.visited = junk;
+    const r = deserialize(JSON.stringify(bad));
+    assert.ok(r.ok, `visited = ${JSON.stringify(junk)} must load rather than throw`);
+    assert.ok(Array.isArray(r.state.synthia.visited),
+      `visited = ${JSON.stringify(junk)} must normalise to a list`);
+  }
+});
+
+test('a visit scene deleted from the content is dropped from her memory', () => {
+  /* `visited` holds SCENE ids, not recipe ids — the only list in the save
+     that does. Renaming or deleting a scene the collaborator wrote would
+     otherwise leave a dead id in there forever, and since the id is what
+     stops her repeating a scene, a stale one silently retires a scene
+     nobody ever saw. */
+  const g = newGame(1);
+  const realScene = Object.keys(SCENES)[0];
+  g.synthia.visited = [realScene, 'a_scene_that_was_renamed'];
+  const { state } = deserialize(JSON.stringify(g));
+  assert.deepEqual(state.synthia.visited, [realScene]);
 });
 
 test('an id list that is not a list loads instead of killing Continue', () => {
