@@ -26,7 +26,7 @@ import { RECIPES } from '../js/data/recipes.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { TIER_ORDER, TIER_THRESHOLDS } from '../js/data/affection.js';
 import { QUOTA_CURVE } from '../js/data/economy.js';
-import { MISS_SCENES } from '../js/engine/story.js';
+import { MISS_SCENES, reachableScenes } from '../js/engine/story.js';
 
 const only = (process.argv[2] || '').toLowerCase();
 const wants = section => !only || only === section;
@@ -46,7 +46,7 @@ const entryPoints = {
     .map(([id, n]) => [id, `she mentions ${n.mentions} in passing`])),
   ...Object.fromEntries(Object.entries(SCENES)
     .filter(([, n]) => n.visit && !n.mentions)
-    .map(([id]) => [id, 'she visits with nothing left to mention (weeks 6-8)'])),
+    .map(([id]) => [id, 'she visits with nothing left to mention (the late weeks)'])),
   ...Object.fromEntries(MISS_SCENES.map((id, i) => [
     id,
     i === MISS_SCENES.length - 1
@@ -67,11 +67,8 @@ if (wants('synthia')) {
   console.log('her are finished: what she mentions, the payoff weeks later when you');
   console.log('serve it back, the five endings chosen by how well you listened.\n');
 
-  const reachable = new Set(Object.keys(entryPoints));
-  for (const [, node] of Object.entries(SCENES)) {
-    if (node.next) reachable.add(node.next);
-    for (const c of node.choices || []) if (c.next) reachable.add(c.next);
-  }
+  /* Shared with validate.js and the test suite, from story.js. */
+  const reachable = reachableScenes(SCENES);
 
   for (const [id, node] of Object.entries(SCENES)) {
     const when = entryPoints[id];
@@ -94,7 +91,13 @@ if (wants('synthia')) {
      The numbers are derived, not typed: mentions counted from the data,
      weeks from the quota curve. */
   rule('THE WEEKS WITH NOTHING IN THEM — js/data/scenes.js');
-  const mentions = Object.values(SCENES).filter(n => n.mentions).length;
+  /* Mention WEEKS, not mention scenes. mentionSceneFor() dedupes on the
+     DISH, and noteMention records the dish — so two scenes naming the same
+     one give two nodes and still only one playable week, with the second
+     unable to ever fire. Counting nodes would understate the silence by
+     exactly the number of duplicates, in the section whose whole job is to
+     report that silence accurately. */
+  const mentions = new Set(Object.values(SCENES).filter(n => n.mentions).map(n => n.mentions)).size;
   const visits = Object.values(SCENES).filter(n => n.visit && !n.mentions).length;
   const weeks = QUOTA_CURVE.length;
   const quiet = Math.max(0, weeks - mentions - visits);

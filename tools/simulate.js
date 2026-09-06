@@ -31,6 +31,7 @@ import { mentionSceneFor, visitSceneFor } from '../js/engine/story.js';
 import { bestSyrupFor } from '../js/engine/syrup.js';
 import { decorFor, buyDecor } from '../js/engine/decor.js';
 import { noteMention } from '../js/engine/affection.js';
+import { QUOTA_CURVE } from '../js/data/economy.js';
 import { SCENES } from '../js/data/scenes.js';
 import { availableNodes, purchase, experiment } from '../js/engine/research.js';
 import { buyIngredient, unitPriceOf } from '../js/engine/pantry.js';
@@ -41,11 +42,17 @@ import { RECIPES } from '../js/data/recipes.js';
 import { TUNING } from '../js/data/economy.js';
 
 // Customers per day now comes from reputation (engine/day.js customersToday).
-/* The shipped run length. Overridable per call (`opts.weeks`) so the
-   question the spec leaves open — is 8 right? — can be answered with
-   measurements rather than opinion. Nothing that runs by default changes:
-   every existing caller gets 8. */
-const WEEKS = 8;
+/* The shipped run length, DERIVED from the quota curve rather than typed.
+   engine/day.js ends the game at `week >= QUOTA_CURVE.length`, so a
+   hardcoded 8 here meant that extending the curve left every balance
+   measurement quietly describing a shorter game than the one being played.
+
+   Overridable per call (`opts.weeks`) so the question the spec left open —
+   is 8 right? — can be answered with measurements rather than opinion.
+   Note that a value ABOVE the curve length keeps simulating past the point
+   the real game has already shown its ending; that is deliberate for
+   "what if it were longer" analysis and wrong for anything else. */
+const WEEKS = QUOTA_CURVE.length;
 
 /* Two player profiles, so the curve can be tuned against both ends.
    `competent` is imperfect: slightly over-poured, a little late on the
@@ -148,7 +155,7 @@ export function simulate(seed = 2026, profile = 'careful', opts = {}) {
   if (shelf) profile = 'careful';
   const s = newGame(seed);
   const rows = [];
-  const weeks = opts.weeks || WEEKS;
+  const weeks = Number.isInteger(opts.weeks) && opts.weeks > 0 ? opts.weeks : WEEKS;
   for (let w = 1; w <= weeks; w++) {
     const quota = quotaForWeek(w);
     let weekBenchSpend = 0;

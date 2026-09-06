@@ -246,3 +246,67 @@ test('a baseIngredient that names nothing is caught', () => {
     assert.ok(errors.some(e => /baseIngredient/.test(e)), errors.join('\n'));
   } finally { TUNING.baseIngredient = saved; }
 });
+
+/* THE SCENE CHECKS THE COLLABORATOR ACTUALLY RELIES ON.
+
+   Three checks were added to help whoever writes her scenes, and every one
+   of them could be deleted outright with the suite still green and the
+   validator still reporting 0/0 — including the case where changing one
+   line made it tell an author that a scene already tagged `visit: true`
+   should be given `visit: true`. Self-contradicting advice, from the tool
+   the writing guide tells them to trust before anything else.
+
+   These are the tests for the tool a non-programmer is pointed at. */
+
+test('a scene nothing can reach is reported', () => {
+  const { warnings } = validateContent({
+    scenes: { ...SCENES, a_lonely_draft: { speaker: 'God Synthia', text: 'x', end: true } }
+  });
+  assert.ok(warnings.some(w => /scenes\.js/.test(w) && /a_lonely_draft/.test(w)),
+    `expected an unreachable-scene warning, got:\n${warnings.join('\n')}`);
+});
+
+test('and so is an orphan PAIR that only links to itself', () => {
+  /* The check used to gather inbound edges, so two unreachable scenes
+     linking to each other vouched for one another and passed clean — and
+     a two-part beat with an "ask again" choice looping back is the obvious
+     shape for someone to draft. */
+  const { warnings } = validateContent({
+    scenes: {
+      ...SCENES,
+      pair_a: { speaker: 'God Synthia', text: 'a', choices: [{ text: 'again', next: 'pair_b' }] },
+      pair_b: { speaker: 'God Synthia', text: 'b', next: 'pair_a' }
+    }
+  });
+  assert.ok(warnings.some(w => /pair_a/.test(w)) && warnings.some(w => /pair_b/.test(w)),
+    `both halves of an orphan pair must be reported, got:\n${warnings.join('\n')}`);
+});
+
+test('a scene she can open with is NOT called unreachable', () => {
+  /* The false-positive direction, and the more damaging one: a tool that
+     tells a writer to add the very tag their scene already has teaches
+     them to stop believing it. */
+  for (const tag of [{ mentions: 'souffle' }, { visit: true }]) {
+    const { warnings } = validateContent({
+      scenes: { ...SCENES, she_opens_with_this: { speaker: 'God Synthia', text: 'x', end: true, ...tag } }
+    });
+    assert.ok(!warnings.some(w => /she_opens_with_this/.test(w)),
+      `a scene with ${JSON.stringify(tag)} is an entry point, not an orphan. Got:\n${warnings.join('\n')}`);
+  }
+});
+
+test('a scene tagged both visit and mentions is an error', () => {
+  const { errors } = validateContent({
+    scenes: { ...SCENES, both_at_once: { speaker: 'God Synthia', visit: true, mentions: 'souffle', text: 'x', end: true } }
+  });
+  assert.ok(errors.some(e => /both_at_once/.test(e)),
+    `expected an error for a scene tagged both ways, got:\n${errors.join('\n')}`);
+});
+
+test('a visit scene with no words is an error', () => {
+  const { errors } = validateContent({
+    scenes: { ...SCENES, silent_visit: { speaker: 'God Synthia', visit: true, text: '   ', end: true } }
+  });
+  assert.ok(errors.some(e => /silent_visit/.test(e)),
+    `she would walk in and say nothing; expected an error, got:\n${errors.join('\n')}`);
+});

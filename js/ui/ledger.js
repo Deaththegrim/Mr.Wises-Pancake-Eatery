@@ -88,7 +88,7 @@ export function renderReceipt(recipe, result, customer, said) {
   }
 
   /* THE STAGGER, indexed here rather than in CSS.
-​
+
      The rows arrive one after another so the bill is watched adding up —
      but `:nth-child` counts every child of the card, and the first two are
      the dish name and what the customer said. So the first money line was

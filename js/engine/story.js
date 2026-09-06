@@ -138,3 +138,47 @@ export function endingTitleFor(endingId) {
   }
   return null;
 }
+
+/* EVERY WAY A SCENE CAN BE ENTERED, and which scenes are reachable at all.
+
+   This list was written out by hand in THREE places — tools/validate.js,
+   tools/writing.js and tests/art.test.js — with nothing asserting the
+   three agreed. They had already diverged: one of them did not know about
+   `visit` scenes, so a validator built on it told an author that a scene
+   already tagged `visit: true` should be given `visit: true`. Advice that
+   contradicts itself, from the tool a writer is told to trust first.
+
+   One home, imported by all three.
+
+   `reachableScenes` walks FORWARD from the entry points rather than
+   collecting every `next` in the file. That difference matters: gathering
+   inbound edges counts links emitted BY unreachable scenes, so any orphan
+   pair that links to each other vouches for itself and passes as reached.
+   A collaborator drafting a two-part beat with an "ask again" choice
+   looping back — the obvious shape — would have got silence. */
+export function entryScenes(scenes = SCENES) {
+  return new Set([
+    'visit_first', 'quota_met', 'noticed',
+    ...MISS_SCENES,
+    ...TIER_ORDER.map(t => `ending_${t.toLowerCase()}`),
+    ...Object.entries(scenes)
+      .filter(([, n]) => n && (n.mentions || n.visit))
+      .map(([id]) => id)
+  ]);
+}
+
+export function reachableScenes(scenes = SCENES) {
+  /* Entry points count as reached whether or not they exist, so a MISSING
+     entry scene is reported by the check that looks for it by name rather
+     than turning up here as an orphan. */
+  const reached = new Set(entryScenes(scenes));
+  const queue = [...reached];
+  while (queue.length) {
+    const node = scenes[queue.pop()];
+    if (!node) continue;
+    for (const n of [node.next, ...(node.choices || []).map(c => c.next)]) {
+      if (n && !reached.has(n)) { reached.add(n); queue.push(n); }
+    }
+  }
+  return reached;
+}

@@ -57,6 +57,17 @@ export function playScene(startId, state, onEnd) {
 
     if (node.mentions) noteMention(state.synthia, node.mentions);
 
+    /* A visit scene marks ITSELF seen, for the same reason a mention does:
+       whoever plays it should not have to remember to. It was recorded at
+       the call site in main.js, which works while there is exactly one
+       call site — and this project's whole bug history is second call
+       sites that forgot. She would simply repeat a scene, which is the
+       kind of fault nobody reports and everybody notices. */
+    if (node.visit && !node.mentions) {
+      const seen = state.synthia.visited || [];
+      if (!seen.includes(current)) state.synthia.visited = [...seen, current];
+    }
+
     const choicesEl = clear(document.getElementById('vn-choices'));
 
     if (node.end) {

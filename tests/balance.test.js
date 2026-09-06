@@ -170,13 +170,25 @@ test('the quota curve is reachable in principle at every week', () => {
    She used to order whatever was priciest on the menu, so a player who
    heard her mention a dish, spent weeks researching it and put it out had
    no way to actually serve it to her — the payoff landed only if the RNG
-   happened to pick it. DEVOTED came up on 2 of 10 seeds. */
+   happened to pick it. DEVOTED came up on 2 of 10 seeds.
+
+   It is now 10 of 10 — and identically 72 points on every one of them,
+   because once she reliably orders what she mentioned, nothing the RNG
+   deals touches the affection total. That sameness IS the property under
+   test, so the assertion is all ten and not a majority: a threshold of
+   "most seeds" would let the top ending quietly go back to being luck and
+   still pass. If a later change makes this vary at all, the arc has
+   become seed-dependent again and this is the test that should say so. */
 test('an attentive player reaches DEVOTED by playing', () => {
-  const tiers = [];
-  for (let seed = 2001; seed <= 2010; seed++) tiers.push(simulate(seed, 'careful')[7].tier);
-  const devoted = tiers.filter(t => t === 'DEVOTED').length;
-  assert.ok(devoted >= 7,
-    `the full arc must be a reward for attention, not a lottery: ${devoted}/10 seeds reached DEVOTED (${tiers.join(', ')})`);
+  const rows = [];
+  for (let seed = 2001; seed <= 2010; seed++) rows.push(simulate(seed, 'careful')[7]);
+  const missed = rows.filter(r => r.tier !== 'DEVOTED').length;
+  assert.equal(missed, 0,
+    `the full arc must be a reward for attention, not a lottery: ` +
+    `${10 - missed}/10 seeds reached DEVOTED (${rows.map(r => r.tier).join(', ')})`);
+  assert.equal(new Set(rows.map(r => r.affection)).size, 1,
+    `listening must pay the same however the week falls, or the ending is partly luck ` +
+    `again: ${rows.map(r => r.affection).join(', ')}`);
 });
 
 test('the run length is what makes the top ending reachable at all', () => {
@@ -201,7 +213,10 @@ test('the run length is what makes the top ending reachable at all', () => {
   const top = TIER_ORDER[TIER_ORDER.length - 1];
   const full = simulate(2026, 'careful', { weeks: WEEKS });
   assert.equal(full[full.length - 1].tier, top,
-    `${WEEKS} weeks must be enough to reach ${top}; it is the length the endings are tuned against`);
+    `a listening player finishes ${WEEKS} weeks on ${full[full.length - 1].affection} points and ` +
+    `${top} needs ${TIER_THRESHOLDS[top]}, so the best ending in the game cannot be reached at all. ` +
+    `Either lengthen the run, lower the ${top} threshold in js/data/affection.js, or raise what ` +
+    `listening is worth — but do not leave an ending nobody can see.`);
 
   const short = simulate(2026, 'careful', { weeks: WEEKS - 1 });
   const reached = short[short.length - 1].affection;

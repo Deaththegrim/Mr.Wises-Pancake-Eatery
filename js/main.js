@@ -104,7 +104,12 @@ function nextOrder() {
     const mention = mentionSceneFor(state);
     if (mention) {
       state.flags[`mentioned_w${state.week}`] = true;
-      playScene(mention, state, () => { showScreen('service'); proceedWith(order); });
+      /* Saved in the callback for the same reason as the visit below:
+         noteMention() runs inside playScene, so without this a tab closed
+         during the following cook loses the record of what she said, and
+         the listening payoff can never fire for a thing she has already
+         said out loud. */
+      playScene(mention, state, () => { saveGame(); showScreen('service'); proceedWith(order); });
       return;
     }
     /* Nothing left to plant. A mention has to name a node the player has
@@ -116,8 +121,14 @@ function nextOrder() {
     const visit = visitSceneFor(state);
     if (visit) {
       state.flags[`mentioned_w${state.week}`] = true;
-      state.synthia.visited = [...(state.synthia.visited || []), visit];
-      playScene(visit, state, () => { showScreen('service'); proceedWith(order); });
+      /* Marking it seen is playScene's job, the same as a mention's — and
+         SAVING it is this one's. The next save otherwise lands after the
+         whole griddle minigame, so closing the tab mid-cook lost both the
+         seen-mark and the week flag, and she opened with the very same
+         scene next session. That is precisely what `visited` exists to
+         stop. The `noticed` payoff below already saves in its callback for
+         the same reason. */
+      playScene(visit, state, () => { saveGame(); showScreen('service'); proceedWith(order); });
       return;
     }
   }

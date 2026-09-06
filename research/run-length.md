@@ -18,6 +18,16 @@ the syrup that suits the customer), `shelf` (plays equally well but pours
 whatever is first on the shelf — the honest first-time player), and `deaf`
 (cooks *identically* to careful but never acts on anything she mentions).
 
+One caveat on the long rows. The quota curve is eight numbers, so past
+week 8 `quotaForWeek()` extrapolates instead of reading it, repeating the
+last authored week's ratchet ratio forever, and there is no
+content out there either — the research tree finishes, the decor sells out
+and the endings have already been written for week 8. The 9–12 week rows
+are therefore a measure of the *shape* the economy is heading in, not a
+report on a game anyone could play. They are here because that shape is
+the argument against going longer; do not read the 12-week row as a
+playtest.
+
 ## Finding 1 — the run length IS the affection budget
 
 Affection accrues at a roughly fixed rate per week, so making the game

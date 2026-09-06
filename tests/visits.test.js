@@ -5,6 +5,7 @@ import { synthiaDueToday, mentionSceneFor, visitSceneFor } from '../js/engine/st
 import { newGame } from '../js/engine/state.js';
 import { noteMention } from '../js/engine/affection.js';
 import { SCENES } from '../js/data/scenes.js';
+import { simulate } from '../tools/simulate.js';
 import { RECIPES } from '../js/data/recipes.js';
 
 const perfect = id => {
@@ -265,5 +266,58 @@ test('a visit scene is never also a mention', () => {
       'a scene tagged with BOTH must not be served as a plain visit');
   } finally {
     delete SCENES.both;
+  }
+});
+
+test('the simulator plays visit scenes too, so its numbers match the game', () => {
+  /* Deleting the whole visit branch from tools/simulate.js left the suite
+     green and every balance number identical — so nothing could detect the
+     mirror going missing, let alone drifting. That is the exact failure
+     the mirror exists to prevent: this simulator once imitated main.js
+     wrongly and reproduced a bug instead of finding it.
+
+     With a visit scene authored, a full run must actually play some. */
+  const fake = {
+    sim_visit_a: { speaker: 'God Synthia', visit: true, end: true, text: 'a' },
+    sim_visit_b: { speaker: 'God Synthia', visit: true, end: true, text: 'b' }
+  };
+  Object.assign(SCENES, fake);
+  try {
+    const rows = simulate(2026, 'careful');
+    const seen = rows.state.synthia.visited || [];
+    assert.ok(seen.length > 0,
+      'a full run authored with visit scenes must play at least one; if this is empty ' +
+      'the simulator is no longer mirroring how main.js drives her visits');
+    for (const id of seen) {
+      assert.ok(id in fake, `the simulator recorded "${id}", which is not a visit scene`);
+    }
+  } finally {
+    for (const id of Object.keys(fake)) delete SCENES[id];
+  }
+});
+
+test('a week gets at most one of her scenes, never two', () => {
+  /* Removing the `mentioned_w${week}` guard from either main.js or
+     simulate.js left everything green. It matters because her visit rolls
+     FORWARD when she is not served, so she can appear more than once in a
+     week — and without the flag each appearance opens a scene, burning
+     several of the five mentions in one week and exhausting them by week
+     two or three. That widens the very silence the visit slot exists to
+     close. */
+  const fake = { wk_visit: { speaker: 'God Synthia', visit: true, end: true, text: 'x' } };
+  Object.assign(SCENES, fake);
+  try {
+    const rows = simulate(2026, 'careful');
+    const s = rows.state;
+    const mentionWeeks = Object.keys(s.flags).filter(k => k.startsWith('mentioned_w'));
+    assert.equal(new Set(mentionWeeks).size, mentionWeeks.length,
+      'a week must not be flagged twice');
+
+    const spoken = (s.synthia.mentions || []).length + (s.synthia.visited || []).length;
+    assert.ok(spoken <= mentionWeeks.length,
+      `she opened ${spoken} scenes across ${mentionWeeks.length} flagged weeks — ` +
+      'more scenes than weeks means the once-a-week guard is not holding');
+  } finally {
+    delete SCENES.wk_visit;
   }
 });

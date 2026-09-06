@@ -752,6 +752,134 @@ def main():
             })()""")
             check(state_now == "available", f"the browser can make audio at all: {state_now}")
 
+        # ---- her visit scenes, end to end ----
+        # The unit tests cover visitSceneFor() and the save round-trip, but
+        # NOT the wiring: js/ui/vn.js needs a DOM, so no unit test can
+        # import it. That gap is not theoretical — the first cut of the
+        # recording inside playScene used a variable name that did not
+        # exist there, so it appended `undefined` to the seen-list, prune
+        # stripped it, the scene was never marked, and she would have
+        # repeated the same visit every single week. Everything was green.
+        #
+        # No visit scene is authored (they are the collaborator's), so one
+        # is injected here the same way the unit tests do it, and removed
+        # after.
+        print("\n-- her visit scenes --")
+        # A clean game from the title screen. #btn-restart only exists on
+        # the ending screen and the run is nowhere near it here, which is
+        # what the first cut of this tried to click for thirty seconds.
+        page.goto(f"http://127.0.0.1:{PORT}/", wait_until="networkidle")
+        page.click("#btn-new")
+        page.wait_for_selector("#screen-morning", state="visible", timeout=4000)
+        page.evaluate("window.GAME.state.seed = 2026; window.GAME.save();")
+        page.evaluate("""
+          import('./js/data/scenes.js').then(m => {
+            m.SCENES.__smoke_visit = {
+              speaker: 'God Synthia',
+              visit: true,
+              end: true,
+              text: 'A week with nothing to plant.'
+            };
+            const s = window.GAME.state;
+            s.synthia.mentions = [];   // nothing spent yet
+            s.synthia.visited = [];
+            s.flags = {};
+            window.GAME.save();
+          })
+        """)
+        time.sleep(0.3)
+
+        # ORDER FIRST, WITH BOTH KINDS AVAILABLE.
+        # visitSceneFor() firing only when no mention is left is an engine
+        # rule the unit tests pin, but the game asks the two questions in
+        # main.js — in an order no unit test can see, because main.js needs
+        # a DOM. Swap those two branches and every unit test still passes
+        # while she stops planting anything: the mention beat, the research
+        # payoff and the whole route to DEVOTED go quiet, and the only
+        # symptom is that she talks more.
+        # So: a visit scene EXISTS here and her mentions are unspent. She
+        # must still open with a mention.
+        opened_with = None
+        for day in range(1, 9):
+            page.evaluate(f"window.GAME.state.day = {day}; window.GAME.save();")
+            if page.is_visible("#screen-evening"):
+                page.click("#btn-next-day")
+            if not page.is_visible("#screen-service"):
+                page.wait_for_selector("#btn-open", state="visible", timeout=4000)
+                page.click("#btn-open")
+            time.sleep(0.35)
+            if page.is_visible("#screen-vn"):
+                opened_with = page.inner_text("#vn-text")
+                break
+            clear_scenes(page)
+            if page.is_visible("#screen-service"):
+                page.click("#btn-close")
+                time.sleep(0.2)
+
+        check(opened_with is not None and "nothing to plant" not in opened_with,
+              "with a mention still unsaid she plants it rather than taking the visit slot: "
+              f"{(opened_with or 'she never came in')!r}")
+        clear_scenes(page)
+        time.sleep(0.3)
+        check(page.evaluate("window.GAME.state.synthia.mentions.length") == 1,
+              "and that mention is recorded, so it is a real mention and not a lookalike")
+
+        # Now spend every mention, so the visit path is the only one left.
+        # A reload re-imports scenes.js fresh, so the fixture is injected
+        # again here rather than carried over.
+        page.goto(f"http://127.0.0.1:{PORT}/", wait_until="networkidle")
+        page.click("#btn-new")
+        page.wait_for_selector("#screen-morning", state="visible", timeout=4000)
+        page.evaluate("window.GAME.state.seed = 2026; window.GAME.save();")
+        page.evaluate("""
+          import('./js/data/scenes.js').then(m => {
+            m.SCENES.__smoke_visit = {
+              speaker: 'God Synthia',
+              visit: true,
+              end: true,
+              text: 'A week with nothing to plant.'
+            };
+            const s = window.GAME.state;
+            s.synthia.mentions = Object.values(m.SCENES)
+              .filter(n => n.mentions).map(n => n.mentions);
+            s.synthia.visited = [];
+            s.flags = {};
+            window.GAME.save();
+          })
+        """)
+        time.sleep(0.3)
+
+        seen_visit = False
+        for day in range(1, 9):
+            page.evaluate(f"window.GAME.state.day = {day}; window.GAME.save();")
+            if page.is_visible("#screen-evening"):
+                page.click("#btn-next-day")
+            if not page.is_visible("#screen-service"):
+                page.wait_for_selector("#btn-open", state="visible", timeout=4000)
+                page.click("#btn-open")
+            time.sleep(0.35)
+            if page.is_visible("#screen-vn") and "nothing to plant" in page.inner_text("#vn-text"):
+                seen_visit = True
+                break
+            clear_scenes(page)
+            if page.is_visible("#screen-service"):
+                page.click("#btn-close")
+                time.sleep(0.2)
+
+        check(seen_visit, "she opens with a visit scene once every mention is spent")
+        if seen_visit:
+            clear_scenes(page)
+            time.sleep(0.3)
+            recorded = page.evaluate(
+                "JSON.stringify(window.GAME.state.synthia.visited || [])")
+            # THE ASSERTION THAT WOULD HAVE CAUGHT IT. A wrong id here reads
+            # as [null] or [], and she repeats the scene forever.
+            check('__smoke_visit' in recorded,
+                  f"and playing it marks that scene seen, so she will not repeat it: {recorded}")
+
+        page.evaluate("import('./js/data/scenes.js').then(m => { delete m.SCENES.__smoke_visit; })")
+        time.sleep(0.2)
+
         # ---- the preview workbench ----
         # It is a handoff deliverable and nothing else covers it: it imports
         # the real art, scene and sound layers, so a break in any of them

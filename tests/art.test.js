@@ -7,7 +7,7 @@ import { ART } from '../js/data/art.js';
 import { DECOR } from '../js/data/decor.js';
 import { SCENES } from '../js/data/scenes.js';
 import { TIER_ORDER } from '../js/data/affection.js';
-import { MISS_SCENES } from '../js/engine/story.js';
+import { MISS_SCENES, reachableScenes } from '../js/engine/story.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -93,21 +93,9 @@ test('the writing checklist accounts for every scene', () => {
      sends someone hunting a bug when it is not. It derives the entry
      points from the engine (miss scenes, endings, mentions) rather than
      listing them, so this asserts the derivation still covers everything. */
-  const entry = new Set([
-    'visit_first', 'quota_met', 'noticed',
-    ...MISS_SCENES,
-    ...TIER_ORDER.map(t => `ending_${t.toLowerCase()}`),
-    ...Object.entries(SCENES).filter(([, n]) => n.mentions).map(([id]) => id),
-    // Visit scenes are entered the same way a mention is — by her turning
-    // up with nothing left to plant. They must be listed here for the same
-    // reason mentions are, or authoring one reports it as orphaned.
-    ...Object.entries(SCENES).filter(([, n]) => n.visit && !n.mentions).map(([id]) => id)
-  ]);
-  const reachable = new Set(entry);
-  for (const [, node] of Object.entries(SCENES)) {
-    if (node.next) reachable.add(node.next);
-    for (const c of node.choices || []) if (c.next) reachable.add(c.next);
-  }
+  /* The same walk validate.js and writing.js use, from story.js — it was
+     spelled out here by hand, and the three copies had already drifted. */
+  const reachable = reachableScenes(SCENES);
   const orphaned = Object.keys(SCENES).filter(id => !reachable.has(id));
   assert.deepEqual(orphaned, [],
     'scenes nothing can reach — either wire them up or delete them:\n' + orphaned.join('\n'));
