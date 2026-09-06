@@ -424,6 +424,13 @@ It's the best thing in here. Two notes on using it:
   said it. Three or four across the whole game is plenty.
 - **Make the line sound like nothing.** If it reads as a quest marker, the
   moment is dead. She should be talking to herself.
+- **If you write more, weeks 6–8 are where they go.** There are five of
+  these and she says one per week, so the last three weeks currently have
+  nothing new from her — and they are the weeks the player is most
+  invested, because the research tree completes in week 8, the shop finally
+  becomes affordable, and her closest tier is crossed. That gap is the one
+  real weakness a full measurement of the run length turned up; the working
+  is in `research/run-length.md` if you want it.
 
 ---
 

@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-09-06 — is eight weeks right? (measured)
+
+The design doc left the run length open and never measured it. Measuring it
+gave a sharper answer than the question expected. Full working in
+`research/run-length.md`; the spec's open item is now resolved.
+
+**Keep eight — it is the shortest run in which the top ending exists.**
+Affection accrues at a roughly fixed rate, so the run length *is* the
+affection budget. A listening player ends on 36 / 41 / 54 / 59 / **72** at
+four through eight weeks, and DEVOTED needs 70. Eight is not a round
+number; it is the first length that works, clearing by two points. A
+seven-week game would make "Most Do Not Stay" structurally impossible —
+the same failure already fixed twice here.
+
+`tests/balance.test.js` pins it now, so shortening the game fails with the
+reason attached rather than silently deleting an ending. Verified by
+actually shortening the curve and watching it fail.
+
+**Longer is worse in the other direction.** By week 9 a player who ignores
+everything she says still reaches CONFIDANT, so extra weeks erode the
+premium on the listening beat — the one mechanic the pillar rests on. And
+past week 9 income plateaus while the quota ratchets on, turning a −2,000
+near miss into a −25,970 rout. A rout is not a metronome.
+
+**The real finding is not about the length.** There are five mention scenes
+and she says one per week, so weeks 6–8 have nothing new from her — and
+those are the most invested weeks in the run. If more get written, that is
+where they go. Noted in `CONTENT.md` beside the field itself.
+
+`tools/simulate.js` now takes `{ weeks }` so the question stays answerable.
+Nothing that runs by default changed: every existing caller still gets 8.
+
 ## 2026-09-06 — the second review pass
 
 Ran the rest of the reviewer panel — comment accuracy, silent failures, a

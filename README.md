@@ -52,7 +52,7 @@ Then open http://localhost:8000
 
 ## Check everything works
 
-    node --test tests/         # 310 unit tests (incl. balance + motion regressions)
+    node --test tests/         # 311 unit tests (incl. balance + motion regressions)
     node tools/validate.js     # content integrity
     node tools/simulate.js     # is the game actually balanced? (8 weeks, fast)
     python3 tools/smoke.py     # plays the game in a headless browser (115 checks)
@@ -172,5 +172,7 @@ replaces. Put a file at the path and it is in the game on the next reload —
 no code change and no build step. Delete it and the placeholder comes back.
 Nothing needs to be drawn in any particular order, or at all.
 
-Design docs live in `docs/superpowers/`, and the genre research they argue
-from is in `research/genre-loops.md`.
+Design docs live in `docs/superpowers/`. The genre research they argue from
+is in `research/genre-loops.md`, and `research/run-length.md` answers the one
+balance question the spec left open — why the game is eight weeks and not
+seven or ten.

@@ -41,6 +41,10 @@ import { RECIPES } from '../js/data/recipes.js';
 import { TUNING } from '../js/data/economy.js';
 
 // Customers per day now comes from reputation (engine/day.js customersToday).
+/* The shipped run length. Overridable per call (`opts.weeks`) so the
+   question the spec leaves open — is 8 right? — can be answered with
+   measurements rather than opinion. Nothing that runs by default changes:
+   every existing caller gets 8. */
 const WEEKS = 8;
 
 /* Two player profiles, so the curve can be tuned against both ends.
@@ -144,7 +148,8 @@ export function simulate(seed = 2026, profile = 'careful', opts = {}) {
   if (shelf) profile = 'careful';
   const s = newGame(seed);
   const rows = [];
-  for (let w = 1; w <= WEEKS; w++) {
+  const weeks = opts.weeks || WEEKS;
+  for (let w = 1; w <= weeks; w++) {
     const quota = quotaForWeek(w);
     let weekBenchSpend = 0;
     for (let d = 0; d < 7; d++) {

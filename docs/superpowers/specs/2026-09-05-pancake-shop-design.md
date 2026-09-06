@@ -808,13 +808,35 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
 2. ~~**Canvas or DOM**~~ — resolved by prototype, see §5. Stack stays DOM;
    pour and drizzle move to `<canvas>` in Phase 2, drawn over the real
    stack. No engine change required.
-3. **Eight weeks** — the right length? Long enough for a slow burn to breathe,
-   short enough to finish. Measured over 30 seeds (2026-09-05): a careful player
-   clears 6.2 of 8 and misses only weeks 7 and 8; a sloppy one clears exactly 2;
-   a player who cooks as well as the careful one but ignores what Synthia mentions
-   clears 4.6 and never reaches her closest tier. So the curve works. Whether 8
-   weeks is enough for the *relationship* to breathe is a question only reading the
-   finished writing can answer. Revisit once the collaborator's scenes exist.
+3. ~~**Eight weeks** — the right length?~~ **RESOLVED 2026-09-06 by measurement.
+   Keep eight.** Full write-up: `research/run-length.md`.
+
+   The curve half was already settled (a careful player clears 6.2 of 8 across 30
+   seeds, missing only weeks 7 and 8; a sloppy one clears 2; one who cooks equally
+   well but ignores what she mentions clears 4.6 and never reaches her closest
+   tier). What had never been measured is the half that turned out to decide it.
+
+   **Affection accrues at a roughly fixed rate, so the run length IS the affection
+   budget.** A listening player ends on 36 / 41 / 54 / 59 / **72** at four through
+   eight weeks, and DEVOTED needs 70. Eight is therefore not a round number — it is
+   the FIRST length at which the top ending exists, clearing by 2 points. A
+   seven-week game would make "Most Do Not Stay" structurally impossible, which is
+   the same failure already fixed twice here (DEVOTED at threshold 90 against a
+   ceiling of 64; STRANGER at a floor of 16 against a threshold of 10).
+   `tests/balance.test.js` now pins it, so shortening the game fails with the
+   reason attached instead of silently deleting an ending.
+
+   Longer is worse in the other direction: by week 9 the deaf player reaches
+   CONFIDANT, so extra weeks erode the premium on the listening beat — the one
+   mechanic the pillar rests on — and past week 9 income plateaus while the quota
+   ratchets on, turning a −2,000 near miss into a −25,970 rout. A rout is not a
+   metronome.
+
+   **The real finding is not about the length.** There are five mention scenes and
+   she says one per week, so weeks 6–8 have nothing new from her — and those are
+   the most invested weeks in the run (the tree completes in week 8, the shop is
+   finally affordable, DEVOTED is crossed). **If more mention scenes are written,
+   weeks 6–8 are where they go.** That is the only change the measurement asks for.
 4. **Demon Synthia's role**, if any. Collaborator's call; system supports it free.
 5. ~~**Decoration layer**~~ — **BUILT 2026-09-06**, brought forward from Phase 2
    because the hole it fills was measured rather than theoretical (below). It does

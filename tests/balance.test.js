@@ -9,6 +9,13 @@ import { TUNING } from '../js/data/economy.js';
 import { DECOR } from '../js/data/decor.js';
 import { SYRUPS } from '../js/data/syrups.js';
 import { RESEARCH } from '../js/data/research.js';
+import { QUOTA_CURVE } from '../js/data/economy.js';
+import { TIER_ORDER, TIER_THRESHOLDS } from '../js/data/affection.js';
+
+/* The authored run length, taken from the curve rather than repeated here —
+   tests/ending.test.js already pins the game to ending on the curve's last
+   authored week, so this is the same number by construction. */
+const WEEKS = QUOTA_CURVE.length;
 
 /* BALANCE REGRESSION TESTS.
 
@@ -170,6 +177,38 @@ test('an attentive player reaches DEVOTED by playing', () => {
   const devoted = tiers.filter(t => t === 'DEVOTED').length;
   assert.ok(devoted >= 7,
     `the full arc must be a reward for attention, not a lottery: ${devoted}/10 seeds reached DEVOTED (${tiers.join(', ')})`);
+});
+
+test('the run length is what makes the top ending reachable at all', () => {
+  /* WHY EIGHT WEEKS. The spec left this open and it was never measured;
+     measuring it gave a sharper answer than the question expected.
+
+     Affection accrues at a roughly fixed rate, so the run length IS the
+     affection budget. Simulated across lengths, a listening player ends on
+     36 / 41 / 54 / 59 / 72 at four through eight weeks — and DEVOTED needs
+     70. Eight weeks is therefore not a round number, it is the FIRST
+     length at which the top ending exists, and it clears by 2 points.
+
+     Cut one week and "Most Do Not Stay" — the payoff the whole affection
+     system is built for, her own voice-guide line turned back on her —
+     becomes structurally impossible, exactly as it was when its threshold
+     was 90 against a ceiling of 64. That bug has been fixed twice here
+     already; this pins the third door it could come through.
+
+     So this test fails if someone shortens the game. That is the point:
+     shortening it is allowed, but not silently, and not without also
+     moving the thresholds. */
+  const top = TIER_ORDER[TIER_ORDER.length - 1];
+  const full = simulate(2026, 'careful', { weeks: WEEKS });
+  assert.equal(full[full.length - 1].tier, top,
+    `${WEEKS} weeks must be enough to reach ${top}; it is the length the endings are tuned against`);
+
+  const short = simulate(2026, 'careful', { weeks: WEEKS - 1 });
+  const reached = short[short.length - 1].affection;
+  assert.ok(reached < TIER_THRESHOLDS[top],
+    `a ${WEEKS - 1}-week game already reaches ${top} (${reached} points), so the last week ` +
+    'is not carrying the ending it is supposed to. Either the arc is too fast or the ' +
+    'game is longer than its story needs.');
 });
 
 test('and listening is what gets them there — not just cooking well', () => {
