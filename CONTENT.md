@@ -424,13 +424,30 @@ It's the best thing in here. Two notes on using it:
   said it. Three or four across the whole game is plenty.
 - **Make the line sound like nothing.** If it reads as a quest marker, the
   moment is dead. She should be talking to herself.
-- **If you write more, weeks 6–8 are where they go.** There are five of
-  these and she says one per week, so the last three weeks currently have
-  nothing new from her — and they are the weeks the player is most
-  invested, because the research tree completes in week 8, the shop finally
-  becomes affordable, and her closest tier is crossed. That gap is the one
-  real weakness a full measurement of the run length turned up; the working
-  is in `research/run-length.md` if you want it.
+- **It only works on a dish the player has NOT researched yet.** That is
+  worth knowing before you place one: every research node not already
+  claimed by a mention is bought by week 4, so there is no dish left that a
+  mention in week 6 could pay off on. For the late weeks, use a visit scene
+  instead — see just below.
+
+### When she has nothing left to plant — `visit: true`
+
+    a_quiet_week: {
+      speaker: 'God Synthia',
+      visit: true,          // she talks; no goal is planted
+      text: '...'
+    }
+
+There are five mentions and she says one a week, so **weeks 6, 7 and 8
+currently have nothing new from her** — and those are the weeks the player
+is most invested, because the research tree completes in week 8, the shop
+finally becomes affordable, and her closest tier is crossed.
+
+A `visit` scene fills exactly that. It fires only once every mention is
+spent, so it can never take a mention's turn, and each one is used once.
+None are written — that is yours. **If you add scenes anywhere, add them
+here first;** it is the one gap a full measurement of the game's length
+actually turned up. The working is in `research/run-length.md`.
 
 ---
 

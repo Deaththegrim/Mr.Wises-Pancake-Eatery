@@ -8,7 +8,7 @@ import { renderDecorShop, renderShopfrontDecor } from './ui/decor.js';
 import { renderTree, renderBench } from './ui/tree.js';
 import { mountGriddle } from './ui/griddle.js';
 import { playScene } from './ui/vn.js';
-import { missSceneFor, mentionSceneFor, endingTitleFor } from './engine/story.js';
+import { missSceneFor, mentionSceneFor, visitSceneFor, endingTitleFor } from './engine/story.js';
 import { tierFor } from './engine/affection.js';
 import { characterOf } from './engine/syrup.js';
 import { TUNING } from './data/economy.js';
@@ -105,6 +105,19 @@ function nextOrder() {
     if (mention) {
       state.flags[`mentioned_w${state.week}`] = true;
       playScene(mention, state, () => { showScreen('service'); proceedWith(order); });
+      return;
+    }
+    /* Nothing left to plant. A mention has to name a node the player has
+       not bought yet, and every unclaimed one is gone by week 4 — so
+       without this she spent the last three weeks of the game walking in
+       and saying nothing, in the weeks the player is most invested. A
+       `visit` scene is her talking without setting a goal. None are
+       authored yet; this is the empty slot, waiting. */
+    const visit = visitSceneFor(state);
+    if (visit) {
+      state.flags[`mentioned_w${state.week}`] = true;
+      state.synthia.visited = [...(state.synthia.visited || []), visit];
+      playScene(visit, state, () => { showScreen('service'); proceedWith(order); });
       return;
     }
   }

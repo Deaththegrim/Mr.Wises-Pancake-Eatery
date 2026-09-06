@@ -835,8 +835,18 @@ Verified 2026-09-05 in `~/vault/projects/god-synthia/`:
    **The real finding is not about the length.** There are five mention scenes and
    she says one per week, so weeks 6–8 have nothing new from her — and those are
    the most invested weeks in the run (the tree completes in week 8, the shop is
-   finally affordable, DEVOTED is crossed). **If more mention scenes are written,
-   weeks 6–8 are where they go.** That is the only change the measurement asks for.
+   finally affordable, DEVOTED is crossed).
+
+   "Write three more mentions" was the first answer and it is a dead end, which
+   checking it before publishing it caught: a mention must name a node the player
+   has NOT bought yet, and the three nodes unclaimed by a mention are researched in
+   weeks 1, 3 and 4 across every seed. Every node bought late is already claimed.
+   **There are zero viable mention targets for weeks 6–8.**
+
+   So a `visit: true` scene was added to §9's vocabulary: her talking without
+   planting a goal, firing only once every mention is spent. The mechanism exists
+   and is tested; no such scene is authored, because she is the collaborator's.
+   **Weeks 6–8 are where the writing goes.**
 4. **Demon Synthia's role**, if any. Collaborator's call; system supports it free.
 5. ~~**Decoration layer**~~ — **BUILT 2026-09-06**, brought forward from Phase 2
    because the hole it fills was measured rather than theoretical (below). It does

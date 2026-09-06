@@ -43,6 +43,9 @@ const entryPoints = {
   ...Object.fromEntries(Object.entries(SCENES)
     .filter(([, n]) => n.mentions)
     .map(([id, n]) => [id, `she mentions ${n.mentions} in passing`])),
+  ...Object.fromEntries(Object.entries(SCENES)
+    .filter(([, n]) => n.visit && !n.mentions)
+    .map(([id]) => [id, 'she visits with nothing left to mention (weeks 6-8)'])),
   ...Object.fromEntries(MISS_SCENES.map((id, i) => [
     id,
     i === MISS_SCENES.length - 1

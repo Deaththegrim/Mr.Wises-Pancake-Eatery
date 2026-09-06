@@ -27,7 +27,7 @@
 import { newGame } from '../js/engine/state.js';
 import { makeRng } from '../js/engine/rng.js';
 import { openDay, closeDay, serve, nextCustomer, customersToday } from '../js/engine/day.js';
-import { mentionSceneFor } from '../js/engine/story.js';
+import { mentionSceneFor, visitSceneFor } from '../js/engine/story.js';
 import { bestSyrupFor } from '../js/engine/syrup.js';
 import { decorFor, buyDecor } from '../js/engine/decor.js';
 import { noteMention } from '../js/engine/affection.js';
@@ -170,6 +170,16 @@ export function simulate(seed = 2026, profile = 'careful', opts = {}) {
           if (mention) {
             s.flags[`mentioned_w${s.week}`] = true;
             noteMention(s.synthia, SCENES[mention].mentions);
+          } else {
+            // Mirror main.js: with nothing left to plant she can still
+            // have a visit scene. Keeping this in step is the rule — the
+            // simulator once imitated main.js wrongly and reproduced a bug
+            // instead of finding it.
+            const visit = visitSceneFor(s);
+            if (visit) {
+              s.flags[`mentioned_w${s.week}`] = true;
+              s.synthia.visited = [...(s.synthia.visited || []), visit];
+            }
           }
         }
 

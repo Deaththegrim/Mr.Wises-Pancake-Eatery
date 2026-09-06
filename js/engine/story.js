@@ -85,6 +85,36 @@ export function mentionSceneFor(state) {
   return available[Math.floor(rng() * available.length)];
 }
 
+/* SOMETHING TO SAY WHEN THERE IS NO GOAL LEFT TO PLANT.
+
+   A mention has to name a research node the player has NOT bought yet —
+   that is the whole beat: she says a thing in passing, you research it
+   weeks later unprompted, and she notices. Measuring the run length turned
+   up the consequence: there are five mentions, she says one a week, and
+   every research node still unclaimed by one is bought by week 4. So in
+   weeks 6, 7 and 8 she walked in and said NOTHING — and those are the
+   weeks the player is most invested, with the tree completing, the shop
+   finally affordable and her closest tier being crossed.
+
+   A `visit: true` scene is her talking without planting anything. It fires
+   only when no mention is left, so it can never take a mention's place,
+   and each one is used once.
+
+   There are none authored yet, deliberately: she is the collaborator's to
+   write. This is the slot, empty, the same way the art and sound slots are
+   empty — the mechanism exists so the writing can drop in without anyone
+   touching the engine. See `research/run-length.md` for why this is where
+   the gap is. */
+export function visitSceneFor(state) {
+  const seen = state.synthia.visited || [];
+  const available = Object.entries(SCENES)
+    .filter(([id, node]) => node.visit && !node.mentions && !seen.includes(id))
+    .map(([id]) => id);
+  if (available.length === 0) return null;
+  const rng = makeRng(state.seed + state.week * 613 + state.day);
+  return available[Math.floor(rng() * available.length)];
+}
+
 /* THE ENDING'S TITLE.
 
    Every ending scene carries its `endingTitle` one or two hops down the

@@ -84,8 +84,37 @@ completes in week 8, the decoration shop is finally affordable, and DEVOTED
 is crossed. The player is at their most invested precisely while she has
 gone quiet.
 
-This is the actionable one. **If anyone writes more mention scenes, weeks
-6–8 are where they go.** Nothing else about the length needs changing.
+### And "just write three more mentions" does not work
+
+That was the first conclusion, and checking it before publishing it showed
+it was a dead end. **A mention has to name a research node the player has
+not bought yet** — that is the whole beat: she says it in passing, you
+research it weeks later unprompted, she notices. Of the three research
+nodes not already claimed by a mention:
+
+| node | researched by a careful player in |
+|------|-----------------------------------|
+| Buttermilk Stack | week 1 (it costs 8 points) |
+| Blueberry Pile | week 3 |
+| Ash-Dark Stack | week 4 |
+
+All ten seeds, identically. So a mention of any of them in week 6 lands on
+a dish the player already owns and the payoff can never fire. Every node
+bought *late* is already claimed by one of the five existing mentions.
+**There are zero viable mention targets for weeks 6–8.**
+
+### So the slot for those weeks is a visit, not a mention
+
+`visit: true` on a scene is her talking **without planting anything**. It
+fires only when no mention remains, so it can never take a mention's turn,
+and each one is used once. That mechanism now exists and is tested; no such
+scene is authored, because she is the collaborator's to write.
+
+The other option remains open too: add a genuinely late, expensive research
+node purely to be a week-6 mention target. That couples the story to the
+tech tree, which is why the visit slot is the lighter answer.
+
+**Either way, weeks 6–8 are where the writing goes.**
 
 ## Conclusion
 
@@ -93,8 +122,10 @@ This is the actionable one. **If anyone writes more mention scenes, weeks
   premium and turns the last weeks into a rout.
 - **Do not shorten without moving `TIER_THRESHOLDS`** — the balance suite
   now refuses it, and says why.
-- **Write into the gap, not around it.** Three more mention scenes would
-  fix the only real weakness the measurement found.
+- **Write into the gap, not around it** — but as `visit` scenes, not
+  mentions. There are no unclaimed research nodes left that are researched
+  late enough for a mention to pay off, which the first draft of this
+  document got wrong before checking.
 
 *Numbers reproduce with `node tools/simulate.js` (the shipped eight-week
 table) and by passing `{ weeks: n }` to `simulate()` for the rest.*

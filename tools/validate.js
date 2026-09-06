@@ -355,6 +355,22 @@ export function validateContent(override = {}) {
     }
   }
 
+  /* --- her visit scenes ---
+     `visit: true` is her talking with no goal planted, for the weeks after
+     every mention is spent. Two ways to write one that never plays, and
+     both look exactly like a scene nobody has got round to. */
+  for (const [id, node] of Object.entries(scenes)) {
+    if (!node || !node.visit) continue;
+    if (node.mentions) {
+      errors.push(`scenes.js — "${id}" is tagged BOTH visit and mentions. A visit plants ` +
+                  `no goal, so it would be served through the path for scenes that do not, ` +
+                  `and "${node.mentions}" would never be recorded. Pick one.`);
+    }
+    if (typeof node.text !== 'string' || !node.text.trim()) {
+      errors.push(`scenes.js — visit scene "${id}" has no text, so she would walk in and say nothing.`);
+    }
+  }
+
   // --- sound ---
   /* The recipes cannot be checked for how they sound, and nothing here
      pretends to. What CAN go wrong silently is a slot the browser refuses

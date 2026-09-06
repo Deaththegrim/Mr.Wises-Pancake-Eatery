@@ -26,8 +26,23 @@ near miss into a −25,970 rout. A rout is not a metronome.
 
 **The real finding is not about the length.** There are five mention scenes
 and she says one per week, so weeks 6–8 have nothing new from her — and
-those are the most invested weeks in the run. If more get written, that is
-where they go. Noted in `CONTENT.md` beside the field itself.
+those are the most invested weeks in the run.
+
+**And the obvious fix does not work**, which checking it before shipping
+the advice caught. A mention must name a research node the player has *not*
+bought yet — that is the whole beat. The three nodes unclaimed by a mention
+are researched in weeks 1, 3 and 4 across every seed, and every node bought
+late is already claimed. **There are zero viable mention targets for weeks
+6–8**, so "write three more mentions" would have handed the collaborator a
+dead end.
+
+So there is now a `visit: true` scene type: her talking **without planting
+a goal**, firing only once every mention is spent, each used once. The
+mechanism is built, wired into both `main.js` and the simulator, tested
+with synthetic scenes so it is not one more thing that exists and has never
+run, and covered by a validator rule that rejects a scene tagged as both.
+**No such scene is authored — she is the collaborator's to write.** It is
+an empty slot, exactly like the art and sound slots.
 
 `tools/simulate.js` now takes `{ weeks }` so the question stays answerable.
 Nothing that runs by default changed: every existing caller still gets 8.

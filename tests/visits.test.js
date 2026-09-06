@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openDay, closeDay, nextCustomer, serve } from '../js/engine/day.js';
-import { synthiaDueToday, mentionSceneFor } from '../js/engine/story.js';
+import { synthiaDueToday, mentionSceneFor, visitSceneFor } from '../js/engine/story.js';
 import { newGame } from '../js/engine/state.js';
 import { noteMention } from '../js/engine/affection.js';
 import { SCENES } from '../js/data/scenes.js';
@@ -164,4 +164,81 @@ test('a mention naming a dish that no longer exists is ignored, not asked for', 
   noteMention(s.synthia, 'deleted_recipe');
   const order = synthiaVisit(s);
   assert.equal(order.impossibleAsk, null, 'she must not ask for something with no name to print');
+});
+
+/* WHEN SHE HAS NOTHING LEFT TO PLANT.
+
+   A mention must name a research node the player has NOT bought yet — that
+   is the entire beat. Measuring the run length (research/run-length.md)
+   turned up what that costs at the end: five mentions, one a week, and
+   every node still unclaimed by one is bought by week 4. So weeks 6, 7 and
+   8 had her walk in and say nothing, in the weeks the player is most
+   invested — the tree completing, the shop finally affordable, her closest
+   tier being crossed.
+
+   `visit: true` is her talking without setting a goal. No such scene is
+   authored yet, because she is the collaborator's to write; these tests
+   prove the slot WORKS, using synthetic scenes, so it is not one more
+   mechanism that exists and has never once run. That is this project's
+   most repeated bug. */
+
+test('a visit scene fires only once every mention is spent', () => {
+  const state = newGame(7);
+  const before = visitSceneFor(state);
+
+  /* With mentions still available the fallback must stay out of the way —
+     it can never take a mention's turn, or it would eat the beat it exists
+     to sit behind. mentionSceneFor is what runs first in both main.js and
+     simulate.js; this asserts the ordering those rely on. */
+  assert.ok(mentionSceneFor(state), 'the fixture should still have mentions left');
+  assert.equal(before, null,
+    'no visit scene is authored yet, so this must be null rather than firing early');
+});
+
+test('the visit slot picks up a scene the moment one exists', () => {
+  /* The mechanism, exercised. If someone adds `visit: true` to a scene and
+     it never plays, that is indistinguishable from having not written it. */
+  const fake = {
+    a_quiet_week: { speaker: 'God Synthia', visit: true, text: 'x' },
+    another_one:  { speaker: 'God Synthia', visit: true, text: 'y' }
+  };
+  Object.assign(SCENES, fake);
+  try {
+    const state = newGame(7);
+    state.synthia.mentions = Object.values(SCENES)
+      .filter(n => n.mentions).map(n => n.mentions);      // all spent
+
+    assert.equal(mentionSceneFor(state), null, 'every mention is spent');
+    const first = visitSceneFor(state);
+    assert.ok(first in fake, `expected one of the visit scenes, got ${first}`);
+
+    // Used once each, so she does not repeat herself.
+    state.synthia.visited = [first];
+    const second = visitSceneFor(state);
+    assert.ok(second in fake && second !== first,
+      `the second visit must be a different scene, got ${second}`);
+
+    state.synthia.visited = Object.keys(fake);
+    assert.equal(visitSceneFor(state), null,
+      'once they are all used she goes quiet again rather than looping');
+  } finally {
+    for (const id of Object.keys(fake)) delete SCENES[id];
+  }
+});
+
+test('a visit scene is never also a mention', () => {
+  /* Tagging both would make a scene that plants a goal fire through the
+     path that exists for scenes that do not, and the goal would be
+     recorded twice or not at all depending on which ran. */
+  const fake = { both: { speaker: 'God Synthia', visit: true, mentions: 'souffle', text: 'x' } };
+  Object.assign(SCENES, fake);
+  try {
+    const state = newGame(7);
+    state.synthia.mentions = Object.values(SCENES)
+      .filter(n => n.mentions).map(n => n.mentions);
+    assert.notEqual(visitSceneFor(state), 'both',
+      'a scene tagged with BOTH must not be served as a plain visit');
+  } finally {
+    delete SCENES.both;
+  }
 });

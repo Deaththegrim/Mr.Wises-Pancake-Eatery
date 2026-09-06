@@ -2,6 +2,7 @@ import { META } from '../data/meta.js';
 import { RECIPES } from '../data/recipes.js';
 import { SYRUPS } from '../data/syrups.js';
 import { DECOR } from '../data/decor.js';
+import { SCENES } from '../data/scenes.js';
 
 const startingRecipes = () => RECIPES.filter(r => r.unlockedAtStart).map(r => r.id);
 const startingSyrups  = () => SYRUPS.filter(s => s.unlockedAtStart).map(s => s.id);
@@ -22,7 +23,7 @@ export function newGame(seed = Date.now() % 2147483647) {
     todayServed: {},
     pantry: {},
     orderIndex: 0,
-    synthia: { points: 0, mentions: [], noticed: [], wanted: [], log: [], lastVisitWeek: 0 },
+    synthia: { points: 0, mentions: [], noticed: [], wanted: [], visited: [], log: [], lastVisitWeek: 0 },
     flags: {}
   };
 }
@@ -85,6 +86,7 @@ export function deserialize(json) {
   const validRecipes = new Set(RECIPES.map(r => r.id));
   const validSyrups = new Set(SYRUPS.map(s => s.id));
   const validDecor = new Set(DECOR.map(d => d.id));
+  const validScenes = new Set(Object.keys(SCENES));
   /* Array.isArray, not `arr || []`: a save holding a STRING or an object
      where a list belongs threw straight out of deserialize, and loadGame
      does not catch — so the player clicked Continue and nothing happened
@@ -113,6 +115,9 @@ export function deserialize(json) {
   state.synthia.wanted = prune(state.synthia.wanted, validRecipes, 'dish she asked for');
   state.synthia.mentions = prune(state.synthia.mentions, validRecipes, 'dish she mentioned');
   state.synthia.noticed = prune(state.synthia.noticed, validRecipes, 'dish she noticed');
+  /* Scene ids, not recipe ids — a visit scene names no dish. Pruned
+     against the scenes that exist so a save survives one being renamed. */
+  state.synthia.visited = prune(state.synthia.visited, validScenes, 'visit scene');
   state.unlockedSyrups = prune(state.unlockedSyrups, validSyrups, 'syrup');
   state.menu = prune(state.menu, validRecipes, 'menu recipe');
   state.decor = prune(state.decor, validDecor, 'decoration');
