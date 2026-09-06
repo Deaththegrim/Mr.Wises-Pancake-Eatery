@@ -38,17 +38,26 @@ you go and research that thing weeks later, unprompted, and serve it to
 her, she notices — and that's worth more than anything else in the game.
 How much she warms to you decides which of five endings you get.
 
-All of that works. There are 9 dishes, 9 syrups, 11 customers, 13 research
-steps, 14 ingredients and 7 things to buy for the room.
+All of that works. At handoff there were 9 dishes, 9 syrups, 11 customers,
+13 research steps, 14 ingredients and 7 things to buy for the room — which
+is enough for a full run to feel populated, and all of it is yours to add
+to. (Those numbers are a snapshot taken the day it was handed over. The three
+worklists further down always print the current truth.)
 
 ---
 
 ## What's yours
 
 **Her voice.** She's your character. Everything she currently says is
-placeholder — written deliberately badly so you'd throw it away rather than
-feel obliged to keep it. 26 scenes, about 450 words. The machinery around
-them is finished: what she mentions, the payoff weeks later, the five
+placeholder. It's written to your voice guide rather than thrown together,
+because it had to be good enough to test the systems with — but it is
+*placeholder*, and you should replace it without a second thought. Around
+26 scenes and 450 words, so it's an afternoon, not a project.
+
+Do read it once before you bin it, though. It's the quickest way to see
+what each moment in the game is *for*: which scene lands after a good week,
+which after a bad one, what the five endings are reacting to. The machinery
+around it is finished — what she mentions, the payoff weeks later, the
 endings picked by how well the player listened.
 
 **The pictures.** 11 slots — pancakes, the griddle, and the seven things
@@ -56,9 +65,8 @@ you can buy for the shop. Every one currently draws a coloured shape. Her
 own sprites are already in and working, from `god-synthia`.
 
 You can also rewrite anything else you like. The customers, the dish names,
-the shop's decorations — I wrote all of those, and they're furniture. They
-were filled in so the place wouldn't feel empty while you're working, not
-because they're settled.
+the shop's decorations — all of that is furniture. It was filled in so the
+place wouldn't feel empty while you work, not because any of it is settled.
 
 ---
 
@@ -166,18 +174,25 @@ To check the whole thing is still sound:
 
     node --test tests/
 
-That runs 314 checks over the rules and the balance. It should say
-`# fail 0`. If it doesn't, something in the machinery needs a programmer,
-not you.
+That runs a few hundred checks over the rules and the balance, and prints a
+summary at the end. The line that matters is `# fail 0`.
+
+**If it isn't zero, read the name of the failing check before worrying.**
+Most of them are about the machinery and nothing you write can touch them.
+But a few do read your content — the commonest is a scene that nothing
+links to, which is a perfectly normal thing to have while you're drafting.
+`node tools/validate.js` will say so in plain English, and it's the one to
+run first. Anything the validator calls clean that still fails the tests is
+a programmer's problem, not yours.
 
 ---
 
 ## A note on the writing
 
-There's a voice guide at `god-synthia/research/voice-style-guide.md` and
-everything I wrote was held to it — second person, present tense, short
-hard-broken lines, deadpan. But she's yours, and if the guide and your
-instinct disagree, your instinct wins.
+There's a voice guide at `god-synthia/research/voice-style-guide.md`, and
+every placeholder line here was held to it — second person, present tense,
+short hard-broken lines, deadpan. But she's yours, and if the guide and
+your instinct disagree, your instinct wins.
 
 One small thing worth keeping: **"Hm." is hers.** It's the only verbal tic
 in the game that belongs to a single character, and the eleven customers

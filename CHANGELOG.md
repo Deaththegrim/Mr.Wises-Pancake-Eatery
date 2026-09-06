@@ -31,6 +31,23 @@ exists, all eight index links resolve to real headings, and the commands
 produce the output the page says they will — including the section heading
 it tells the reader to go and look at.
 
+**One claim did not survive that check, and it mattered.** The page said no
+content the collaborator writes can fail the test suite. It can: a scene
+nothing links to — an entirely normal thing to have mid-draft — fails
+`the writing checklist accounts for every scene`, while
+`node tools/validate.js` reported the file clean. That is the wrong way
+round. A writer would have seen a red test, believed they had broken the
+machinery, and had the friendly tool tell them nothing was wrong.
+
+`validate.js` now catches an unreachable scene itself, as a **warning**
+rather than an error, because a scene written today and linked tomorrow is
+ordinary work in progress. It names the scene and lists the three ways to
+reach one. The README has claimed this checker catches "nothing
+unreachable" since the beginning, and until now it did not.
+
+The page says the true thing instead: most checks cannot be touched by
+their content, a few can, and the validator is the one to run first.
+
 ## 2026-09-06 — is eight weeks right? (measured)
 
 The design doc left the run length open and never measured it. Measuring it

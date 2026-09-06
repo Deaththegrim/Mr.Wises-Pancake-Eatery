@@ -16,6 +16,7 @@ import { SCENES } from '../js/data/scenes.js';
 import { DECOR } from '../js/data/decor.js';
 import { SOUNDS } from '../js/data/sounds.js';
 import { TIER_ORDER, TIER_THRESHOLDS, TIER_EXPRESSION, TIER_POSE } from '../js/data/affection.js';
+import { MISS_SCENES } from '../js/engine/story.js';
 
 
 /* Mirrors engine/research.js blendAxes/axisDistance. Duplicated rather
@@ -351,6 +352,37 @@ export function validateContent(override = {}) {
       if (best < 0.5) {
         warnings.push(`syrups.js — no customer scores "${sy.id}" above ${best.toFixed(2)}; ` +
                       `discovering it would never pay off for anyone.`);
+      }
+    }
+  }
+
+  /* --- a scene nothing can reach ---
+     The README promises this checker catches "nothing unreachable", and it
+     did not: a scene no entry point names and nothing links to would pass
+     here as clean and then fail the TEST SUITE, which is the wrong way
+     round. Someone drafting a scene should hear it in plain English from
+     the friendly tool, not as a red test they will read as having broken
+     the machinery.
+
+     A warning rather than an error, because a scene written today and
+     linked up tomorrow is ordinary work in progress, not a fault. */
+  if (crossContent) {
+    const entered = new Set([
+      'visit_first', 'quota_met', 'noticed',
+      ...MISS_SCENES,
+      ...TIER_ORDER.map(t => `ending_${t.toLowerCase()}`),
+      ...Object.entries(scenes).filter(([, n]) => n && (n.mentions || n.visit)).map(([id]) => id)
+    ]);
+    for (const node of Object.values(scenes)) {
+      if (!node) continue;
+      if (node.next) entered.add(node.next);
+      for (const c of node.choices || []) if (c.next) entered.add(c.next);
+    }
+    for (const id of Object.keys(scenes)) {
+      if (!entered.has(id)) {
+        warnings.push(`scenes.js — nothing reaches "${id}", so no player will ever see it. ` +
+                      `Link it from another scene's \`next\` or a choice, or give it \`mentions\` ` +
+                      `or \`visit: true\` so she can open with it. (Fine if you are mid-draft.)`);
       }
     }
   }
