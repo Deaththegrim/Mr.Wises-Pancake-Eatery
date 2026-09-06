@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-09-06 — doing what the docs tell someone to do
+
+The handoff pages were written and checked for *accuracy*, but never
+*executed*. So I filled the visit slot from `CONTENT.md`'s own worked
+example — all three endings it offers, `end: true`, `next:` and `choices:`
+— and ran the full gate against it.
+
+It found a test that would have failed on the collaborator, and it is a
+mistake already written down once here: the simulator-mirror test asserted
+that every visit a run recorded was one of **its own two fixtures**. Those
+fixtures go into the shared scene registry alongside whatever is really
+authored, so the first genuine visit scene breaks it — on the person who
+just wrote that scene. It now asserts the property (what was recorded is a
+visit scene) rather than membership of its own fixtures.
+
+The fill confirmed two things the docs promise and nothing had tested: a
+two-part visit beat with an "ask again" choice looping back validates
+clean — precisely the shape the old inbound-edge walk declared unreachable
+— and the "N WEEK(S) HAVE NOTHING" section retires itself once those weeks
+are written, as both pages say it will.
+
+Two path claims did not survive checking. `CONTENT.md` pointed at
+`ui/griddle.js`; the file is `js/ui/griddle.js`. `START-HERE.md` gave the
+voice guide as `god-synthia/research/voice-style-guide.md` without saying
+that `god-synthia` is a **sibling** folder, so following it from this
+directory finds nothing.
+
+Everything else holds: every file path the docs name resolves, all eight
+`CONTENT.md` index anchors hit real headings, the section heading
+`START-HERE.md` sends the reader to is printed verbatim by the tool, and
+its quoted counts are the real ones — 26 scenes, ~453 words, 11 art slots,
+9 dishes, 9 syrups, 11 customers, 13 research steps, 14 ingredients, 7
+decorations.
+
+Green with the slot empty and with it filled as documented, which is the
+only version of "the handoff works" that means anything.
+
 ## 2026-09-06 — what the review found
 
 Two reviewers over the visit-scene work. Every finding worth acting on was
