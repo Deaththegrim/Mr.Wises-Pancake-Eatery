@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-09-06 — what the review found
+
+Two reviewers over the visit-scene work. Every finding worth acting on was
+an absence again — something never written down once, never saved, or
+never asked in the right order.
+
+**One scene-walk.** "How can a scene be entered" was written out by hand in
+three places — `tools/validate.js`, `tools/writing.js`, `tests/art.test.js`
+— with nothing asserting the three agreed, and they had already drifted:
+one of them did not know visit scenes existed, so the validator told an
+author to add `visit: true` to a scene that already had it. Advice
+contradicting itself, from the tool `START-HERE.md` says to trust first.
+It now lives once in `js/engine/story.js` and the three import it.
+
+That shared walk also closes a real hole. It had been collecting *inbound*
+edges, which counts links emitted by unreachable scenes — so two orphans
+linking to each other vouched for one another and passed clean. A two-part
+beat with an "ask again" choice looping back is the obvious thing for a
+collaborator to draft, and it would have got silence. It now walks forward
+from the entry points. Five validator tests cover it, the orphan pair
+included.
+
+**One saved visit.** Playing a visit scene marked it seen in memory but
+never wrote the save, so closing the tab during the cook that follows lost
+it and she would have replayed the same scene.
+
+**One pinned order.** Whether she is asked for a mention before a visit
+lived only in `js/main.js`, which needs a DOM, so no unit test can see it.
+Swap those two branches and all 323 unit tests still pass while she quietly
+stops planting anything — no mentions, no research payoff, no route to
+DEVOTED — and the only symptom is that she talks more. The browser test now
+puts a visit scene in front of her with her mentions unspent and checks she
+plants one anyway. Mutation-tested: the swap fails those two checks and
+nothing else in the suite notices.
+
+Smaller, in the balance suite: `an attentive player reaches DEVOTED` ran ten
+seeds, but careful play is seed-invariant — 72 points on all ten. It now
+asserts all ten *and* that they are identical, which is the property that
+keeps the top ending from becoming luck again. The "eight weeks is enough"
+failure message now says what to do about it, like its counterpart already
+did. `tools/simulate.js` takes its length from the quota curve instead of a
+hardcoded 8. And `research/run-length.md` now states outright that its
+9–12 week rows are extrapolated shape rather than a playtest: past week 8
+the quota is extrapolated, the research tree is finished and the endings
+were written for week 8.
+
+323 tests, 119 browser checks, validator clean.
+
 ## 2026-09-06 — a front door
 
 Six thousand lines of documentation across seven files, and no way in. The
